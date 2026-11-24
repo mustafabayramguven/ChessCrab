@@ -1,5 +1,6 @@
 package dev.chesscrab.app.ui.learn
 
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -78,7 +79,9 @@ fun isDue(cardId: String, now: Long = System.currentTimeMillis()) = cardOf(cardI
 
 private fun syncLater() { if (SyncClient.loggedIn) CoroutineScope(Dispatchers.IO).launch { SyncClient.sync() } }
 
-private val COURSE_COLORS = listOf(listOf(Color(0xFF5D8A35), Color(0xFF81B64C)), listOf(Color(0xFF8A4B2B), Color(0xFFE07B39)))
+private val COURSE_COLORS = listOf(listOf(Color(0xFF1B4351), Color(0xFF0F2A35)), listOf(Color(0xFF4A2621), Color(0xFF221A20)))
+private val COURSE_ACCENT = listOf(Crabs.Sea, Crabs.Coral)
+private val ROMAN = listOf("I", "II", "III", "IV", "V")
 
 /** Kurs listesi: kurs kartları, bölümler açılır-kapanır, dersler yıldızlı */
 @Composable
@@ -90,17 +93,23 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
             item(key = c.getString("id")) {
                 val all = c.getJSONArray("chapters").objects().flatMap { it.getJSONArray("lessons").objects() }
                 val done = all.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
-                Row(
-                    Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(14.dp))
-                        .background(Brush.horizontalGradient(COURSE_COLORS[ci % 2])).padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                val accent = COURSE_ACCENT[ci % 2]
+                Box(
+                    Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(26.dp))
+                        .background(Brush.linearGradient(COURSE_COLORS[ci % 2])).border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(c.getString("title"), style = MaterialTheme.typography.titleLarge, color = Color.White)
-                        Text(c.getString("description"), fontSize = 12.sp, color = Color.White.copy(alpha = 0.85f), maxLines = 3)
+                    dev.chesscrab.app.ui.components.WaveBackdrop(Modifier.matchParentSize(), color = accent, lines = 3, phase = ci * 2f)
+                    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            dev.chesscrab.app.ui.components.Overline("Kurs ${ROMAN.getOrElse(ci) { "${ci + 1}" }} · ${all.size} ders", color = accent)
+                            Spacer(Modifier.height(4.dp))
+                            Text(c.getString("title"), style = MaterialTheme.typography.headlineSmall)
+                            Spacer(Modifier.height(4.dp))
+                            Text(c.getString("description"), fontSize = 12.5.sp, color = Crabs.Muted, maxLines = 3, lineHeight = 17.sp)
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        ProgressRing(if (all.isEmpty()) 0f else done / all.size.toFloat(), 58.dp, accent, "$done/${all.size}")
                     }
-                    Spacer(Modifier.width(10.dp))
-                    ProgressRing(if (all.isEmpty()) 0f else done / all.size.toFloat(), 54.dp, Color.White, "$done/${all.size}")
                 }
             }
             for (ch in c.getJSONArray("chapters").objects()) {
@@ -109,13 +118,13 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                 item(key = "$chId-h") {
                     val done = lessons.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
                     Row(
-                        Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(10.dp)).background(Crabs.Card)
-                            .clickable { expanded = if (expanded == chId) "" else chId }.padding(14.dp),
+                        Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(18.dp))
+                            .clickable { expanded = if (expanded == chId) "" else chId }.padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text(ch.getString("title"), fontWeight = FontWeight.Bold)
-                            Text("$done / ${lessons.size} ders", fontSize = 12.sp, color = if (done == lessons.size) Crabs.Green else Crabs.Muted)
+                            Text(ch.getString("title"), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                            Text("$done / ${lessons.size} ders", fontSize = 12.sp, color = if (done == lessons.size) Crabs.Sea else Crabs.Muted)
                         }
                         Icon(if (expanded == chId) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, tint = Crabs.Muted)
                     }
@@ -127,16 +136,17 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                             val p = progressOf(l.getString("id"))
                             val doneL = p?.optBoolean("completed") == true
                             Row(
-                                Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(10.dp)).background(Crabs.Surface)
-                                    .clickable { onOpen(l.getString("id")) }.padding(12.dp),
+                                Modifier.fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(16.dp))
+                                    .clickable { onOpen(l.getString("id")) }.padding(horizontal = 8.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
-                                    Modifier.size(34.dp).clip(CircleShape).background(if (doneL) Crabs.Green else Crabs.Card),
+                                    Modifier.size(38.dp).clip(CircleShape).background(if (doneL) Crabs.Sea.copy(alpha = 0.18f) else Color.Transparent)
+                                        .border(1.dp, if (doneL) Crabs.Sea else Crabs.Line, CircleShape),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    if (doneL) Icon(Icons.Filled.CheckCircle, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                    else Text("${li + 1}", fontWeight = FontWeight.Bold)
+                                    if (doneL) Icon(Icons.Filled.CheckCircle, null, tint = Crabs.Sea, modifier = Modifier.size(20.dp))
+                                    else Text("${li + 1}", fontFamily = dev.chesscrab.app.ui.Display, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 18.sp, color = Crabs.Sand)
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
@@ -194,13 +204,13 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("✕", fontSize = 20.sp, color = Crabs.Muted, modifier = Modifier.clickable(onClick = onExit).padding(end = 12.dp))
-                Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Crabs.Card)) {
-                    Box(Modifier.fillMaxWidth(prog).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Crabs.Green))
+                Box(Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Crabs.CardHi)) {
+                    Box(Modifier.fillMaxWidth(prog).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Brush.horizontalGradient(listOf(Crabs.Sea, Crabs.Coral))))
                 }
                 Spacer(Modifier.width(10.dp))
-                Text("${minOf(view.getInt("index") + 1, total)}/$total", color = Crabs.Muted, fontSize = 13.sp)
+                Text("${minOf(view.getInt("index") + 1, total)}/$total", color = Crabs.Muted, fontSize = 12.sp, fontFamily = dev.chesscrab.app.ui.Mono)
             }
-            Text(player.title(), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 14.dp))
+            Text(player.title(), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(8.dp))
             Box(Modifier.padding(horizontal = 8.dp)) {
                 ChessBoard(
@@ -218,10 +228,10 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
                         if (verdict == "correct" || verdict == "also_good") {
                             wrong = null; hint = null
                             Sounds.play(Sounds.S.CORRECT)
-                            flash = Flash(uci.substring(2, 4), Crabs.Green, token)
+                            flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
                         } else {
                             Sounds.play(Sounds.S.WRONG)
-                            flash = Flash(uci.substring(2, 4), Color(0xFFFA412D), token)
+                            flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
                             shake++
                             wrong = fb.getString("message")
                         }
@@ -245,8 +255,8 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
                     Text(quiz.getString("question"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     quiz.getJSONArray("options").strings().forEachIndexed { i, o ->
                         Box(
-                            Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(10.dp)).background(Crabs.Card)
-                                .border(1.dp, Color(0xFF4F4C48), RoundedCornerShape(10.dp))
+                            Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(16.dp)).background(Crabs.Card)
+                                .border(1.dp, Crabs.Line, RoundedCornerShape(16.dp))
                                 .clickable {
                                     val r = JSONObject(player.answer(i.toUInt()))
                                     if (r.getBoolean("correct")) { Sounds.play(Sounds.S.CORRECT); wrong = null } else { Sounds.play(Sounds.S.WRONG); shake++; wrong = r.getString("message") }
@@ -286,17 +296,17 @@ fun RepertoireList(modifier: Modifier, onDrill: (String, Int) -> Unit) {
                 val lines = r.getJSONArray("lines").objects()
                 val due = lines.count { isDue(it.getString("card_id"), now) }
                 val learned = lines.count { cardOf(it.getString("card_id")) != null }
-                Column(Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(12.dp)).background(Crabs.Card).padding(14.dp)) {
+                Column(Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(22.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(22.dp)).padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        ProgressRing(learned / lines.size.toFloat(), 44.dp, label = "$learned")
+                        ProgressRing(learned / lines.size.toFloat(), 46.dp, Crabs.Sea, label = "$learned")
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(r.getString("title"), fontWeight = FontWeight.Bold)
-                            Text(if (due > 0) "$due hat tekrar bekliyor" else "Bugünlük bitti ✓", fontSize = 12.sp, color = if (due > 0) Crabs.Orange else Crabs.Green)
+                            Text(r.getString("title"), fontFamily = dev.chesscrab.app.ui.Display, fontSize = 20.sp)
+                            Text(if (due > 0) "$due hat tekrar bekliyor" else "Bugünlük bitti ✓", fontSize = 12.sp, color = if (due > 0) Crabs.Coral else Crabs.Sea)
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    BigButton(if (due > 0) "Çalış ($due)" else "Yine de çalış", color = if (due > 0) Crabs.Green else Crabs.CardHi) {
+                    BigButton(if (due > 0) "Çalış ($due)" else "Yine de çalış", color = if (due > 0) Crabs.Coral else Crabs.CardHi) {
                         val i = lines.indexOfFirst { isDue(it.getString("card_id"), now) }.let { if (it < 0) 0 else it }
                         onDrill(r.getString("id"), i)
                     }
@@ -339,11 +349,11 @@ fun DrillScreen(repId: String, line: Int, modifier: Modifier, onNext: (Int?) -> 
                     token++
                     if (!fb.getBoolean("correct")) {
                         Sounds.play(Sounds.S.WRONG); shake++
-                        flash = Flash(uci.substring(2, 4), Color(0xFFFA412D), token)
+                        flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
                         say = "mistake" to "Repertuvarındaki hamle ${fb.optStr("expected_san")}. Onu oyna."
                     } else {
                         Sounds.play(Sounds.S.MOVE)
-                        flash = Flash(uci.substring(2, 4), Crabs.Green, token)
+                        flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
                         say = "best" to ("Doğru!" + (fb.optStr("reply_san")?.let { " Rakip: $it" } ?: ""))
                     }
                     view = JSONObject(drill.viewJson())
@@ -417,7 +427,7 @@ fun PuzzleScreen(modifier: Modifier, onExit: () -> Unit) {
                         token++
                         if (uci == solution[idx]) {
                             view = GameView.parse(game.play(uci)); idx++
-                            flash = Flash(uci.substring(2, 4), Crabs.Green, token)
+                            flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
                             if (idx < solution.size) {
                                 Sounds.forSan(view.sans.lastOrNull())
                                 say = "best" to "Doğru!"
@@ -436,7 +446,7 @@ fun PuzzleScreen(modifier: Modifier, onExit: () -> Unit) {
                             showSol = false
                         } else {
                             Sounds.play(Sounds.S.WRONG); shake++
-                            flash = Flash(uci.substring(2, 4), Color(0xFFFA412D), token)
+                            flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
                             say = "mistake" to "Bu değil. Şahları, alımları ve tehditleri kontrol et."
                         }
                     },

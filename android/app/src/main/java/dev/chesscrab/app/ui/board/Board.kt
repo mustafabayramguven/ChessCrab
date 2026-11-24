@@ -62,17 +62,17 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-data class Arrow(val uci: String, val color: Color = Color(0xCC15781B))
+data class Arrow(val uci: String, val color: Color = Color(0xD9FF7A59))
 data class SquareBadge(val square: String, val cls: String)
 /** Kare üzerinde kısa süreli renk parlaması (doğru/yanlış geri bildirimi). `token` her yeni parlamada artmalı. */
 data class Flash(val square: String, val color: Color, val token: Int)
 
-val ARROW_BEST = Color(0xCC15781B)
-val ARROW_HINT = Color(0xCC3A86C8)
-val ARROW_BAD = Color(0xB3E2563B)
+val ARROW_BEST = Color(0xD9FF7A59)
+val ARROW_HINT = Color(0xCC2F6FD6)
+val ARROW_BAD = Color(0xB3B0304A)
 
-private val LAST_MOVE = Color(0x80F5F682)
-private val SELECTED = Color(0x99F5F682)
+private val LAST_MOVE = Color(0x66FFB45A)
+private val SELECTED = Color(0x8CFF9A5C)
 
 fun parseBoard(fen: String): Map<String, Char> {
     val out = HashMap<String, Char>()
@@ -222,7 +222,7 @@ fun ChessBoard(
             .fillMaxWidth()
             .aspectRatio(1f)
             .offset { IntOffset(shakeX.value.roundToInt(), 0) }
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(10.dp))
     ) {
         Canvas(
             Modifier
@@ -262,13 +262,13 @@ fun ChessBoard(
                 val light = (f + r) % 2 == 1
                 drawRect(if (light) theme.light else theme.dark, tl, Size(s, s))
                 if (lastMove != null && lastMove.length >= 4 && (lastMove.startsWith(name) || lastMove.substring(2, 4) == name)) drawRect(LAST_MOVE, tl, Size(s, s))
-                if (name in highlights) drawRect(Color(0x664C9BE8), tl, Size(s, s))
+                if (name in highlights) drawRect(Color(0x6654D1BE), tl, Size(s, s))
                 if (selected == name) drawRect(SELECTED, tl, Size(s, s))
                 if (flash != null && flash.square == name && flashAlpha.value > 0f) drawRect(flash.color.copy(alpha = flashAlpha.value), tl, Size(s, s))
             }
             // koordinatlar (karenin karşıt renginde)
             if (coordinates) {
-                val style = TextStyle(fontSize = (s * 0.17f / density).sp, fontWeight = FontWeight.Bold)
+                val style = TextStyle(fontSize = (s * 0.15f / density).sp, fontWeight = FontWeight.Bold, fontFamily = dev.chesscrab.app.ui.Mono)
                 val rb = if (whiteBottom) 0 else 7
                 val fl0 = if (whiteBottom) 0 else 7
                 for (i in 0..7) {
@@ -308,8 +308,8 @@ fun ChessBoard(
             selected?.let { sel ->
                 legal.filter { it.startsWith(sel) }.map { it.substring(2, 4) }.distinct().forEach { t ->
                     val c = topLeft(t, s) + Offset(s / 2, s / 2)
-                    if (board.containsKey(t)) drawCircle(Color(0x33000000), s * 0.45f, c, style = Stroke(s * 0.09f))
-                    else drawCircle(Color(0x33000000), s * 0.16f, c)
+                    if (board.containsKey(t)) drawCircle(Color(0x400B161D), s * 0.45f, c, style = Stroke(s * 0.09f))
+                    else drawCircle(Color(0x400B161D), s * 0.16f, c)
                 }
             }
             // oklar
@@ -330,16 +330,17 @@ fun ChessBoard(
                 }
                 drawPath(path, a.color)
             }
-            // hamle kalitesi rozeti (chess.com tarzı)
+            // hamle kalitesi rozeti
             if (badge != null && p >= 1f) CLASS_INFO[badge.cls]?.let { info ->
                 val tl = topLeft(badge.square, s)
                 val r = s * 0.2f
                 val c = Offset(tl.x + s - r * 0.75f, tl.y + r * 0.75f)
                 scale(badgeScale.value, pivot = c) {
-                    drawCircle(Color(0x55000000), r * 1.08f, c + Offset(0f, r * 0.12f))
-                    drawCircle(info.color, r, c)
-                    drawCircle(Color.White, r, c, style = Stroke(r * 0.14f))
-                    val t = measurer.measure(info.symbol, TextStyle(color = Color.White, fontSize = (r * (if (info.symbol.length > 1) 0.95f else 1.15f) / density).sp, fontWeight = FontWeight.Black))
+                    val cr = androidx.compose.ui.geometry.CornerRadius(r * 0.62f)
+                    drawRoundRect(Color(0x66000000), c - Offset(r, r * 0.85f), Size(r * 2, r * 2), cr)
+                    drawRoundRect(info.color, c - Offset(r, r), Size(r * 2, r * 2), cr)
+                    drawRoundRect(Color(0xFF0B161D), c - Offset(r, r), Size(r * 2, r * 2), cr, style = Stroke(r * 0.12f))
+                    val t = measurer.measure(info.symbol, TextStyle(color = Color(0xFF0B161D), fontSize = (r * (if (info.symbol.length > 1) 0.95f else 1.15f) / density).sp, fontWeight = FontWeight.Bold, fontFamily = dev.chesscrab.app.ui.Mono))
                     drawText(t, topLeft = Offset(c.x - t.size.width / 2f, c.y - t.size.height / 2f))
                 }
             }

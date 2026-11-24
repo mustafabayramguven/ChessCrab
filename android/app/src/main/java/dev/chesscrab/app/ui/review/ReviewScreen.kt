@@ -1,5 +1,7 @@
 package dev.chesscrab.app.ui.review
 
+import androidx.compose.foundation.border
+import dev.chesscrab.app.ui.Display
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -78,12 +80,13 @@ fun ReviewScreen(m: ReviewModel, modifier: Modifier) {
 @Composable
 private fun ImportView(m: ReviewModel, modifier: Modifier) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        Text("Oyun İncelemesi", style = MaterialTheme.typography.headlineSmall)
+        dev.chesscrab.app.ui.components.Overline("Cihazında, internetsiz")
+        Text("Oyun incelemesi", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(12.dp))
         if (m.running) {
             CoachBubble("Oyununu hamle hamle inceliyorum. Telefonunun bütün çekirdekleri çalışıyor…", title = "Bir saniye")
             Spacer(Modifier.height(16.dp))
-            LinearProgressIndicator(progress = { m.progress }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = Crabs.Green, trackColor = Crabs.Card)
+            LinearProgressIndicator(progress = { m.progress }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = Crabs.Coral, trackColor = Crabs.Card)
             Text("%${(m.progress * 100).toInt()}", color = Crabs.Muted, modifier = Modifier.padding(top = 6.dp))
             return@Column
         }
@@ -92,15 +95,13 @@ private fun ImportView(m: ReviewModel, modifier: Modifier) {
         OutlinedTextField(
             value = m.pgn, onValueChange = { m.pgn = it }, label = { Text("PGN") },
             modifier = Modifier.fillMaxWidth().height(200.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Crabs.Green),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Crabs.Coral),
         )
         Spacer(Modifier.height(10.dp))
         Text("Derinlik (yüksek = daha doğru, daha yavaş)", color = Crabs.Muted, fontSize = 13.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
             for (d in listOf(10, 12, 14, 16, 18)) {
-                Box(Modifier.clip(RoundedCornerShape(8.dp)).background(if (m.depth == d) Crabs.Green else Crabs.Card).clickable { m.depth = d }.padding(horizontal = 14.dp, vertical = 8.dp)) {
-                    Text("$d", fontWeight = FontWeight.Bold)
-                }
+                dev.chesscrab.app.ui.components.Pill("$d", m.depth == d, mono = true) { m.depth = d }
             }
         }
         m.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -126,8 +127,11 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
     val myAcc = mine.optDouble("accuracy", 0.0)
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Oyun İncelemesi", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-            Text("Yeni", color = Crabs.Muted, modifier = Modifier.clickable { m.reset() }.padding(8.dp))
+            Column(Modifier.weight(1f)) {
+                dev.chesscrab.app.ui.components.Overline("Oyun incelemesi")
+                Text("${m.tag("White") ?: "Beyaz"} – ${m.tag("Black") ?: "Siyah"}", style = MaterialTheme.typography.headlineSmall, maxLines = 2)
+            }
+            Text("yeni", color = Crabs.Muted, fontFamily = Display, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 17.sp, modifier = Modifier.clickable { m.reset() }.padding(8.dp))
         }
         Spacer(Modifier.height(10.dp))
         CoachBubble(summaryLine(myAcc, bad), title = "Koç")
@@ -138,16 +142,22 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
                 val s = r.getJSONObject(if (white) "white" else "black")
                 val acc = s.optDouble("accuracy", Double.NaN)
                 Column(
-                    Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(Crabs.Card).padding(12.dp),
+                    Modifier.weight(1f).clip(RoundedCornerShape(22.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(22.dp)).padding(vertical = 16.dp, horizontal = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(m.tag(if (white) "White" else "Black") ?: if (white) "Beyaz" else "Siyah", fontWeight = FontWeight.SemiBold, maxLines = 1, fontSize = 13.sp)
-                    Spacer(Modifier.height(6.dp))
-                    Box(Modifier.clip(RoundedCornerShape(8.dp)).background(if (white) Color.White else Color(0xFF1E1D1B)).padding(horizontal = 16.dp, vertical = 6.dp)) {
-                        Text(if (acc.isNaN()) "-" else CountUp(acc.toFloat()), fontSize = 28.sp, fontWeight = FontWeight.Black, color = if (white) Color(0xFF302E2B) else Color.White)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (white) Crabs.Sand else Color(0xFF05090C)).border(1.dp, Crabs.Faint, androidx.compose.foundation.shape.CircleShape))
+                        Spacer(Modifier.width(6.dp))
+                        Text(m.tag(if (white) "White" else "Black") ?: if (white) "Beyaz" else "Siyah", fontWeight = FontWeight.SemiBold, maxLines = 1, fontSize = 13.sp)
                     }
-                    Text("Doğruluk", color = Crabs.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
-                    if (!s.isNull("estimated_elo")) Text("~${s.getInt("estimated_elo")} performans", color = Crabs.Faint, fontSize = 11.sp)
+                    Spacer(Modifier.height(10.dp))
+                    Box(contentAlignment = Alignment.Center) {
+                        dev.chesscrab.app.ui.components.ProgressRing(if (acc.isNaN()) 0f else acc.toFloat() / 100f, 96.dp, if (white) Crabs.Sand else Crabs.Coral)
+                        Text(if (acc.isNaN()) "–" else CountUp(acc.toFloat()), fontSize = 30.sp, fontFamily = Display)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    dev.chesscrab.app.ui.components.Overline("doğruluk")
+                    if (!s.isNull("estimated_elo")) Text("~${s.getInt("estimated_elo")} performans", color = Crabs.Faint, fontSize = 11.sp, fontFamily = dev.chesscrab.app.ui.Mono)
                 }
             }
         }
@@ -156,17 +166,18 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
         EvalGraph(wins, moves.map { it.getString("class") }, selected = null, height = 100.dp) { p -> m.phase = Phase.Steps; m.go(p) }
         Spacer(Modifier.height(14.dp))
         // sınıf tablosu
-        Column(Modifier.clip(RoundedCornerShape(12.dp)).background(Crabs.Card).padding(vertical = 6.dp)) {
-            for (c in CLASS_ORDER) {
+        Column(Modifier.clip(RoundedCornerShape(22.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(22.dp)).padding(vertical = 8.dp)) {
+            for ((ci, c) in CLASS_ORDER.withIndex()) {
+                if (ci > 0) Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(1.dp).background(Crabs.Line))
                 val info = CLASS_INFO.getValue(c)
                 val w = moves.count { it.getBoolean("white") && it.getString("class") == c }
                 val b = moves.count { !it.getBoolean("white") && it.getString("class") == c }
-                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("$w", color = info.color, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("$w", color = if (w > 0) info.color else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp))
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                         ClassBadge(c, 20.dp); Spacer(Modifier.width(6.dp)); Text(info.label, fontSize = 14.sp)
                     }
-                    Text("$b", color = info.color, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                    Text("$b", color = if (b > 0) info.color else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
                 }
             }
         }
@@ -175,7 +186,7 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
         BigButton("İncelemeye başla") { m.phase = Phase.Steps; m.go(1) }
         if (bad > 0) {
             Spacer(Modifier.height(8.dp))
-            BigButton("Hatalarından öğren ($bad)", color = Crabs.Orange) { m.learnFromMistakes(myWhite) }
+            BigButton("Hatalarından öğren ($bad)", color = Crabs.Sea) { m.learnFromMistakes(myWhite) }
         }
         Spacer(Modifier.height(8.dp))
         Text("${r.getString("engine")} · ${r.getLong("total_nodes") / 1_000_000}M düğüm · ${r.getLong("time_ms")} ms · cihazında", color = Crabs.Faint, fontSize = 11.sp)
@@ -196,11 +207,10 @@ private fun StepsView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("← Özet", color = Crabs.Muted, modifier = Modifier.clickable { m.phase = Phase.Summary; m.closeRetry(); m.closeExplore() }.padding(6.dp))
+            Text("← özet", color = Crabs.Sand, fontFamily = Display, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 18.sp, modifier = Modifier.clickable { m.phase = Phase.Summary; m.closeRetry(); m.closeExplore() }.padding(6.dp))
             Spacer(Modifier.weight(1f))
-            Text(
-                when { retry != null -> "Daha iyisini dene"; explore != null -> "Keşif"; else -> "Hamle $ply / ${moves.size}" },
-                color = Crabs.Muted, fontSize = 13.sp,
+            dev.chesscrab.app.ui.components.Overline(
+                when { retry != null -> "Daha iyisini dene"; explore != null -> "Keşif modu"; else -> "Hamle $ply / ${moves.size}" },
             )
         }
         // tahta
@@ -263,7 +273,7 @@ private fun StepsView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
                             cls = cls,
                             title = "${mv.getInt("move_number")}${if (mv.getBoolean("white")) "." else "..."} ${mv.getString("san")} · ${CLASS_INFO[cls]?.label ?: ""}",
                         ) {
-                            Text("Değerlendirme ${scoreLabel(ev.getInt("cp"))} · doğruluk %${mv.getDouble("accuracy").toInt()}", color = Color(0xFF6B6863), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                            Text("Değerlendirme ${scoreLabel(ev.getInt("cp"))} · doğruluk %${mv.getDouble("accuracy").toInt()}", color = Crabs.Faint, fontSize = 11.5.sp, fontFamily = dev.chesscrab.app.ui.Mono, modifier = Modifier.padding(top = 6.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 8.dp)) {
                                 if (cls in ReviewModel.BAD) LinkText("Daha iyisini dene") { m.startRetry() }
                                 val line = mv.optJSONArray("best_line")?.strings().orEmpty()
@@ -301,7 +311,7 @@ private fun whiteCp(score: JSONObject, whiteToMove: Boolean): Int {
 private fun ExplorePanel(m: ReviewModel) {
     val lines = m.exploreLines
     val turnWhite = m.exploreView?.turnWhite ?: true
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Crabs.Card).padding(12.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).padding(14.dp)) {
         Text(if (m.playingLine) "En iyi devam oynanıyor…" else "Keşif: istediğin hamleyi oyna, CrabFish anında değerlendirsin.", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         Spacer(Modifier.height(8.dp))
         if (lines == null) Text("Hesaplanıyor…", color = Crabs.Muted, fontSize = 13.sp)
@@ -309,11 +319,11 @@ private fun ExplorePanel(m: ReviewModel) {
             for (l in lines.getJSONArray("lines").objects()) {
                 val cp = whiteCp(l.getJSONObject("score"), turnWhite)
                 Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.width(54.dp).clip(RoundedCornerShape(4.dp)).background(if (cp >= 0) Color.White else Color(0xFF1E1D1B)).padding(vertical = 2.dp), contentAlignment = Alignment.Center) {
-                        Text(scoreLabel(cp), color = if (cp >= 0) Color(0xFF302E2B) else Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Box(Modifier.width(54.dp).clip(RoundedCornerShape(50)).background(if (cp >= 0) Crabs.Sand else Color(0xFF05090C)).padding(vertical = 3.dp), contentAlignment = Alignment.Center) {
+                        Text(scoreLabel(cp), color = if (cp >= 0) Crabs.Ink else Crabs.Sand, fontWeight = FontWeight.Bold, fontSize = 11.5.sp, fontFamily = dev.chesscrab.app.ui.Mono)
                     }
                     Spacer(Modifier.width(8.dp))
-                    Text(l.getJSONArray("pv_san").strings().take(7).joinToString(" "), fontSize = 13.sp, maxLines = 1)
+                    Text(l.getJSONArray("pv_san").strings().take(7).joinToString(" "), fontSize = 12.5.sp, maxLines = 1, fontFamily = dev.chesscrab.app.ui.Mono)
                 }
             }
             Text("derinlik ${lines.getInt("depth")}", color = Crabs.Faint, fontSize = 11.sp)
@@ -323,14 +333,15 @@ private fun ExplorePanel(m: ReviewModel) {
 
 @Composable
 private fun LinkText(text: String, onClick: () -> Unit) {
-    Text(text, color = Crabs.GreenDark, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, modifier = Modifier.clickable(onClick = onClick))
+    Text("$text →", color = Crabs.Coral, fontWeight = FontWeight.ExtraBold, fontSize = 13.5.sp, modifier = Modifier.clip(RoundedCornerShape(50)).border(1.dp, Crabs.Coral.copy(alpha = 0.5f), RoundedCornerShape(50)).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 6.dp))
 }
 
 @Composable
 private fun NavBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, big: Boolean = false, onClick: () -> Unit) {
     Box(
-        Modifier.size(if (big) 64.dp else 48.dp, 48.dp).clip(RoundedCornerShape(8.dp)).background(if (big) Crabs.CardHi else Crabs.Card).clickable(onClick = onClick),
+        Modifier.size(if (big) 64.dp else 46.dp, 46.dp).clip(RoundedCornerShape(50)).background(if (big) Crabs.Coral else Crabs.Card)
+            .border(1.dp, if (big) Crabs.Coral else Crabs.Line, RoundedCornerShape(50)).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = Crabs.Text) }
+    ) { Icon(icon, null, tint = if (big) Crabs.Ink else Crabs.Sand) }
 }
 

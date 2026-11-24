@@ -1,5 +1,9 @@
 package dev.chesscrab.app.ui.play
 
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.Brush
+import dev.chesscrab.app.ui.Display
+import dev.chesscrab.app.ui.Mono
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -66,6 +70,7 @@ import dev.chesscrab.app.ui.board.SquareBadge
 import dev.chesscrab.app.ui.board.capturedPieces
 import dev.chesscrab.app.ui.components.BigButton
 import dev.chesscrab.app.ui.components.ClassBadge
+import dev.chesscrab.app.ui.components.Pill
 import dev.chesscrab.app.ui.components.CoachAvatar
 import dev.chesscrab.app.ui.components.CoachBubble
 import dev.chesscrab.app.ui.components.CountUp
@@ -100,7 +105,7 @@ fun PlayScreen(m: PlayModel, modifier: Modifier, onNewGame: () -> Unit, onReview
                     if (topWhite) byWhite else byBlack, if (topWhite) diff else -diff,
                     clock = if (m.timeCtl.baseMs > 0) fmtClock(m.remaining(topWhite)) else null,
                     clockActive = m.started && !v.over && v.turnWhite == topWhite, thinking = m.thinking)
-                else PlayerBar(me, "", me.first().uppercase(), Crabs.Green, if (topWhite) byWhite else byBlack, if (topWhite) diff else -diff,
+                else PlayerBar(me, "", me.first().uppercase(), Crabs.Coral, if (topWhite) byWhite else byBlack, if (topWhite) diff else -diff,
                     clock = if (m.timeCtl.baseMs > 0) fmtClock(m.remaining(topWhite)) else null, clockActive = m.started && !v.over && v.turnWhite == topWhite)
             }
             BoardWithEvalBar(m.coachOn, m.whiteCp, m.whiteBottom) { boardMod ->
@@ -123,7 +128,7 @@ fun PlayScreen(m: PlayModel, modifier: Modifier, onNewGame: () -> Unit, onReview
             tick.let {
                 if (botBottom) PlayerBar(m.bot.name, "(${m.bot.elo})", m.bot.emoji, m.bot.color, if (bottomWhite) byWhite else byBlack, if (bottomWhite) diff else -diff,
                     clock = if (m.timeCtl.baseMs > 0) fmtClock(m.remaining(bottomWhite)) else null, clockActive = m.started && !v.over && v.turnWhite == bottomWhite, thinking = m.thinking)
-                else PlayerBar(me, "", me.first().uppercase(), Crabs.Green, if (bottomWhite) byWhite else byBlack, if (bottomWhite) diff else -diff,
+                else PlayerBar(me, "", me.first().uppercase(), Crabs.Coral, if (bottomWhite) byWhite else byBlack, if (bottomWhite) diff else -diff,
                     clock = if (m.timeCtl.baseMs > 0) fmtClock(m.remaining(bottomWhite)) else null, clockActive = m.started && !v.over && v.turnWhite == bottomWhite)
             }
         }
@@ -152,7 +157,7 @@ fun PlayScreen(m: PlayModel, modifier: Modifier, onNewGame: () -> Unit, onReview
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
                 Text("Canlı koç", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 Switch(checked = m.coachOn, onCheckedChange = { m.coachOn = it; Crab.setSetting("coach", if (it) "1" else "0") },
-                    colors = SwitchDefaults.colors(checkedTrackColor = Crabs.Green))
+                    colors = SwitchDefaults.colors(checkedTrackColor = Crabs.Coral, checkedThumbColor = Crabs.Ink, uncheckedTrackColor = Crabs.Card))
             }
             v.opening?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Crabs.Muted) }
             Spacer(Modifier.height(16.dp))
@@ -176,27 +181,28 @@ fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)
     }
     androidx.compose.foundation.lazy.LazyRow(
         state = state,
-        modifier = Modifier.fillMaxWidth().background(Crabs.Surface).padding(horizontal = 8.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (sans.isEmpty()) item { Text("Hamleler burada görünecek", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(4.dp)) }
         items((sans.size + 1) / 2) { pair ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${pair + 1}.", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(start = 6.dp, end = 2.dp))
+                Text("${pair + 1}", color = Crabs.Faint, fontSize = 11.sp, fontFamily = Mono, modifier = Modifier.padding(start = 8.dp, end = 3.dp))
                 for (ply in listOf(pair * 2 + 1, pair * 2 + 2)) {
                     if (ply > sans.size) continue
                     val sel = ply == target
                     Row(
-                        Modifier.clip(RoundedCornerShape(4.dp)).background(if (sel) Color(0xFF4B4844) else Color.Transparent)
+                        Modifier.clip(RoundedCornerShape(50)).background(if (sel) Crabs.CardHi else Color.Transparent)
+                            .border(1.dp, if (sel) Crabs.Coral else Color.Transparent, RoundedCornerShape(50))
                             .then(if (onClick != null) Modifier.clickable { onClick(ply) } else Modifier)
-                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val cls = classOf(ply)
                         if (cls != null && cls in setOf("brilliant", "great", "best", "inaccuracy", "mistake", "miss", "blunder", "book")) {
-                            ClassBadge(cls, 15.dp); Spacer(Modifier.width(3.dp))
+                            ClassBadge(cls, 14.dp); Spacer(Modifier.width(4.dp))
                         }
-                        Text(sans[ply - 1], fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium, fontSize = 14.sp)
+                        Text(sans[ply - 1], fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.5.sp, fontFamily = Mono, color = if (sel) Crabs.Text else Crabs.Muted)
                     }
                 }
             }
@@ -207,10 +213,13 @@ fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)
 @Composable
 fun ActionIcon(icon: ImageVector, label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(8.dp)).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        Modifier.clip(RoundedCornerShape(14.dp)).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, label, tint = if (enabled) Crabs.Text else Crabs.Faint)
+        Box(Modifier.size(44.dp).clip(CircleShape).background(Crabs.Card).border(1.dp, Crabs.Line, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, label, tint = if (enabled) Crabs.Sand else Crabs.Faint, modifier = Modifier.size(21.dp))
+        }
+        Spacer(Modifier.height(4.dp))
         Text(label, fontSize = 11.sp, color = if (enabled) Crabs.Muted else Crabs.Faint)
     }
 }
@@ -222,9 +231,10 @@ private fun GameOverDialog(m: PlayModel, onDismiss: () -> Unit, onNew: () -> Uni
         LaunchedEffect(Unit) { shown = true }
         val sc by animateFloatAsState(if (shown) 1f else 0.85f, label = "pop")
         Column(
-            Modifier.scale(sc).clip(RoundedCornerShape(16.dp)).background(Crabs.Surface).padding(20.dp),
+            Modifier.scale(sc).clip(RoundedCornerShape(28.dp)).background(Crabs.Surface).border(1.dp, Crabs.Line, RoundedCornerShape(28.dp)).padding(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            dev.chesscrab.app.ui.components.Overline("Oyun bitti")
             Text(m.resultText, style = MaterialTheme.typography.headlineMedium)
             Text(m.view.termination ?: "", color = Crabs.Muted)
             Spacer(Modifier.height(14.dp))
@@ -240,7 +250,7 @@ private fun GameOverDialog(m: PlayModel, onDismiss: () -> Unit, onNew: () -> Uni
                 val acc = r.getJSONObject(myKey).optDouble("accuracy", Double.NaN)
                 if (!acc.isNaN()) {
                     Text("Doğruluğun", color = Crabs.Muted)
-                    Text("%" + CountUp(acc.toFloat()), fontSize = 40.sp, fontWeight = FontWeight.Black, color = Crabs.Green)
+                    Text(CountUp(acc.toFloat()), fontSize = 56.sp, fontFamily = Display, color = Crabs.Coral)
                 }
             } else {
                 Text("Koç oyunu inceliyor…", color = Crabs.Muted)
@@ -253,7 +263,7 @@ private fun GameOverDialog(m: PlayModel, onDismiss: () -> Unit, onNew: () -> Uni
     }
 }
 
-/** Bot seçimi (chess.com "Botlarla oyna" ekranı gibi) */
+/** Rakip seçimi: deniz canlıları */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BotSelectScreen(m: PlayModel, modifier: Modifier, onStart: () -> Unit, onBack: () -> Unit) {
@@ -262,22 +272,34 @@ fun BotSelectScreen(m: PlayModel, modifier: Modifier, onStart: () -> Unit, onBac
     var tc by remember { mutableStateOf(m.timeCtl) }
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Botlarla oyna", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+            Column(Modifier.weight(1f)) {
+                dev.chesscrab.app.ui.components.Overline("Yeni oyun")
+                Text("Rakibini seç", style = MaterialTheme.typography.headlineMedium)
+            }
             Text("Kapat", color = Crabs.Muted, modifier = Modifier.clickable(onClick = onBack).padding(8.dp))
         }
         Spacer(Modifier.height(12.dp))
         // seçili bot kartı
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Crabs.Card).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(84.dp).clip(RoundedCornerShape(12.dp)).background(bot.color), contentAlignment = Alignment.Center) {
-                Text(bot.emoji, fontSize = 46.sp)
-            }
-            Spacer(Modifier.width(14.dp))
-            Column {
-                Text(bot.name, style = MaterialTheme.typography.titleLarge)
-                Text("${bot.elo} · Seviye ${bot.level}", color = Crabs.Muted)
-                Spacer(Modifier.height(6.dp))
-                Box(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 10.dp, vertical = 6.dp)) {
-                    Text("“${bot.blurb}”", color = Color(0xFF302E2B), fontSize = 13.sp)
+        androidx.compose.animation.AnimatedContent(bot, label = "bot", transitionSpec = {
+            androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) togetherWith androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(120))
+        }) { b ->
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
+                    .background(Brush.linearGradient(listOf(b.color.copy(alpha = 0.28f), Crabs.Card, Crabs.Card)))
+                    .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)).padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier.size(86.dp).clip(CircleShape).background(Brush.radialGradient(listOf(b.color.copy(alpha = 0.45f), b.color.copy(alpha = 0.08f))))
+                        .border(2.dp, b.color, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) { Text(b.emoji, fontSize = 44.sp) }
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(b.name, style = MaterialTheme.typography.titleLarge)
+                    Text("${b.elo} · seviye ${b.level}", color = b.color, fontFamily = Mono, fontSize = 12.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text("“${b.blurb}”", fontFamily = Display, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 16.sp, color = Crabs.Sand, lineHeight = 20.sp)
                 }
             }
         }
@@ -285,25 +307,27 @@ fun BotSelectScreen(m: PlayModel, modifier: Modifier, onStart: () -> Unit, onBac
         FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (b in BOTS) {
                 val sel = b == bot
+                val sc by animateFloatAsState(if (sel) 1.08f else 1f, label = "botsc")
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable { bot = b }) {
                     Box(
-                        Modifier.size(64.dp).clip(RoundedCornerShape(10.dp)).background(b.color)
-                            .border(if (sel) 3.dp else 0.dp, if (sel) Crabs.Green else Color.Transparent, RoundedCornerShape(10.dp)),
+                        Modifier.scale(sc).size(60.dp).clip(CircleShape).background(if (sel) b.color.copy(alpha = 0.3f) else Crabs.Card)
+                            .border(if (sel) 2.dp else 1.dp, if (sel) b.color else Crabs.Line, CircleShape),
                         contentAlignment = Alignment.Center,
-                    ) { Text(b.emoji, fontSize = 32.sp) }
-                    Text("${b.elo}", fontSize = 12.sp, color = if (sel) Crabs.Text else Crabs.Muted, fontWeight = FontWeight.Bold)
+                    ) { Text(b.emoji, fontSize = 28.sp) }
+                    Spacer(Modifier.height(4.dp))
+                    Text("${b.elo}", fontSize = 11.sp, color = if (sel) Crabs.Text else Crabs.Faint, fontFamily = Mono)
                 }
             }
         }
         Spacer(Modifier.height(18.dp))
-        Text("Rengin", style = MaterialTheme.typography.titleMedium)
+        dev.chesscrab.app.ui.components.Overline("Rengin")
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            for ((k, label, bg) in listOf(Triple("white", "Beyaz", Color.White), Triple("random", "Rastgele", Color(0xFF8B8987)), Triple("black", "Siyah", Color(0xFF1E1D1B)))) {
+            for ((k, label, bg) in listOf(Triple("white", "Beyaz", Crabs.Sand), Triple("random", "Rastgele", Crabs.Faint), Triple("black", "Siyah", Color(0xFF05090C)))) {
                 val sel = color == k
                 Box(
-                    Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(10.dp)).background(Crabs.Card)
-                        .border(2.dp, if (sel) Crabs.Green else Color.Transparent, RoundedCornerShape(10.dp)).clickable { color = k },
+                    Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(50)).background(if (sel) Crabs.CardHi else Color.Transparent)
+                        .border(1.dp, if (sel) Crabs.Coral else Crabs.Line, RoundedCornerShape(50)).clickable { color = k },
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -314,14 +338,12 @@ fun BotSelectScreen(m: PlayModel, modifier: Modifier, onStart: () -> Unit, onBac
             }
         }
         Spacer(Modifier.height(18.dp))
-        Text("Süre", style = MaterialTheme.typography.titleMedium)
+        dev.chesscrab.app.ui.components.Overline("Süre")
         Spacer(Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             for (t in TIME_CONTROLS) {
                 val sel = tc == t
-                Box(
-                    Modifier.clip(RoundedCornerShape(8.dp)).background(if (sel) Crabs.Green else Crabs.Card).clickable { tc = t }.padding(horizontal = 16.dp, vertical = 10.dp)
-                ) { Text(t.label, fontWeight = FontWeight.Bold) }
+                Pill(t.label, sel, mono = true) { tc = t }
             }
         }
         Spacer(Modifier.height(24.dp))
@@ -347,10 +369,10 @@ fun ClassChip(cls: String) {
 @Composable
 fun BoardWithEvalBar(showBar: Boolean, whiteCp: Int, whiteBottom: Boolean, board: @Composable (Modifier) -> Unit) {
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val barW = if (showBar) 22.dp else 0.dp
+        val barW = if (showBar) 21.dp else 0.dp
         val side = maxWidth - barW
         Row {
-            if (showBar) { EvalBar(whiteCp, whiteBottom, Modifier.height(side)); Spacer(Modifier.width(4.dp)) }
+            if (showBar) { EvalBar(whiteCp, whiteBottom, Modifier.height(side)); Spacer(Modifier.width(5.dp)) }
             board(Modifier.size(side))
         }
     }

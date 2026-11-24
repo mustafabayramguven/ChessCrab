@@ -1,5 +1,7 @@
 package dev.chesscrab.app.ui.review
 
+import dev.chesscrab.app.ui.Crabs
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -151,7 +153,7 @@ class ReviewModel {
             flashToken++
             if (good) {
                 Sounds.play(Sounds.S.CORRECT)
-                flash = Flash(uci.substring(2, 4), Color(0xFF81B64C), flashToken)
+                flash = Flash(uci.substring(2, 4), Crabs.Sea, flashToken)
                 retry = r.copy(shownFen = after.fen, lastMove = uci, legal = emptyList(), ok = true,
                     text = if (c.getBoolean("is_best")) "Harika! En iyi hamleyi buldun: ${after.sans.lastOrNull() ?: uci}." else "Güzel! ${after.sans.lastOrNull()} da neredeyse en iyisi kadar iyi (en iyisi ${c.optStr("best_san")}).")
             } else {

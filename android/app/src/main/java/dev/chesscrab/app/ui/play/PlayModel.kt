@@ -28,14 +28,14 @@ import java.util.UUID
 data class Bot(val level: Int, val name: String, val elo: Int, val emoji: String, val color: Color, val blurb: String)
 
 val BOTS = listOf(
-    Bot(1, "Yavru Yengeç", 400, "🦀", Color(0xFFE07B39), "Taşlar nasıl gidiyordu? Birlikte öğrenelim!"),
-    Bot(2, "Kaplumbağa Kemal", 700, "🐢", Color(0xFF6BA368), "Acelem yok… ama arada taş bırakırım."),
-    Bot(3, "Martı Mert", 1000, "🐦", Color(0xFF5B8DB8), "Açıkta kalan taşları kaparım!"),
-    Bot(4, "Ahtapot Ayla", 1300, "🐙", Color(0xFFB0558E), "Sekiz kolum var, çatallara dikkat."),
-    Bot(5, "Denizatı Deniz", 1600, "🐴", Color(0xFFD4A63A), "Açılışlarımı bilirim, orta oyunda görüşürüz."),
-    Bot(6, "Kılıçbalığı Kaan", 1900, "🐟", Color(0xFF3F9AA6), "Keskin taktikler, keskin saldırılar."),
-    Bot(7, "Köpekbalığı Selin", 2300, "🦈", Color(0xFF55606E), "Bir hata yap, gerisini ben hallederim."),
-    Bot(8, "CrabFish", 3000, "👑", Color(0xFF8A5A2B), "Tam güç. Bol şans."),
+    Bot(1, "Yavru Yengeç", 400, "🦀", Color(0xFFFF7A59), "Taşlar nasıl gidiyordu? Birlikte öğrenelim!"),
+    Bot(2, "Kaplumbağa Kemal", 700, "🐢", Color(0xFF6FB98A), "Acelem yok… ama arada taş bırakırım."),
+    Bot(3, "Martı Mert", 1000, "🐦", Color(0xFF7FB2FF), "Açıkta kalan taşları kaparım!"),
+    Bot(4, "Ahtapot Ayla", 1300, "🐙", Color(0xFFD07BB4), "Sekiz kolum var, çatallara dikkat."),
+    Bot(5, "Denizatı Deniz", 1600, "🐴", Color(0xFFF2C46D), "Açılışlarımı bilirim, orta oyunda görüşürüz."),
+    Bot(6, "Kılıçbalığı Kaan", 1900, "🐟", Color(0xFF54D1BE), "Keskin taktikler, keskin saldırılar."),
+    Bot(7, "Köpekbalığı Selin", 2300, "🦈", Color(0xFF8FA3B8), "Bir hata yap, gerisini ben hallederim."),
+    Bot(8, "CrabFish", 3000, "👑", Color(0xFFF4E8CF), "Tam güç. Bol şans."),
 )
 
 data class TimeCtl(val label: String, val baseMs: Long, val incMs: Long)

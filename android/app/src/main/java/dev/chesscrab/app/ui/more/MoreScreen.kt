@@ -64,7 +64,7 @@ import java.util.Locale
 fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onThemeChanged: () -> Unit) {
     val scope = rememberCoroutineScope()
     var refresh by remember { mutableIntStateOf(0) }
-    var theme by remember { mutableStateOf(Crab.setting("board_theme", "green")) }
+    var theme by remember { mutableStateOf(Crab.setting("board_theme", "sand")) }
     var sound by remember { mutableStateOf(Crab.setting("sound", "1") == "1") }
     var depth by remember { mutableStateOf(Crab.setting("coach_depth", "12")) }
     var server by remember { mutableStateOf(Crab.setting("server")) }
@@ -75,7 +75,8 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
     val fmt = remember { SimpleDateFormat("d MMM HH:mm", Locale.forLanguageTag("tr")) }
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        Text("Ayarlar", style = MaterialTheme.typography.headlineSmall)
+        dev.chesscrab.app.ui.components.Overline("Tercihler · kayıtlar · eşitleme")
+        Text("Ayarlar", style = MaterialTheme.typography.headlineMedium)
         SectionTitle("Tahta")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             for (t in BOARD_THEMES) {
@@ -83,23 +84,24 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
                     theme = t.id; Crab.setSetting("board_theme", t.id); dev.chesscrab.app.ui.Prefs.boardTheme = t.id; onThemeChanged()
                 }) {
-                    Box(Modifier.size(84.dp).clip(RoundedCornerShape(6.dp)).border(3.dp, if (sel) Crabs.Green else Color.Transparent, RoundedCornerShape(6.dp)).padding(3.dp)) {
+                    Box(Modifier.size(84.dp).clip(RoundedCornerShape(14.dp)).border(2.dp, if (sel) Crabs.Coral else Crabs.Line, RoundedCornerShape(14.dp)).padding(4.dp)) {
                         ChessBoard("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", true, emptyList(), theme = t, coordinates = false)
                     }
-                    Text(t.name, fontSize = 12.sp, color = if (sel) Crabs.Text else Crabs.Muted)
+                    Spacer(Modifier.height(4.dp))
+                    Text(t.name, fontSize = 12.sp, color = if (sel) Crabs.Text else Crabs.Muted, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
                 }
             }
         }
         Spacer(Modifier.height(8.dp))
         ToggleRow("Sesler", "Hamle, alım ve şah sesleri", sound) { sound = it; Crab.setSetting("sound", if (it) "1" else "0") }
         Spacer(Modifier.height(6.dp))
-        Text("Koç derinliği", fontWeight = FontWeight.SemiBold)
+        Text("Koç derinliği", fontWeight = FontWeight.Bold)
         Text("Canlı koçun her hamlede ne kadar derin bakacağı (yüksek = daha doğru, daha çok pil)", color = Crabs.Muted, fontSize = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
             for (d in listOf("10", "12", "14", "16")) {
-                Box(Modifier.clip(RoundedCornerShape(8.dp)).background(if (depth == d) Crabs.Green else Crabs.Card).clickable {
+                dev.chesscrab.app.ui.components.Pill(d, depth == d, mono = true) {
                     depth = d; Crab.setSetting("coach_depth", d); Crab.coach.setDepth(d.toUInt())
-                }.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(d, fontWeight = FontWeight.Bold) }
+                }
             }
         }
 
@@ -109,7 +111,7 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
         for (g in games.take(60)) {
             val d = g.getJSONObject("data")
             Row(
-                Modifier.fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(8.dp)).background(Crabs.Surface)
+                Modifier.fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(14.dp)).background(Crabs.Card)
                     .clickable { onOpenGame(d.getString("pgn"), g.getString("id")) }.padding(start = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -125,10 +127,10 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
         SectionTitle("Senkronizasyon")
         Text("Kendi ChessCrab sunucunla cihazların arasında oyunlar, ders ilerlemesi ve repertuvar tekrarları eşitlenir. Uygulama sunucusuz da tamamen çalışır.", color = Crabs.Muted, fontSize = 12.sp)
         Spacer(Modifier.height(8.dp))
-        val tf = OutlinedTextFieldDefaults.colors(focusedBorderColor = Crabs.Green)
+        val tf = OutlinedTextFieldDefaults.colors(focusedBorderColor = Crabs.Coral, unfocusedBorderColor = Crabs.Line.copy(alpha = 0.25f), focusedLabelColor = Crabs.Coral)
         refresh.let {
             if (SyncClient.loggedIn) {
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Crabs.Card).padding(14.dp)) {
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(20.dp)).padding(16.dp)) {
                     Text("${SyncClient.username} @ ${SyncClient.server}", fontWeight = FontWeight.SemiBold)
                     val last = Crab.setting("last_sync").toLongOrNull()
                     Text("Son: ${last?.let { fmt.format(Date(it)) } ?: "hiç"} · bekleyen ${Crab.store.pendingCount()}", color = Crabs.Muted, fontSize = 12.sp)
@@ -163,6 +165,7 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
         Spacer(Modifier.height(24.dp))
         Text(crabVersion(), color = Crabs.Faint, fontSize = 11.sp)
         Text("Taşlar: cburnett (Colin M.L. Burnett, GPLv2+)", color = Crabs.Faint, fontSize = 11.sp)
+        Text("Yazı tipleri: DM Serif Display, Manrope, JetBrains Mono (SIL OFL 1.1)", color = Crabs.Faint, fontSize = 11.sp)
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -174,7 +177,7 @@ private fun ToggleRow(title: String, sub: String, value: Boolean, onChange: (Boo
             Text(title, fontWeight = FontWeight.SemiBold)
             Text(sub, color = Crabs.Muted, fontSize = 12.sp)
         }
-        Switch(value, onChange, colors = SwitchDefaults.colors(checkedTrackColor = Crabs.Green))
+        Switch(value, onChange, colors = SwitchDefaults.colors(checkedTrackColor = Crabs.Coral, checkedThumbColor = Crabs.Ink, uncheckedTrackColor = Crabs.Card, uncheckedBorderColor = Crabs.Line))
     }
 }
 

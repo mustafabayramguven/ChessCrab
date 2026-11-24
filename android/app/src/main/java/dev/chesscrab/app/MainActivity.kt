@@ -14,6 +14,15 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,7 +69,7 @@ import dev.chesscrab.app.ui.review.ReviewModel
 import dev.chesscrab.app.ui.review.ReviewScreen
 
 enum class Tab(val label: String, val icon: ImageVector) {
-    Home("Ana Sayfa", Icons.Filled.Home),
+    Home("Liman", Icons.Filled.Home),
     Play("Oyna", Icons.Filled.SportsEsports),
     Learn("Öğren", Icons.AutoMirrored.Filled.MenuBook),
     More("Daha", Icons.Filled.MoreHoriz),
@@ -113,13 +122,7 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
     Scaffold(
         containerColor = Crabs.Bg,
         bottomBar = {
-            if (route == null) NavigationBar(containerColor = Crabs.Surface) {
-                for (t in Tab.entries) NavigationBarItem(
-                    selected = tab == t, onClick = { tab = t },
-                    icon = { Icon(t.icon, contentDescription = t.label) }, label = { Text(t.label) },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.White, indicatorColor = Crabs.GreenDark, selectedTextColor = Color.White, unselectedIconColor = Crabs.Muted, unselectedTextColor = Crabs.Muted),
-                )
-            }
+            if (route == null) FloatingNav(tab) { tab = it }
         },
     ) { pad ->
         val m = Modifier.padding(pad).fillMaxSize()
@@ -146,13 +149,17 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
                 )
                 Tab.Play -> PlayScreen(play, m, onNewGame = { route = Route.BotSelect }, onReview = { pgn, json, id -> openReview(pgn, json, id) })
                 Tab.Learn -> Column(m) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp).clip(RoundedCornerShape(10.dp)).background(Crabs.Card)) {
-                        listOf("Dersler", "Repertuvar", "Bulmaca").forEachIndexed { i, l ->
-                            Box(
-                                Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (learnTab == i) Crabs.GreenDark else Color.Transparent)
-                                    .clickable { if (i == 2) route = Route.Puzzle else learnTab = i }.padding(vertical = 10.dp),
-                                contentAlignment = androidx.compose.ui.Alignment.Center,
-                            ) { Text(l, fontWeight = FontWeight.Bold) }
+                    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp)) {
+                        dev.chesscrab.app.ui.components.Overline("Öğren · çevrimdışı kurslar")
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                            listOf("Dersler", "Repertuvar", "Bulmaca").forEachIndexed { i, l ->
+                                val sel = learnTab == i
+                                Column(Modifier.clickable { if (i == 2) route = Route.Puzzle else learnTab = i }) {
+                                    Text(l, fontFamily = dev.chesscrab.app.ui.Display, fontSize = 26.sp, color = if (sel) Crabs.Text else Crabs.Faint)
+                                    Box(Modifier.padding(top = 2.dp).height(3.dp).width(if (sel) 28.dp else 0.dp).clip(RoundedCornerShape(2.dp)).background(Crabs.Coral))
+                                }
+                            }
                         }
                     }
                     if (learnTab == 0) LessonsList(Modifier.weight(1f)) { route = Route.Lesson(it) }
@@ -160,6 +167,29 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
                 }
                 Tab.More -> MoreScreen(m, onOpenGame = { pgn, id -> openReview(pgn, null, id) }, onThemeChanged = {})
                 else -> Unit
+            }
+        }
+    }
+}
+
+/** Yüzen alt menü: seçili sekme mercan bir hapa genişler. */
+@Composable
+private fun FloatingNav(tab: Tab, onSelect: (Tab) -> Unit) {
+    Box(Modifier.fillMaxWidth().background(Crabs.Bg).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(28.dp)).padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            for (t in Tab.entries) {
+                val sel = t == tab
+                Row(
+                    Modifier.clip(RoundedCornerShape(22.dp)).background(if (sel) Crabs.Coral else Color.Transparent)
+                        .clickable { onSelect(t) }.animateContentSize().padding(horizontal = if (sel) 16.dp else 14.dp, vertical = 11.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Icon(t.icon, contentDescription = t.label, tint = if (sel) Crabs.Ink else Crabs.Muted, modifier = Modifier.size(22.dp))
+                    if (sel) { Spacer(Modifier.width(8.dp)); Text(t.label, color = Crabs.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp) }
+                }
             }
         }
     }
