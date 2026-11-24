@@ -294,7 +294,7 @@ class PlayModel {
                 reviews.add(o.getJSONObject("move")); wins.add(winPercent(o.getInt("white_cp")))
                 whiteCp = o.getInt("white_cp")
             }
-            reviews.lastOrNull { it.getBoolean("white") }?.let { say = CoachSay(it.getString("comment"), cls = it.getString("class")) }
+            reviews.lastOrNull { it?.optBoolean("white") == true }?.let { say = CoachSay(it.getString("comment"), cls = it.getString("class")) }
         }
     }
 }
