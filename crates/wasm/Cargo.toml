@@ -1,0 +1,21 @@
+[package]
+name = "chesscrab-wasm"
+description = "Tarayıcı için ChessCrab: motor, analiz ve dersler WebAssembly olarak yerelde"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+chesscrab-core.workspace = true
+chesscrab-engine.workspace = true
+chesscrab-analysis.workspace = true
+chesscrab-lessons.workspace = true
+shakmaty.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+# wasm-bindgen-cli sürümüyle birebir aynı olmalı (Dockerfile ve CI)
+wasm-bindgen = "=0.2.130"
+console_error_panic_hook = "0.1.7"

@@ -12,7 +12,5 @@ services:
     environment:
       # İlk kullanıcıdan sonra kayıt kapalı; açmak için 1 yap
       CHESSCRAB_ALLOW_REGISTER: "0"
-      # 1 GB RAM'li sunucularda analizi tek iş parçacığıyla sınırlamak iyi olur
-      CHESSCRAB_ANALYSIS_THREADS: "2"
-      CHESSCRAB_MAX_DEPTH: "18"
-    mem_limit: 512m
+    # Sadece senkronizasyon: satranç hesabı istemcide, bu yüzden az bellek yeter
+    mem_limit: 128m

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ChessCrab</title>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
 <style>
 :root {
@@ -110,7 +111,7 @@ tr.click { cursor: pointer; } tr.click:hover { background: var(--panel2); }
     <button data-v="games">Oyunlarım</button>
     <button data-v="account">Hesap</button>
   </nav>
-  <div id="who"></div>
+  <div id="who"></div><div id="ver" class="small muted"></div>
 </header>
 <main>
 
@@ -157,7 +158,6 @@ tr.click { cursor: pointer; } tr.click:hover { background: var(--panel2); }
         <textarea id="an-pgn" placeholder="PGN buraya (lichess / chess.com dışa aktarımı olur)"></textarea>
         <div class="row">
           <label>Derinlik <select id="an-depth"><option>10</option><option selected>12</option><option>14</option><option>16</option></select></label>
-          <label id="an-engine-wrap" style="display:none">Motor <select id="an-engine"><option value="crabfish">CrabFish</option><option value="stockfish">Stockfish</option></select></label>
           <button class="btn primary" id="an-run">Analiz et</button>
           <span class="small muted" id="an-info"></span>
         </div>
@@ -222,7 +222,7 @@ tr.click { cursor: pointer; } tr.click:hover { background: var(--panel2); }
     <div id="acc-in">
       <div class="row"><input id="acc-user" placeholder="kullanıcı adı"><input id="acc-pass" type="password" placeholder="şifre"></div>
       <div class="row"><button class="btn primary" id="acc-login">Giriş</button><button class="btn" id="acc-register">Kayıt ol</button></div>
-      <p class="small muted">İlk kayıt olan kullanıcı sunucunun sahibidir. Sonraki kayıtlar CHESSCRAB_ALLOW_REGISTER=1 ile açılır.</p>
+      <p class="small muted">Giriş yapmadan da her şey çalışır: motor, analiz ve dersler bu cihazda (WebAssembly). Sunucu sadece oyunlarını, ders ilerlemeni ve repertuvar tekrarlarını cihazların arasında eşitler. İlk kayıt olan kullanıcı sunucunun sahibidir.</p>
     </div>
     <div id="acc-out" style="display:none">
       <p>Giriş yapıldı: <b id="acc-name"></b></p>
@@ -234,8 +234,9 @@ tr.click { cursor: pointer; } tr.click:hover { background: var(--panel2); }
 </main>
 <div class="toast" id="toast"></div>
 
-<script>
-"use strict";
+<script type="module">
+import init, * as crab from "./pkg/chesscrab_wasm.js";
+await init();
 // ---------- yardımcılar ----------
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -264,6 +265,36 @@ function fmtScore(s) {
   if (!s) return "";
   if (s.type === "mate") return s.value === 0 ? "#" : (s.value > 0 ? "M" + s.value : "-M" + (-s.value));
   return (s.value >= 0 ? "+" : "") + (s.value / 100).toFixed(2);
+}
+
+// ---------- yerel Rust (WASM) çekirdeği ----------
+// Motor ve analiz Web Worker'larda; oyun kuralları ve dersler doğrudan burada.
+function gameState(moves, startFen) {
+  const g = crab.CrabGame.from_moves(startFen ?? undefined, JSON.stringify(moves));
+  try { return JSON.parse(g.state()); } finally { g.free(); }
+}
+class WorkerRpc {
+  constructor() { this.w = new Worker("./worker.js", { type: "module" }); this.n = 0; this.pending = new Map(); this.w.onmessage = e => this.onmsg(e.data); }
+  onmsg(m) { const p = this.pending.get(m.id); if (!p) return; if (m.progress) { p.onProgress?.(m.progress); return; } this.pending.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(m.result); }
+  call(op, args, onProgress) { const id = ++this.n; return new Promise((resolve, reject) => { this.pending.set(id, { resolve, reject, onProgress }); this.w.postMessage({ id, op, args }); }); }
+  terminate() { this.w.terminate(); }
+}
+const engineWorker = new WorkerRpc();
+const CORES = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1));
+let analysisPool = [];
+function pool() { while (analysisPool.length < CORES) analysisPool.push(new WorkerRpc()); return analysisPool; }
+/** Oyunu tüm çekirdeklere bölerek analiz et (go brr). */
+async function analyzeLocal(pgn, depth, onProgress) {
+  const g = crab.CrabGame.from_pgn(pgn); const n = g.ply() + 1; g.free();
+  if (n < 2) throw new Error("analiz edilecek hamle yok");
+  const t0 = performance.now(); const ws = pool(); const k = Math.min(ws.length, n); const chunk = Math.ceil(n / k);
+  let done = 0;
+  const parts = await Promise.all(ws.slice(0, k).map((w, i) => {
+    const start = i * chunk, end = Math.min(n, start + chunk);
+    return start >= end ? Promise.resolve([]) : w.call("analyze_range", { pgn, depth, start, end }, () => onProgress?.(++done, n));
+  }));
+  const evals = parts.flat();
+  return JSON.parse(crab.build_game_analysis(pgn, JSON.stringify(evals), performance.now() - t0));
 }
 
 // ---------- taş çizimleri (basit, özgün SVG) ----------
@@ -408,7 +439,7 @@ function show(v) {
 const play = { moves: [], game: null, engineColor: "black", busy: false, clock: null, timer: null, startFen: null, saved: false };
 const playBoard = new Board($("#play-board"), { onMove: u => playMove(u) });
 async function refreshPlay() {
-  const g = await api("/api/game", { moves: play.moves, start_fen: play.startFen });
+  const g = gameState(play.moves, play.startFen);
   play.game = g;
   const myTurn = g.turn !== play.engineColor && g.status.state === "ongoing";
   playBoard.set({ fen: g.fen, legal: myTurn && !play.busy ? g.legal : [], last: g.ucis[g.ucis.length - 1] || null, check: g.check, orientation: playBoard.orientation });
@@ -430,15 +461,15 @@ async function engineTurn() {
   play.busy = true; await refreshPlay();
   try {
     const movetime = play.clock ? Math.min(3000, Math.max(200, play.clock[play.engineColor] / 30)) : undefined;
-    const r = await api("/api/engine/move", { moves: play.moves, start_fen: play.startFen, level: +$("#play-level").value, movetime_ms: movetime });
-    clockMove(); play.moves.push(r.move.uci);
+    const mv = await engineWorker.call("best_move", { moves: play.moves, start_fen: play.startFen, level: +$("#play-level").value, movetime: movetime ? Math.round(movetime) : null });
+    if (mv) { clockMove(); play.moves.push(mv.uci); }
   } catch (e) { toast(e.message); }
   play.busy = false; await refreshPlay();
 }
 function newGame() {
   let color = $("#play-color").value; if (color === "random") color = Math.random() < .5 ? "white" : "black";
   play.moves = []; play.engineColor = color === "white" ? "black" : "white"; play.startFen = null; play.saved = false; play.id = uuid();
-  playBoard.orientation = color; stopClock();
+  playBoard.orientation = color; stopClock(); engineWorker.call("new_game", {}).catch(() => {});
   const tc = $("#play-time").value;
   if (tc) { const [m, inc] = tc.split(",").map(Number); play.clock = { white: m * 60000, black: m * 60000, inc: inc * 1000, turnStart: Date.now() }; play.tc = tc; $("#play-clocks").style.display = "flex"; play.timer = setInterval(tickClock, 200); }
   else { play.clock = null; play.tc = null; $("#play-clocks").style.display = "none"; }
@@ -502,8 +533,8 @@ async function runAnalysis() {
   $("#an-run").disabled = true; $("#an-info").textContent = "Analiz ediliyor…";
   try {
     const t0 = performance.now();
-    an.data = await api("/api/analyze", { pgn, depth: +$("#an-depth").value, engine: $("#an-engine").value });
-    $("#an-info").textContent = `${(performance.now() - t0 | 0)} ms · ${an.data.engine} · ${(an.data.total_nodes / 1e6).toFixed(1)}M düğüm`;
+    an.data = await analyzeLocal(pgn, +$("#an-depth").value, (d, n) => { $("#an-info").textContent = `Analiz ediliyor… ${d}/${n} (${CORES} çekirdek)`; });
+    $("#an-info").textContent = `${(performance.now() - t0 | 0)} ms · ${CORES} çekirdek · ${(an.data.total_nodes / 1e6).toFixed(1)}M düğüm · cihazında`;
     renderAnalysis(); gotoPly(0);
   } catch (e) { $("#an-info").textContent = ""; toast(e.message); }
   $("#an-run").disabled = false;
@@ -554,7 +585,7 @@ const ls = { sid: null, view: null, lessonId: null };
 const lsBoard = new Board($("#ls-board"), { onMove: u => lessonAct({ action: "move", move: u }) });
 function progressOf(id) { return sync.get("lesson_progress", id); }
 views.lessons = async () => {
-  if (!courses) courses = await api("/api/courses");
+  if (!courses) courses = JSON.parse(crab.courses_json());
   $("#lesson-player").style.display = "none"; $("#course-list").style.display = "block";
   $("#course-list").innerHTML = courses.map(c => {
     const all = c.chapters.flatMap(ch => ch.lessons), done = all.filter(l => progressOf(l.id)?.completed).length;
@@ -566,16 +597,23 @@ views.lessons = async () => {
   $$(".lesson").forEach(el => el.onclick = () => startLesson(el.dataset.id));
 };
 async function startLesson(id) {
-  const r = await api(`/api/lessons/${id}/session`, {});
-  ls.sid = r.sid; ls.lessonId = id;
+  ls.session?.free(); ls.session = new crab.CrabLesson(id); ls.lessonId = id;
+  const r = { view: JSON.parse(ls.session.view()) };
   const l = courses.flatMap(c => c.chapters.flatMap(ch => ch.lessons)).find(x => x.id === id);
   $("#ls-title").textContent = l ? l.title : id;
   $("#course-list").style.display = "none"; $("#lesson-player").style.display = "block";
   renderLesson(r.view, null);
 }
-async function lessonAct(body) {
-  try { const r = await api(`/api/sessions/${ls.sid}`, body); renderLesson(r.view, r.result, r); }
-  catch (e) { toast(e.message); }
+function lessonAct(body) {
+  const s = ls.session; if (!s) return;
+  let result = {};
+  try {
+    if (body.action === "move") result = { feedback: JSON.parse(s.submit_move(body.move)) };
+    else if (body.action === "next") s.next();
+    else if (body.action === "answer") result = JSON.parse(s.answer(body.option));
+    else if (body.action === "hint") result = { hint: s.hint() ?? null };
+    renderLesson(JSON.parse(s.view()), result, { stars: s.stars(), done: s.is_done() });
+  } catch (e) { toast(e.message ?? String(e)); }
 }
 function renderLesson(v, result, full) {
   ls.view = v;
@@ -612,7 +650,7 @@ const dr = { sid: null, rep: null, line: 0, cardId: null };
 const drBoard = new Board($("#dr-board"), { onMove: u => drillMove(u) });
 function cardOf(id) { return sync.get("srs_cards", id); }
 views.repertoire = async () => {
-  if (!reps) reps = await api("/api/repertoires");
+  if (!reps) reps = JSON.parse(crab.repertoires_json());
   $("#rep-drill").style.display = "none"; $("#rep-list").style.display = "block";
   const now = Date.now();
   $("#rep-list").innerHTML = reps.map(r => {
@@ -628,8 +666,9 @@ views.repertoire = async () => {
   });
 };
 async function startDrill(rep, line) {
-  const r = await api("/api/drills", { repertoire: rep.id, line });
-  Object.assign(dr, { sid: r.sid, rep, line, cardId: r.card_id });
+  dr.session?.free(); const d = new crab.CrabDrill(rep.id, line);
+  const r = { view: JSON.parse(d.view()) };
+  Object.assign(dr, { session: d, rep, line, cardId: d.card_id() });
   $("#rep-list").style.display = "none"; $("#rep-drill").style.display = "block";
   $("#dr-title").textContent = rep.lines[line].name; $("#dr-sub").textContent = rep.title + " · sıra sende: repertuvar hamleni oyna";
   $("#dr-feedback").innerHTML = ""; $("#dr-nextline").style.display = "none";
@@ -637,12 +676,13 @@ async function startDrill(rep, line) {
 }
 function renderDrill(v) { drBoard.set({ fen: v.fen, orientation: v.orientation, legal: v.legal_moves, last: v.last_move, arrows: [] }); }
 async function drillMove(u) {
-  const r = await api(`/api/drills/${dr.sid}`, { move: u });
+  const r = { feedback: JSON.parse(dr.session.submit(u)), view: JSON.parse(dr.session.view()), grade: dr.session.grade() };
   renderDrill(r.view);
   if (!r.feedback.correct) { $("#dr-feedback").innerHTML = `<div class="feedback no">Repertuvardaki hamle: <b>${esc(r.feedback.expected_san)}</b>. Onu oyna.</div>`; return; }
   $("#dr-feedback").innerHTML = r.feedback.done ? "" : `<div class="feedback ok">Doğru!${r.feedback.reply_san ? " Rakip: " + esc(r.feedback.reply_san) : ""}</div>`;
   if (r.feedback.done) {
-    const card = await api("/api/srs/review", { card: cardOf(dr.cardId), card_id: dr.cardId, grade: r.grade });
+    const prev = cardOf(dr.cardId);
+    const card = JSON.parse(crab.srs_review(prev ? JSON.stringify(prev) : undefined, dr.cardId, r.grade, Date.now()));
     sync.put("srs_cards", dr.cardId, card);
     const days = Math.round((card.due_ms - Date.now()) / 864e5);
     $("#dr-feedback").innerHTML = `<div class="feedback ${r.grade === "again" ? "no" : "ok"}">Hat bitti · ${r.view.mistakes} hata · sonraki tekrar: ${days <= 0 ? "bugün" : days + " gün sonra"}${r.view.note ? "<br>" + esc(r.view.note) : ""}</div>`;
@@ -692,10 +732,11 @@ $("#acc-sync").onclick = async () => { try { const n = await sync.run(); $("#acc
 (async () => {
   renderAccount();
   try {
-    const info = await api("/api/engine");
-    $("#play-level").innerHTML = info.levels.map(l => `<option value="${l.level}" ${l.level === 4 ? "selected" : ""}>${l.level} · ${l.name} (~${l.elo})</option>`).join("");
-    if (info.stockfish) $("#an-engine-wrap").style.display = "";
-  } catch (e) { toast("Sunucuya ulaşılamadı: " + e.message); }
+    const levels = JSON.parse(crab.levels_json());
+    $("#play-level").innerHTML = levels.map(l => `<option value="${l.level}" ${l.level === 4 ? "selected" : ""}>${l.level} · ${l.name} (~${l.elo})</option>`).join("");
+    $("#ver").textContent = crab.version();
+  } catch (e) { toast("Çekirdek yüklenemedi: " + e.message); }
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
   sync.run().catch(() => {});
   newGame();
 })();

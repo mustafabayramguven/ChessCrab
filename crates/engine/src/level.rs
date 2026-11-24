@@ -12,8 +12,8 @@ impl Rng {
         Rng(seed | 1)
     }
     pub fn from_time() -> Self {
-        let t = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
+        let t = web_time::SystemTime::now()
+            .duration_since(web_time::UNIX_EPOCH)
             .map(|d| d.as_nanos() as u64)
             .unwrap_or(0x9E37_79B9_7F4A_7C15);
         Rng::new(t ^ 0x9E37_79B9_7F4A_7C15)

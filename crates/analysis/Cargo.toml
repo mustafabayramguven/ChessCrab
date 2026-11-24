@@ -11,3 +11,4 @@ chesscrab-engine.workspace = true
 shakmaty.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+web-time.workspace = true

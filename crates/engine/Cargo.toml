@@ -9,6 +9,7 @@ license.workspace = true
 chesscrab-core.workspace = true
 shakmaty.workspace = true
 serde.workspace = true
+web-time.workspace = true
 
 [[bin]]
 name = "crabfish"

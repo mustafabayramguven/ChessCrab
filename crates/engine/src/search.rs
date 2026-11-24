@@ -4,7 +4,9 @@
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+use web_time::Instant;
 
 use serde::{Deserialize, Serialize};
 use shakmaty::zobrist::Zobrist64;

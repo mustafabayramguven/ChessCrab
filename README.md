@@ -2,7 +2,9 @@
 
 Kendi sunucunda çalışan, **tamamen offline** kullanılabilen, chess.com/lichess tarzı bir satranç uygulaması. Baştan sona Rust.
 
-- **CrabFish**: kendi satranç motorumuz (Rust). Telefonda, sunucuda ve web'de aynı motor.
+**Bütün satranç hesabı cihazda yapılır.** Motor, analiz ve dersler telefonda (Rust + UniFFI) ve tarayıcıda (Rust + WebAssembly) çalışır. Sunucu sadece hesapları ve senkronizasyonu tutar; satranç hesabı yapmaz, bu yüzden çok az kaynak harcar (128 MB yeter).
+
+- **CrabFish**: kendi satranç motorumuz (Rust). Telefonda ve tarayıcıda aynı motor.
 - **Oyun doğruluğu analizi**: lichess formülüyle doğruluk yüzdesi, ACPL, chess.com tarzı hamle sınıfları (Parlak !!, Harika !, En iyi, Mükemmel, İyi, Kitap, Belirsiz ?!, Hata ?, Kaçırılan, Büyük hata ??, Zorunlu), değerlendirme grafiği, kritik anlar ve Türkçe yorumlar. Bütün çekirdeklerde paralel çalışır.
 - **Dersler**: *Satranç Temelleri* ve *Açılıştan Orta Oyuna* kursları (53 ders): prensipler, İtalyan/İki At, İspanyol/İskoç/Petrov, Sicilya, Fransız/Caro-Kann/İskandinav, Vezir Gambiti/Londra, Hint savunmaları, piyon yapıları ve planlar, taktik motifler.
 - **Repertuvar çalışması** (Chessable tarzı) + aralıklı tekrar (SRS): beyaz için 1.e4/İtalyan, siyah için Caro-Kann ve VG Reddi.
@@ -16,15 +18,17 @@ crates/
   core/       oyun modeli, PGN (lichess %clk dahil), saat, ECO açılış tanıma   (kurallar: shakmaty)
   engine/     CrabFish: PVS + TT + null-move + LMR + SEE + PeSTO değerlendirme, MultiPV,
               8 zorluk seviyesi, açılış kitabı, UCI ikilisi (crabfish), harici UCI desteği
-  analysis/   doğruluk, ACPL, hamle sınıflandırma, çok iş parçacıklı oyun analizi
+  analysis/   doğruluk, ACPL, hamle sınıflandırma, çok iş parçacıklı / dağıtık oyun analizi
   lessons/    kurs/ders/repertuvar içeriği (TOML, ikiliye gömülü), ders oturumu, SRS
   sync/       HLC, LWW birleştirme, SQLite yerel depo
-  server/     Axum + SQLite: kimlik, /api/sync, analiz, dersler, web arayüzü
+  server/     Axum + SQLite: sadece kimlik ve /api/sync (+ web dosyalarını sunar)
   ffi/        UniFFI → Kotlin (Android)
+  wasm/       wasm-bindgen → tarayıcı (motor/analiz Web Worker'larda)
 android/      Jetpack Compose uygulaması
+web/          tarayıcı uygulaması (WASM + Web Worker + çevrimdışı service worker)
 ```
 
-Tüm istemciler aynı Rust kodunu kullanır: ders oturumu mantığı, analiz, motor ve birleştirme bir kez yazıldı.
+Tüm istemciler aynı Rust kodunu kullanır: ders oturumu mantığı, analiz, motor ve birleştirme bir kez yazıldı. Tarayıcıda analiz, pozisyonlar çekirdek sayısı kadar Web Worker'a bölünerek yapılır.
 
 ## Sunucu
 
@@ -37,6 +41,13 @@ docker compose up -d        # http://sunucu:3437
 Kaynaktan:
 
 ```sh
+# web uygulaması (WASM)
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.130
+cargo build --release -p chesscrab-wasm --target wasm32-unknown-unknown
+wasm-bindgen --target web --out-dir web/pkg target/wasm32-unknown-unknown/release/chesscrab_wasm.wasm
+
+# senkronizasyon sunucusu (web/ klasörünü de sunar)
 cargo run --release -p chesscrab-server
 ```
 
@@ -45,11 +56,11 @@ cargo run --release -p chesscrab-server
 | `CHESSCRAB_ADDR` | `0.0.0.0:3437` | dinlenecek adres |
 | `CHESSCRAB_DB` | `./data/chesscrab.db` | SQLite dosyası |
 | `CHESSCRAB_ALLOW_REGISTER` | `0` | `1` ise herkes kayıt olabilir; değilse sadece ilk kullanıcı |
-| `CHESSCRAB_STOCKFISH` | – | harici UCI motoru yolu (Docker imajında Stockfish hazır) |
-| `CHESSCRAB_ANALYSIS_THREADS` | çekirdek sayısı | analiz iş parçacıkları |
-| `CHESSCRAB_MAX_DEPTH` | `18` | izin verilen en büyük analiz derinliği |
+| `CHESSCRAB_WEB_DIR` | `./web` | web uygulaması klasörü (yoksa sadece API) |
 
-Web arayüzü sunucunun kökünde: CrabFish'e karşı oyna (saatli/saatsiz), PGN analizi, dersler, repertuvar ve oyun listesi. İlk açılışta **Hesap** sekmesinden kayıt ol; ilk kullanıcı sunucunun sahibidir.
+API: `/api/auth/{register,login,logout,me}`, `/api/sync`, `/api/records/{koleksiyon}`, `/api/health`. Başka bir şey yok.
+
+Web uygulaması sunucunun kökünde: CrabFish'e karşı oyna (saatli/saatsiz), PGN analizi, dersler, repertuvar ve oyun listesi. Hepsi tarayıcıda çalışır, giriş yapmadan da kullanılabilir; bir kez açıldıktan sonra internet olmadan da açılır. **Hesap** sekmesinden kayıt olursan telefonla eşitlenir; ilk kullanıcı sunucunun sahibidir.
 
 Caddy ile:
 

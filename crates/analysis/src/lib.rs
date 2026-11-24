@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chesscrab_core::opening::{book_depth, identify_opening};
 use chesscrab_core::{Game, san_of, to_fen, uci_of};
+#[cfg(not(target_arch = "wasm32"))]
 use chesscrab_engine::external::UciEngine;
 use chesscrab_engine::see::see;
 use chesscrab_engine::{Limits, Score, SearchResult, Searcher};
@@ -31,6 +32,7 @@ impl PositionAnalyzer for Searcher {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PositionAnalyzer for UciEngine {
     fn analyse(&mut self, pos: &Chess, _history: &[u64], limits: &Limits) -> SearchResult {
         UciEngine::analyse(self, pos, limits).unwrap_or_else(|_| SearchResult {
@@ -69,7 +71,7 @@ impl AnalysisConfig {
     pub fn deep() -> Self {
         Self { depth: Some(16), hash_mb: 64, ..Default::default() }
     }
-    fn limits(&self) -> Limits {
+    pub fn limits(&self) -> Limits {
         Limits { depth: self.depth, nodes: self.nodes, movetime_ms: self.movetime_ms, multipv: 2, ..Default::default() }
     }
 }
@@ -227,7 +229,7 @@ fn white_pov(score: Score, turn: Color) -> Score {
 }
 
 /// Tek pozisyonu analiz et, beyaz açısından sonuç döndür.
-fn eval_position<A: PositionAnalyzer + ?Sized>(
+pub fn eval_position<A: PositionAnalyzer + ?Sized>(
     a: &mut A,
     pos: &Chess,
     history: &[u64],
@@ -284,7 +286,9 @@ fn eval_position<A: PositionAnalyzer + ?Sized>(
 
 /// Oyunu CrabFish ile analiz et (çok iş parçacıklı).
 pub fn analyse_game(game: &Game, cfg: &AnalysisConfig, progress: Option<&(dyn Fn(usize, usize) + Sync)>) -> GameAnalysis {
-    let threads = if cfg.threads == 0 {
+    let threads = if cfg!(target_arch = "wasm32") {
+        1
+    } else if cfg.threads == 0 {
         std::thread::available_parallelism().map(|n| n.get()).unwrap_or(2)
     } else {
         cfg.threads
@@ -294,14 +298,22 @@ pub fn analyse_game(game: &Game, cfg: &AnalysisConfig, progress: Option<&(dyn Fn
 }
 
 /// Oyunu harici bir UCI motoruyla analiz et (tek süreç, sıralı).
+#[cfg(not(target_arch = "wasm32"))]
 pub fn analyse_game_uci(game: &Game, cfg: &AnalysisConfig, path: &str) -> Result<GameAnalysis, String> {
     let mut e = UciEngine::spawn(path, &[("Hash", &cfg.hash_mb.to_string())]).map_err(|e| e.to_string())?;
     let name = e.name.clone();
     let positions = game.positions();
     let limits = cfg.limits();
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     let evals: Vec<PositionEval> = positions.iter().map(|p| eval_position(&mut e, p, &[], &limits)).collect();
     Ok(build_analysis(game, &positions, evals, name, start.elapsed().as_millis() as u64))
+}
+
+/// Bir oyunun tüm pozisyonları ve zobrist anahtarları (paralel/dağıtık analiz için).
+pub fn positions_and_hashes(game: &Game) -> (Vec<Chess>, Vec<u64>) {
+    let positions = game.positions();
+    let hashes = positions.iter().map(|p| p.zobrist_hash::<Zobrist64>(EnPassantMode::Legal).0).collect();
+    (positions, hashes)
 }
 
 pub fn analyse_game_with(
@@ -312,7 +324,7 @@ pub fn analyse_game_with(
     progress: Option<&(dyn Fn(usize, usize) + Sync)>,
     engine_name: &str,
 ) -> GameAnalysis {
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     let positions = game.positions();
     let hashes: Vec<u64> = positions.iter().map(|p| p.zobrist_hash::<Zobrist64>(EnPassantMode::Legal).0).collect();
     let n = positions.len();
@@ -321,6 +333,19 @@ pub fn analyse_game_with(
     let chunk = n.div_ceil(threads);
     let done = AtomicUsize::new(0);
     let mut evals: Vec<Option<PositionEval>> = vec![None; n];
+
+    if threads == 1 {
+        // İş parçacığı açmadan (WASM ve tek çekirdek için)
+        let mut a = factory();
+        for i in (0..n).rev() {
+            evals[i] = Some(eval_position(a.as_mut(), &positions[i], &hashes[..i], &limits));
+            if let Some(p) = progress {
+                p(n - i, n);
+            }
+        }
+        let evals: Vec<PositionEval> = evals.into_iter().map(|e| e.expect("analiz edildi")).collect();
+        return build_analysis(game, &positions, evals, engine_name.to_string(), start.elapsed().as_millis() as u64);
+    }
 
     std::thread::scope(|s| {
         let mut handles = Vec::new();
@@ -376,7 +401,7 @@ fn fmt_score_tr(s: Score) -> String {
     }
 }
 
-fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>, engine: String, time_ms: u64) -> GameAnalysis {
+pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>, engine: String, time_ms: u64) -> GameAnalysis {
     let start = &positions[0];
     let white_first = start.turn() == Color::White;
     let sans = game.sans();

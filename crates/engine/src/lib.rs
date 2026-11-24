@@ -5,6 +5,7 @@
 
 pub mod book;
 pub mod eval;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod external;
 pub mod level;
 pub mod search;

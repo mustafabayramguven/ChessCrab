@@ -8,6 +8,7 @@ members = [
     "crates/sync",
     "crates/server",
     "crates/ffi",
+    "crates/wasm",
 ]
 
 [workspace.package]
@@ -26,6 +27,7 @@ toml = "1"
 thiserror = "2"
 uuid = { version = "1", features = ["v4", "serde"] }
 rusqlite = { version = "0.43", features = ["bundled"] }
+web-time = "1"
 
 chesscrab-core = { path = "crates/core" }
 chesscrab-engine = { path = "crates/engine" }
