@@ -165,6 +165,12 @@ impl LocalStore {
         Ok(rows.filter_map(Result::ok).map(|(r, _)| r).collect())
     }
 
+    /// Bütün kayıtları yeniden gönderilecek olarak işaretle.
+    pub fn mark_all_dirty(&self) -> Result<(), StoreError> {
+        self.conn.execute("UPDATE records SET dirty=1", [])?;
+        Ok(())
+    }
+
     pub fn cursor(&self) -> Result<i64, StoreError> {
         Ok(self.meta("cursor")?.and_then(|c| c.parse().ok()).unwrap_or(0))
     }

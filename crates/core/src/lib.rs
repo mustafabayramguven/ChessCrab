@@ -8,12 +8,14 @@ pub mod clock;
 pub mod game;
 pub mod opening;
 pub mod pgn;
+pub mod state;
 
 pub use shakmaty as chess;
 
 pub use clock::{Clock, TimeControl};
 pub use game::{Game, GameError, GameStatus, MoveRecord, Termination};
 pub use opening::{Opening, identify_opening};
+pub use state::GameState;
 
 use shakmaty::{CastlingMode, Chess, EnPassantMode, Move, Position, fen::Fen, san::San, uci::UciMove};
 

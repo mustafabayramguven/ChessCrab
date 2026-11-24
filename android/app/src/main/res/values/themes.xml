@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.ChessCrab" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#161512</item>
+        <item name="android:navigationBarColor">#161512</item>
+        <item name="android:windowBackground">#161512</item>
+    </style>
+</resources>

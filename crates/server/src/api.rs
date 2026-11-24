@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use tokio::sync::Semaphore;
 
 use chesscrab_analysis::{AnalysisConfig, analyse_game, analyse_game_uci};
-use chesscrab_core::{Game, GameStatus, identify_opening, pgn};
+use chesscrab_core::{Game, pgn};
 use chesscrab_engine::{Engine, Level, Limits};
 use chesscrab_lessons::{Catalog, Drill, LessonSession};
 use chesscrab_sync::SyncRequest;
@@ -214,29 +214,7 @@ fn build_game(req: &GameReq) -> Result<Game, ApiError> {
 }
 
 fn game_json(g: &Game) -> Value {
-    let status = g.status();
-    let opening = if g.start_fen() == chesscrab_core::START_FEN {
-        identify_opening(&g.sans()).map(|(o, _)| json!({ "eco": o.eco, "name": o.name }))
-    } else {
-        None
-    };
-    let termination = match status {
-        GameStatus::Finished { termination, .. } => Some(termination.label_tr()),
-        _ => None,
-    };
-    json!({
-        "fen": g.fen(),
-        "turn": g.turn(),
-        "legal": g.legal_uci(),
-        "sans": g.sans(),
-        "ucis": g.records().iter().map(|r| r.uci.clone()).collect::<Vec<_>>(),
-        "check": shakmaty::Position::is_check(g.position()),
-        "status": status,
-        "result": status.result_str(),
-        "termination": termination,
-        "opening": opening,
-        "pgn": pgn::to_pgn(g),
-    })
+    serde_json::to_value(chesscrab_core::GameState::of(g)).unwrap_or(Value::Null)
 }
 
 async fn game_state(Json(req): Json<GameReq>) -> R<Value> {

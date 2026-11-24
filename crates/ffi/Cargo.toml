@@ -1,5 +1,30 @@
 [package]
 name = "chesscrab-ffi"
+description = "Android/iOS için UniFFI bağları: oyun, motor, analiz, dersler ve senkronizasyon"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "chesscrab_ffi"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["cli"]
+
+[features]
+cli = ["uniffi/cli"]
+
+[dependencies]
+chesscrab-core.workspace = true
+chesscrab-engine.workspace = true
+chesscrab-analysis.workspace = true
+chesscrab-lessons.workspace = true
+chesscrab-sync.workspace = true
+shakmaty.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uniffi = "0.32"
