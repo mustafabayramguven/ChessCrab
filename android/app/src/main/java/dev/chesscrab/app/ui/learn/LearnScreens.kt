@@ -1,6 +1,5 @@
 package dev.chesscrab.app.ui.learn
 
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background

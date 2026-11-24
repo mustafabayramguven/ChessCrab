@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -143,12 +142,12 @@ fun HomeScreen(
         val pz = remember { dailyPuzzle() }
         StudyRow("01", "Ders", next?.second ?: "Tüm dersler bitti, tekrar zamanı", Crabs.Coral) { next?.let { onLesson(it.first) } }
         StudyRow("02", "Repertuvar", if (due > 0) "$due hat tekrar bekliyor" else "Bugünlük tamam ✓", Crabs.Sea, onClick = onRepertoire)
-        StudyRow("03", "Günün bulmacası", pz.getString("lesson_title"), Crabs.Gold, onClick = onPuzzle) {
+        StudyRow("03", "Günün bulmacası", pz.getString("lesson_title"), Crabs.Gold, onClick = onPuzzle, trailing = {
             Box(Modifier.size(58.dp).clip(RoundedCornerShape(8.dp))) {
                 val white = pz.getString("fen").split(' ').getOrNull(1) != "b"
                 ChessBoard(pz.getString("fen"), white, emptyList(), coordinates = false)
             }
-        }
+        })
         StudyRow("04", "Oyun incele", "PGN yapıştır, cihazında analiz edilsin", Crabs.Muted, onClick = onReviewPgn)
 
         val games = remember { JSONArray(Crab.store.listJson("games")).objects().take(5) }
@@ -178,7 +177,7 @@ fun HomeScreen(
 
 /** Numaralı çalışma satırı: büyük serif numara, başlık, alt metin */
 @Composable
-private fun StudyRow(no: String, title: String, sub: String, accent: Color, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
+private fun StudyRow(no: String, title: String, sub: String, accent: Color, trailing: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card)
             .border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),

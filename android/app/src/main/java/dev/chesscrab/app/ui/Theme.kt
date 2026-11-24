@@ -41,6 +41,7 @@ object Crabs {
     val Faint = Color(0xFF5E7782)
 }
 
+@OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
 private fun vf(res: Int, w: Int) = Font(res, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
 
 val Display = FontFamily(
