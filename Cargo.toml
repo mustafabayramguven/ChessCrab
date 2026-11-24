@@ -1,0 +1,47 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/core",
+    "crates/engine",
+    "crates/analysis",
+    "crates/lessons",
+    "crates/sync",
+    "crates/server",
+    "crates/ffi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/mustafabayramguven/ChessCrab"
+authors = ["Mustafa Bayram Güven"]
+
+[workspace.dependencies]
+shakmaty = { version = "0.30", features = ["serde"] }
+pgn-reader = "0.29"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+thiserror = "2"
+uuid = { version = "1", features = ["v4", "serde"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
+
+chesscrab-core = { path = "crates/core" }
+chesscrab-engine = { path = "crates/engine" }
+chesscrab-analysis = { path = "crates/analysis" }
+chesscrab-lessons = { path = "crates/lessons" }
+chesscrab-sync = { path = "crates/sync" }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+# Testlerde motorun hızlı olması için
+[profile.test]
+opt-level = 2

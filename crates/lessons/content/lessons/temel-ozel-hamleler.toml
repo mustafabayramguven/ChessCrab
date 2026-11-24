@@ -1,0 +1,35 @@
+id = "temel-ozel-hamleler"
+title = "Özel hamleler: rok, geçerken alma, terfi"
+summary = "Satrancın üç özel kuralı."
+level = "baslangic"
+tags = ["temel"]
+
+[[steps]]
+fen = "4k3/8/8/8/8/8/5PPP/4K2R w K - 0 1"
+text = "ROK: şah ve kalenin aynı anda yaptığı tek hamle. Şah kaleye doğru iki kare gider, kale şahın üzerinden atlayıp yanına gelir. Kısa rok yap!"
+expect = "O-O"
+success = "Kısa rok: şah g1'e, kale f1'e. Şah köşede piyonların arkasında güvende."
+
+[[steps]]
+text = "Rok kuralları: şah ve kale daha önce hiç oynamamış olmalı, aradaki kareler boş olmalı, şah şah altındayken, saldırı altındaki bir kareden geçerek ya da saldırı altındaki bir kareye rok yapamaz."
+
+[[steps]]
+fen = "4k3/8/8/8/8/8/PPP5/R3K3 w Q - 0 1"
+text = "UZUN ROK: şah c1'e, kale d1'e gider. Yap!"
+expect = "O-O-O"
+
+[[steps]]
+fen = "4k3/3p4/8/4P3/8/8/8/4K3 b - - 0 1"
+play = "d5"
+text = "GEÇERKEN ALMA: siyah piyon iki kare ilerleyip senin e5 piyonunun yanına geldi. Sanki tek kare ilerlemiş gibi onu d6'dan alabilirsin — ama sadece hemen bu hamlede!"
+expect = "exd6"
+success = "Geçerken alma (en passant) yaptın."
+
+[[steps]]
+fen = "4k3/1P6/8/8/8/8/8/4K3 w - - 0 1"
+text = "TERFİ: son yataya ulaşan piyon vezir, kale, fil veya ata dönüşür. Neredeyse her zaman vezir seçilir. Piyonu b8'e sür ve vezir yap."
+expect = "b8=Q+"
+success = "Yeni bir vezir — hem de şah çekerek!"
+
+[[steps]]
+quiz = { question = "Geçerken alma ne zaman yapılabilir?", options = ["İstediğin zaman", "Rakip piyon iki kare ilerleyip yanına geldikten hemen sonra", "Sadece oyunun başında"], answer = 1, explain = "Fırsat sadece o an vardır; bir hamle beklersen hakkını kaybedersin." }

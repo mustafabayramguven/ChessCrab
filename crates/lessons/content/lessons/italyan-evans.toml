@@ -1,0 +1,37 @@
+id = "italyan-evans"
+title = "Evans Gambiti"
+summary = "Bir piyon karşılığında tempolar: c3 ve d4 ile hızlı merkez."
+level = "orta"
+tags = ["açılış", "e4", "gambit"]
+setup = "e4 e5 Nf3 Nc6 Bc4 Bc5"
+
+[[steps]]
+text = "Evans Gambiti (1827): b-piyonunu feda et, c5 filini kovala."
+expect = "b4"
+reply = "Bxb4"
+success = "Siyah aldı."
+
+[[steps]]
+text = "Fikir: c3 ile tempoyla file saldır ve d4'ü hazırla."
+expect = "c3"
+reply = "Ba5"
+
+[[steps]]
+text = "Merkezi aç!"
+expect = "d4"
+reply = "exd4"
+
+[[steps]]
+text = "Rok yap: piyon geri alınabilir ama gelişim daha önemli."
+expect = "O-O"
+reply = "Nge7"
+success = "Modern savunma: ...Nge7 ve ardından ...d5 ile merkez kırılır."
+
+[[steps]]
+expect = "cxd4"
+reply = "d5"
+text = "Piyonu geri al."
+success = "Siyah zamanında ...d5 ile merkezi kırdı. Beyaz bir piyon eksik ama gelişim ve merkez karşılığında dinamik bir oyun var."
+
+[[steps]]
+quiz = { question = "Gambitlerde feda edilen piyonun karşılığı genelde nedir?", options = ["Daha iyi son oyun", "Gelişim üstünlüğü, açık hatlar ve inisiyatif", "Daha güvenli şah"], answer = 1 }

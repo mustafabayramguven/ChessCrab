@@ -1,0 +1,23 @@
+id = "prensip-sinav"
+title = "Bölüm sınavı: prensipler"
+summary = "Açılış prensiplerini ne kadar anladın?"
+level = "baslangic"
+tags = ["prensip", "sınav"]
+
+[[steps]]
+quiz = { question = "1.e4 e5 2.Nf3'ten sonra siyah için en prensipli hamle hangisi?", options = ["2...Nc6", "2...h6", "2...Qh4", "2...a5"], answer = 0, explain = "Gelişir ve saldırı altındaki e5'i korur." }
+
+[[steps]]
+quiz = { question = "Açılışın üç ana hedefi nedir?", options = ["Merkez, gelişim, şah güvenliği", "Materyal kazanmak, vezir çıkarmak, piyon sürmek", "Kanat saldırısı, kale açmak, şah yürüyüşü"], answer = 0 }
+
+[[steps]]
+quiz = { question = "Hangi durumda bir taşı açılışta ikinci kez oynamak MANTIKLIDIR?", options = ["Hiçbir zaman", "Taş tehdit altındaysa ya da bedava materyal kazanacaksa", "Her zaman"], answer = 1 }
+
+[[steps]]
+quiz = { question = "Rakip gambit oynadı (bir piyon feda etti). Genel tavsiye nedir?", options = ["Her zaman almak ve korumak", "Asla almamak", "Alabilirsin ama gelişimi ihmal edip piyona yapışma; gerekirse geri ver"], answer = 2 }
+
+[[steps]]
+fen = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+text = "Son soru tahtada: siyahsın. e5'i koru ve geliş."
+expect = "Nc6"
+also = ["d6", "Nf6"]

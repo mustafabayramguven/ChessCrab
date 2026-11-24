@@ -1,0 +1,48 @@
+id = "italyan-c3-d4"
+title = "İtalyan: c3-d4 merkez planı"
+summary = "Beyaz büyük merkez kurar, siyah ...d5 kırılmasıyla eşitler; izole piyonun doğuşu."
+level = "orta"
+tags = ["açılış", "e4", "italyan"]
+setup = "e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6"
+
+[[steps]]
+text = "Pozisyon: 4.c3 Nf6. Plan basit: d4! e5'e saldır ve merkezi kur."
+expect = "d4"
+reply = "exd4"
+
+[[steps]]
+text = "Piyonla geri al: e4 + d4 ideal merkez."
+expect = "cxd4"
+reply = "Bb4+"
+success = "Siyah fili şah çekerek kaçırdı."
+
+[[steps]]
+text = "Şahı fil ile kapat: hem gelişim hem de değişim teklifi."
+expect = "Bd2"
+also = ["Nc3"]
+reply = "Bxd2+"
+success = "7.Nc3 daha keskin (Møller Atağı), 7.Bd2 daha sakin."
+
+[[steps]]
+text = "Atla geri al."
+expect = "Nbxd2"
+reply = "d5"
+success = "Siyahın kilit hamlesi: ...d5! Beyazın piyon merkezine meydan okuyor ve c4 filine saldırıyor."
+
+[[steps]]
+text = "Merkezde değiş."
+expect = "exd5"
+reply = "Nxd5"
+
+[[steps]]
+text = "Şimdi beyazın d4'te İZOLE VEZİR PİYONU var: yanındaki c ve e dikeylerinde beyaz piyon yok, onu başka piyon koruyamaz. Karşılığında beyazın taşları aktif ve açık hatlar var. Siyahın d5'teki atı ise mükemmel bir 'abluka' karesinde."
+highlights = ["d4", "d5"]
+
+[[steps]]
+text = "Bir plan: vezirle d5'teki ata baskı yap (fil c4 de oraya bakıyor)."
+expect = "Qb3"
+reply = "Na5"
+success = "Siyah Na5 ile vezire ve file saldırdı. Pratikte burada 11.Qa4+ Nc6 12.Qb3 Na5 ile tekrar olabilir."
+
+[[steps]]
+quiz = { question = "Bu hatta siyahın eşitleyici fikri neydi?", options = ["...h6 ile bekleme", "...d5 kırılması", "...Qe7 ile vezir çıkışı"], answer = 1, explain = "e5'i kaybettikten sonra ...d5 ile merkezi kırmak siyahın tüm açık oyunlardaki ana kurtuluş fikridir." }

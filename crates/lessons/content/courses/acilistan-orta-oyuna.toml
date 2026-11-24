@@ -1,0 +1,62 @@
+id = "acilistan-orta-oyuna"
+title = "Açılıştan Orta Oyuna"
+order = 2
+level = "orta"
+description = "Açılış prensiplerinden başlayıp en önemli açılışların fikirlerine, oradan da orta oyunun piyon yapılarına, planlara ve taktik motiflere uzanan kapsamlı kurs. Ezber değil fikir: her hamlenin neden oynandığını öğren."
+
+[[chapters]]
+id = "prensipler"
+title = "1. Açılışın altın kuralları"
+description = "Merkez, gelişim, şah güvenliği, tempo ve en bilinen tuzaklar."
+lessons = ["prensip-merkez", "prensip-gelisim", "prensip-rok", "prensip-erken-vezir", "prensip-coban-mati", "prensip-legal-mati", "prensip-sinav"]
+
+[[chapters]]
+id = "italyan"
+title = "2. Açık oyunlar: İtalyan ve İki At"
+description = "1.e4 e5 2.Nf3 Nc6 3.Bc4: f7'ye bakan fil, c3-d4 planı, keskin Ng5 hatları ve Evans Gambiti."
+lessons = ["italyan-giuoco-piano", "italyan-c3-d4", "italyan-pianissimo", "iki-at-ng5", "iki-at-fried-liver", "italyan-evans"]
+repertoire = "beyaz-e4"
+
+[[chapters]]
+id = "ispanyol"
+title = "3. İspanyol, İskoç ve Petrov"
+description = "Ruy Lopez'in ana fikirleri, Berlin Duvarı, Marshall Atağı, İskoç merkez değişimi ve Petrov tuzağı."
+lessons = ["ispanyol-ana-hat", "ispanyol-berlin", "ispanyol-marshall", "iskoc-oyunu", "petrov-savunmasi"]
+
+[[chapters]]
+id = "sicilya"
+title = "4. Sicilya Savunması"
+description = "Asimetrik savaş: Açık Sicilya, Najdorf, Ejderha ve beyaz için Alapin."
+lessons = ["sicilya-fikir", "sicilya-najdorf", "sicilya-ejderha", "sicilya-alapin"]
+
+[[chapters]]
+id = "fransiz-caro"
+title = "5. Fransız, Caro-Kann ve İskandinav"
+description = "Piyon zincirleri, kötü fil sorunu ve onu çözmenin yolları."
+lessons = ["fransiz-ilerleme", "fransiz-winawer", "caro-klasik", "caro-ilerleme", "iskandinav"]
+repertoire = "siyah-caro"
+
+[[chapters]]
+id = "vezir-gambiti"
+title = "6. 1.d4 d5: Vezir Gambiti ve Londra"
+description = "VG Kabulü tuzağı, VG Reddi ve Fil Tuzağı, Carlsbad yapısı, Slav ve Londra Sistemi."
+lessons = ["vg-kabul", "vg-red", "vg-carlsbad", "vg-slav", "londra-sistemi"]
+repertoire = "siyah-vgr"
+
+[[chapters]]
+id = "hint"
+title = "7. Hint savunmaları"
+description = "Hipermodern fikirler: Şah Hint, Nimzo-Hint ve Grünfeld."
+lessons = ["sah-hint", "nimzo-hint", "grunfeld"]
+
+[[chapters]]
+id = "orta-oyun"
+title = "8. Orta oyuna geçiş: yapılar ve planlar"
+description = "Piyon yapısından plan çıkarmak: izole piyon, Carlsbad, iyi-kötü fil, karakol, açık hat ve plan yapma."
+lessons = ["orta-piyon-yapilari", "orta-izole-piyon", "orta-iyi-kotu-fil", "orta-karakol", "orta-acik-hat", "orta-plan-yapma"]
+
+[[chapters]]
+id = "taktik"
+title = "9. Taktik motifler ve saldırı"
+description = "Çatal, açmaz, şiş, açarak saldırı, arka yatay ve Rum hediyesi (Bxh7+)."
+lessons = ["taktik-catal", "taktik-acmaz-sis", "taktik-acarak-saldiri", "taktik-arka-yatay", "taktik-rum-hediyesi", "final-sinav"]

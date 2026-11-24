@@ -1,0 +1,33 @@
+id = "temel-sah-mat-pat"
+title = "Şah, mat ve pat"
+summary = "Oyunun amacı: rakip şahı mat etmek. Pat ise beraberliktir."
+level = "baslangic"
+tags = ["temel"]
+
+[[steps]]
+text = "ŞAH: şah saldırı altındaysa 'şah' denir. Şahtan üç yolla kurtulursun: şahı kaçırmak, saldıran taşı almak ya da araya taş koymak."
+
+[[steps]]
+fen = "4k3/8/8/q7/8/8/2P2PPP/1N2KB2 w - - 0 1"
+text = "Siyah vezir a5'ten çapraz şah çekiyor. Araya taş koyarak (blok) savun."
+expect = "c3"
+also = ["Nc3", "Nd2"]
+wrong = "Bu hamle şahı kurtarmıyor. a5-e1 köşegenine bir taş koy."
+success = "Piyonla blok yaptın; şah artık güvende."
+
+[[steps]]
+text = "MAT: şah çekilmiş ve kurtuluş yoksa oyun biter. Amacın budur."
+
+[[steps]]
+fen = "6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1"
+text = "Bir hamlede mat et! Siyah şahın önündeki piyonlar kaçış karelerini kapatıyor."
+expect = "Ra8#"
+success = "Arka yatay matı! Bu kalıp oyunlarında çok çıkacak."
+puzzle = true
+
+[[steps]]
+fen = "k7/2Q5/1K6/8/8/8/8/8 b - - 0 1"
+quiz = { question = "Sıra siyahta. Siyah şah şah altında değil ama hiçbir yasal hamlesi yok. Sonuç ne?", options = ["Beyaz kazanır", "Pat: beraberlik", "Siyah pas geçer"], answer = 1, explain = "Pat beraberliktir. Kazanırken rakibe hamle bırakmayı unutma!" }
+
+[[steps]]
+text = "Diğer beraberlikler: aynı pozisyonun üç kez tekrarı, 50 hamle boyunca alım veya piyon hamlesi olmaması, yetersiz materyal (ör. sadece şahlar) ve anlaşma."

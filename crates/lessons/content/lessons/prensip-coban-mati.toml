@@ -1,0 +1,40 @@
+id = "prensip-coban-mati"
+title = "Çoban matı ve savunması"
+summary = "En bilinen tuzak: f7'ye vezir+fil saldırısı. Nasıl yapılır, nasıl engellenir?"
+level = "baslangic"
+tags = ["prensip", "tuzak", "mat"]
+
+[[steps]]
+play = "e4 e5 Bc4 Nc6"
+text = "Fil c4'te f7'ye bakıyor. f7'yi sadece siyah şah koruyor."
+arrows = ["c4f7"]
+
+[[steps]]
+text = "Vezirini, fil ile birlikte f7'ye bakacak şekilde çıkar."
+expect = "Qh5"
+also = ["Qf3"]
+reply = "Nf6"
+success = "Siyah Nf6?? ile vezire saldırdı ama f7'yi korumadı."
+
+[[steps]]
+text = "Matı ver!"
+expect = "Qxf7#"
+success = "Çoban matı! Vezir f7'de, fil onu koruyor; şahın kaçacak yeri yok."
+puzzle = true
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 e5 Bc4 Nc6 Qh5"
+text = "Peki siyahken nasıl savunursun? (Siyah taşlarla oyna.) Vezir hem f7'ye hem e5'e saldırıyor; e5 zaten atla korunuyor."
+expect = "g6"
+also = ["Qe7"]
+reply = "Qf3"
+success = "g6 veziri kovaladı ve matı engelledi."
+
+[[steps]]
+text = "Vezir f3'ten yine f7'ye bakıyor. Atla hattı kapat."
+expect = "Nf6"
+success = "Siyah gelişti, tehditler bitti ve beyazın veziri boşuna iki kez oynadı."
+
+[[steps]]
+quiz = { question = "Çoban matında hedef kare hangisidir?", options = ["f7 (siyah için) / f2 (beyaz için)", "e5", "h7", "d7"], answer = 0, explain = "Açılışta f7/f2 sadece şahla korunan en zayıf karedir." }

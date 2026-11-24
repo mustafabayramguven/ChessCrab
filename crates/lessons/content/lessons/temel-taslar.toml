@@ -1,0 +1,46 @@
+id = "temel-taslar"
+title = "Taşlar nasıl hareket eder?"
+summary = "Kale, fil, vezir, şah, at ve piyonun hareketleri; her biriyle bir alım yap."
+level = "baslangic"
+tags = ["temel"]
+
+[[steps]]
+text = "Satranç 8x8 bir tahtada oynanır. Sütunlara a'dan h'ye, yataylara 1'den 8'e isim verilir; her karenin bir adı vardır (ör. e4). Beyaz her zaman ilk hamleyi yapar."
+highlights = ["e4"]
+
+[[steps]]
+fen = "4k3/8/8/3p4/8/8/8/3RK3 w - - 0 1"
+text = "KALE düz çizgilerde (yatay ve dikey) istediği kadar ilerler. d1'deki kale ile d5'teki piyonu al."
+expect = "Rxd5"
+success = "Taşlar rakip taşın bulunduğu kareye giderek onu alır."
+arrows = ["d1d5"]
+
+[[steps]]
+fen = "4k3/8/8/6p1/8/8/8/2B1K3 w - - 0 1"
+text = "FİL çapraz gider ve hep aynı renk karelerde kalır. c1'deki fil ile g5'teki piyonu al."
+expect = "Bxg5"
+
+[[steps]]
+fen = "4k3/1p6/8/8/8/8/8/4K2Q w - - 0 1"
+text = "VEZİR en güçlü taştır: kale gibi düz, fil gibi çapraz gider. h1'den uzun köşegen boyunca b7'yi al."
+expect = "Qxb7"
+
+[[steps]]
+fen = "4k3/8/8/2p5/8/3N4/8/4K3 w - - 0 1"
+text = "AT 'L' şeklinde gider: iki kare bir yöne, bir kare yana. Atlayabilen tek taştır. d3'teki at ile c5'i al."
+expect = "Nxc5"
+highlights = ["b2", "b4", "c1", "c5", "e1", "e5", "f2", "f4"]
+
+[[steps]]
+fen = "4k3/8/8/8/4p3/3P4/8/4K3 w - - 0 1"
+text = "PİYON ileri gider ama ÇAPRAZ alır. İlk hamlesinde iki kare gidebilir. d3 piyonu ile e4'ü al."
+expect = "dxe4"
+
+[[steps]]
+fen = "4k3/8/8/8/8/8/3p4/4K3 w - - 0 1"
+text = "ŞAH her yöne bir kare gider. En değerli 'taş'tır: kaybedersen oyun biter. Şahınla d2 piyonunu al."
+expect = "Kxd2"
+success = "Tebrikler, artık bütün taşların hareketini biliyorsun!"
+
+[[steps]]
+quiz = { question = "Hangi taş diğer taşların üzerinden atlayabilir?", options = ["Fil", "At", "Kale", "Vezir"], answer = 1, explain = "Sadece at atlayabilir." }

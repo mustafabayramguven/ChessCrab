@@ -1,0 +1,41 @@
+id = "temel-mat-bir"
+title = "Bir hamlede mat"
+summary = "Beş temel mat kalıbı: arka yatay, vezir matı, boğulmuş mat, Çoban matı ve kalelerle mat."
+level = "baslangic"
+tags = ["temel", "mat", "bulmaca"]
+
+[[steps]]
+text = "Her pozisyonda bir hamlede mat var. Önce şah çeken hamlelere bak: şahlar, alımlar, tehditler!"
+
+[[steps]]
+fen = "7k/8/6K1/8/8/8/8/1Q6 w - - 0 1"
+text = "Vezir ve şah birlikte: mat et."
+expect = "Qb8#"
+puzzle = true
+success = "Şahın g7 ve h7'yi kapattı, vezir 8. yatayı."
+
+[[steps]]
+fen = "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1"
+text = "Siyah şah kendi taşlarıyla çevrili. Tek taşla mat et."
+expect = "Nf7#"
+puzzle = true
+success = "Boğulmuş mat! Şahın kaçacak hiçbir yeri yok, atı da kimse alamıyor."
+
+[[steps]]
+fen = "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"
+text = "Siyah Nf6?? ile hata yaptı. f7'yi kim koruyor?"
+expect = "Qxf7#"
+puzzle = true
+success = "Çoban matı. f7'yi sadece şah koruyordu ve fil c4 veziri destekliyor."
+
+[[steps]]
+fen = "3rr1k1/5ppp/8/8/8/8/4QPPP/4R1K1 w - - 0 1"
+text = "İki hamlelik bir mat: önce vezirini feda et!"
+expect = "Qxe8+"
+reply = "Rxe8"
+puzzle = true
+
+[[steps]]
+text = "Şimdi bitir."
+expect = "Rxe8#"
+success = "Vezir fedası arka yatayı savunan kaleyi oradan uzaklaştırdı (saptırma)."

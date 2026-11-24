@@ -1,0 +1,30 @@
+id = "prensip-legal-mati"
+title = "Legal matı: açmaz yalan söyler"
+summary = "1750'lerden kalma klasik tuzak: veziri feda edip üç taşla mat."
+level = "baslangic"
+tags = ["prensip", "tuzak", "mat"]
+
+[[steps]]
+play = "e4 e5 Nf3 d6 Bc4 Bg4 Nc3 g6"
+text = "Siyahın fili g4'te f3 atını vezire karşı açmaza almış: at oynarsa d1'deki vezir alınır. Ama bu 'göreli' bir açmaz — at yine de oynayabilir. Siyahın g6 hamlesi ise gelişimi geciktirdi."
+arrows = ["g4d1"]
+
+[[steps]]
+text = "Açmazı umursama: e5 piyonunu at ile al!"
+expect = "Nxe5"
+reply = "Bxd1"
+success = "Siyah vezire atladı... şimdi üç hafif taşla mat zamanı."
+
+[[steps]]
+text = "Önce f7'de şah çek."
+expect = "Bxf7+"
+reply = "Ke7"
+
+[[steps]]
+text = "Ve bitir!"
+expect = "Nd5#"
+success = "Legal matı! Beyaz vezir eksik ama üç hafif taş şahı kapana kıstırdı."
+puzzle = true
+
+[[steps]]
+quiz = { question = "5.Nxe5'ten sonra siyahın en iyisi neydi?", options = ["Bxd1", "dxe5 (piyon kaybını kabul edip Qxg4 ile devam)", "Ke7"], answer = 1, explain = "5...dxe5 6.Qxg4 ile siyah sadece bir piyon kaybeder. Açgözlülük matla sonuçlandı." }

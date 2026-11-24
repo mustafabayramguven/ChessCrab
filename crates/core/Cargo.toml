@@ -1,0 +1,13 @@
+[package]
+name = "chesscrab-core"
+description = "ChessCrab çekirdeği: oyun modeli, PGN, saat, açılış isimleri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+shakmaty.workspace = true
+pgn-reader.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

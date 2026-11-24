@@ -1,0 +1,29 @@
+id = "prensip-rok"
+title = "Şahını güvene al"
+summary = "Rokun önemi, ne zaman yapılamayacağı ve ortada kalan şahın tehlikesi."
+level = "baslangic"
+tags = ["prensip"]
+setup = "e4 e5 Nf3 Nc6 Bc4 Bc5"
+
+[[steps]]
+text = "İtalyan Oyunu. Merkez piyonlar karşılaştı; e-hattı her an açılabilir. Şah ortada kalırsa açılan hatlar onu tehlikeye sokar. Rok yap!"
+expect = "O-O"
+reply = "Nf6"
+success = "Şah g1'de piyonların arkasında, kale f1'den merkeze yaklaştı."
+
+[[steps]]
+fen = "4k3/8/8/8/2b5/8/6PP/4K2R w K - 0 1"
+quiz = { question = "Beyaz kısa rok yapabilir mi?", options = ["Evet", "Hayır: şah f1 üzerinden geçemez, siyah fil f1'i kontrol ediyor", "Hayır: kale daha önce oynamış"], answer = 1, explain = "Şah saldırı altındaki bir kareden geçerek rok yapamaz. Kale saldırı altında olabilir, şahın geçtiği kareler olamaz." }
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 e5 Nf3 Nc6 Bc4 Bc5 d3 Nf6"
+text = "Klasik bir pozisyon: iki taraf da rok yapmaya hazır. Önce kim rok yaparsa şahı önce güvene alır. Yap!"
+expect = "O-O"
+reply = "O-O"
+
+[[steps]]
+quiz = { question = "Hangisinden sonra artık hiç rok yapamazsın?", options = ["Şah çekildiğinde", "Şahın bir kez oynadığında", "Bir piyon sürdüğünde"], answer = 1, explain = "Şah oynarsa rok hakkı tamamen gider. Şah çekilmişken o an rok yapamazsın ama hakkın kaybolmaz." }
+
+[[steps]]
+text = "Özet: 'Erken rok, sağlam şah.' Ama rok kendi başına amaç değildir; merkez kapalıysa acele etmeyebilirsin, merkez açılmak üzereyse rok ACİLDİR."

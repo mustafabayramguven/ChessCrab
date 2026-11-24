@@ -1,0 +1,40 @@
+id = "italyan-pianissimo"
+title = "İtalyan: Giuoco Pianissimo (d3)"
+summary = "Modern ustaların tercihi: yavaş kurulum, manevralar ve doğru zamanda d4."
+level = "orta"
+tags = ["açılış", "e4", "italyan"]
+setup = "e4 e5 Nf3 Nc6 Bc4 Bc5"
+
+[[steps]]
+text = "Modern İtalyan'da beyaz merkezi hemen açmaz. c3 ile d4'ü hazırlar, d3 ile e4'ü sağlamlaştırır."
+expect = "c3"
+reply = "Nf6"
+
+[[steps]]
+text = "e4 saldırı altında. Piyonla koru."
+expect = "d3"
+reply = "d6"
+
+[[steps]]
+expect = "O-O"
+reply = "O-O"
+text = "Rok."
+
+[[steps]]
+text = "Kale e1'e: e4'ü destekler ve e-hattı açılırsa hazırdır."
+expect = "Re1"
+reply = "a6"
+success = "Siyah ...a6 ile fili için a7 karesini hazırladı: beyazın d4 itişi fili tempoyla kovalayamasın."
+
+[[steps]]
+text = "Fil de aynı mantıkla geri çekilir: ...d5 ya da ...Na5 ile kovalanmadan önce."
+expect = "Bb3"
+reply = "Ba7"
+
+[[steps]]
+text = "Önemli profilaktik hamle: ...Bg4 ile atın açmaza alınmasını engelle."
+expect = "h3"
+success = "Sıradaki plan: Nbd2-f1-g3 manevrası ve doğru anda d4. Siyah ...Be6, ...h6, ...Re8 ile karşılık verir. Burada taktik değil, manevra ve sabır kazanır."
+
+[[steps]]
+quiz = { question = "Nbd2-f1-g3 manevrasının amacı nedir?", options = ["Atı vezir kanadına götürmek", "Atı şah kanadına (f5/h5 karelerine) getirip saldırıya katmak", "d4'ü korumak"], answer = 1 }

@@ -1,0 +1,46 @@
+id = "prensip-merkez"
+title = "Merkezi kontrol et"
+summary = "Neden herkes e4 ya da d4 ile başlar? Merkezin gücü ve ideal piyon merkezi."
+level = "baslangic"
+tags = ["prensip"]
+
+[[steps]]
+text = "Tahtanın ortasındaki dört kare — d4, e4, d5, e5 — merkezdir. Merkezdeki taşlar daha çok kare kontrol eder ve iki kanada da hızla yetişir. Açılışta ilk hedefin merkez olmalı."
+highlights = ["d4", "e4", "d5", "e5"]
+
+[[steps]]
+fen = "4k3/8/8/8/3N4/8/8/N3K3 w - - 0 1"
+text = "Karşılaştır: a1'deki at sadece 2 kareye gidebilir, d4'teki at 8 kareye! Eski bir söz: 'Kenardaki at kederli at.'"
+highlights = ["b3", "c2", "b5", "c6", "e6", "f5", "f3", "e2"]
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+text = "Sıra sende. Merkeze bir piyon sür."
+expect = "e4"
+also = ["d4"]
+reply = "e5"
+success = "e4 merkezi tutar, d5 ve f5'i kontrol eder ve fil ile vezirin önünü açar."
+
+[[steps]]
+text = "Siyah da aynısını yaptı. Şimdi bir at geliştir ve aynı anda e5 piyonuna saldır."
+expect = "Nf3"
+reply = "Nc6"
+arrows = ["f3e5"]
+success = "Nf3 gelişir, e5'e saldırır ve d4 karesini kontrol eder. Siyah Nc6 ile e5'i korudu."
+
+[[steps]]
+text = "e4 ve d4 piyonları yan yana durursa buna ideal piyon merkezi denir. d4 ile merkezi aç!"
+expect = "d4"
+reply = "exd4"
+success = "Siyah aldı. Bu İskoç Oyunu."
+
+[[steps]]
+text = "Piyonu taşınla geri al: merkezde güçlü bir at kalsın."
+expect = "Nxd4"
+success = "Merkezde güzel bir at, açık hatlar ve hızlı gelişim. Beyaz merkezde bir piyon (e4) fazlasına sahip."
+
+[[steps]]
+quiz = { question = "Hangisi merkez karesi değildir?", options = ["e4", "d5", "c4", "e5"], answer = 2, explain = "c4 merkeze komşudur ama merkez değildir; merkez d4, e4, d5, e5'tir." }
+
+[[steps]]
+quiz = { question = "Merkezi kontrol etmek için hangisi yanlış bir bilgidir?", options = ["Merkezi piyonlarla işgal edebilirsin", "Merkezi uzaktaki taşlarla kontrol edebilirsin (ör. fianketto fil)", "Merkezi kontrol etmek için kenar piyonlarını sürmelisin"], answer = 2, explain = "Kenar piyonları merkeze etki etmez. Hipermodern açılışlar (Şah Hint, Grünfeld) merkezi uzaktan kontrol eder." }

@@ -1,0 +1,13 @@
+[package]
+name = "chesscrab-analysis"
+description = "Oyun doğruluğu, ACPL, hamle sınıflandırma (brilliant → blunder)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+chesscrab-core.workspace = true
+chesscrab-engine.workspace = true
+shakmaty.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,17 @@
+id = "temeller"
+title = "Satranç Temelleri"
+order = 1
+level = "baslangic"
+description = "Taşların hareketi, özel hamleler, şah-mat-pat, ilk matlar ve taş değerleri. Hiç bilmeyen biri buradan başlasın."
+
+[[chapters]]
+id = "taslar"
+title = "Taşlar ve kurallar"
+description = "Her taş nasıl hareket eder, rok, geçerken alma ve terfi."
+lessons = ["temel-taslar", "temel-ozel-hamleler", "temel-tas-degerleri"]
+
+[[chapters]]
+id = "mat"
+title = "Şah, mat ve pat"
+description = "Oyunun amacı ve ilk mat kalıpları."
+lessons = ["temel-sah-mat-pat", "temel-mat-bir", "temel-merdiven-mati"]

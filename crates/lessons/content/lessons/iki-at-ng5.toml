@@ -1,0 +1,50 @@
+id = "iki-at-ng5"
+title = "İki At Savunması: 4.Ng5 d5!"
+summary = "Siyahın keskin karşı saldırısı ve beyazın f7 hücumuna karşı doğru savunma."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "e4", "iki at"]
+setup = "e4 e5 Nf3 Nc6 Bc4"
+
+[[steps]]
+text = "Bu derste siyahsın. 3...Bc5 yerine daha aktif bir seçenek: ...Nf6 ile e4'e saldır."
+expect = "Nf6"
+also = ["Bc5"]
+reply = "Ng5"
+success = "Beyaz Ng5 ile f7'ye ikinci kez saldırıyor (at + fil). f7'yi korumak zor."
+arrows = ["g5f7", "c4f7"]
+
+[[steps]]
+text = "Saldırıyı merkezde karşı saldırıyla durdur: filin çaprazını kapat."
+expect = "d5"
+reply = "exd5"
+
+[[steps]]
+text = "Şimdi 5...Nxd5? doğal görünür ama 6.Nxf7! (Kızarmış Ciğer) ile çok tehlikeli bir saldırıya izin verir. En sağlam: atla fili kovala!"
+expect = "Na5"
+wrong = "5...Nxd5 olursa 6.Nxf7 Kxf7 7.Qf3+ ile şahın ortada avlanır. Fili kovalayan bir hamle ara."
+reply = "Bb5+"
+
+[[steps]]
+text = "Şahı piyonla kapat ve piyon feda et."
+expect = "c6"
+reply = "dxc6"
+
+[[steps]]
+expect = "bxc6"
+reply = "Be2"
+text = "Geri al: açılan b-hattı ve hızlı gelişim siyahın lehine."
+
+[[steps]]
+text = "g5 atını kovala."
+expect = "h6"
+reply = "Nf3"
+
+[[steps]]
+text = "Tempoyla tekrar kovala!"
+expect = "e4"
+reply = "Ne5"
+success = "Siyah bir piyon eksik ama gelişimde önde, beyazın atı kenarda zorlanıyor ve beyaz taşları geri itildi. Sıradaki: ...Bd6 / ...Qc7 / ...O-O. Ustaların da oynadığı sağlam bir telafi."
+
+[[steps]]
+quiz = { question = "5.exd5'ten sonra neden 5...Nxd5 yerine 5...Na5 oynadık?", options = ["Nxd5 yasal değil", "Nxd5'ten sonra 6.Nxf7! şahı ortaya çeker ve beyaz güçlü saldırı alır", "Na5 bir piyon kazanır"], answer = 1 }

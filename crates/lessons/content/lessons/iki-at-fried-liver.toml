@@ -1,0 +1,42 @@
+id = "iki-at-fried-liver"
+title = "Kızarmış Ciğer Saldırısı (Fried Liver)"
+summary = "5...Nxd5? hatasının cezası: 6.Nxf7! ve şah avı."
+level = "orta"
+tags = ["açılış", "e4", "iki at", "saldırı"]
+setup = "e4 e5 Nf3 Nc6 Bc4 Nf6"
+
+[[steps]]
+text = "Beyazsın. İki At Savunması'nda f7'ye ikinci saldırıyı yap."
+expect = "Ng5"
+reply = "d5"
+
+[[steps]]
+expect = "exd5"
+reply = "Nxd5"
+text = "Al."
+success = "Siyah 5...Nxd5? oynadı. Şimdi fırsat!"
+
+[[steps]]
+text = "Atını f7'de feda et: şah ortaya çıkmak zorunda."
+expect = "Nxf7"
+also = ["d4"]
+reply = "Kxf7"
+success = "6.d4 (Lolli Atağı) de çok güçlüdür; biz klasik Kızarmış Ciğer ile devam ediyoruz."
+
+[[steps]]
+text = "Şah çekerek d5'teki ata ikinci kez saldır."
+expect = "Qf3+"
+reply = "Ke6"
+success = "Şah d5 atını korumak için e6'ya çıkmak zorunda kaldı (Kg8?? Bxd5+ ile çok kötü)."
+
+[[steps]]
+text = "d5 atı açmazda! Üçüncü kez saldır."
+expect = "Nc3"
+reply = "Ncb4"
+success = "Siyah ...Ncb4 ile c2'ye saldırarak karşılık verdi."
+
+[[steps]]
+text = "Beyazın planı: rok (O-O), a3, d4 ile merkezi açıp şaha ulaşmak. Siyahın şahı e6'da ve taşları koordinesiz. Pratikte beyazın saldırısı çok güçlü; siyah doğru savunsa bile çok zor bir oyun oynar."
+
+[[steps]]
+quiz = { question = "Kızarmış Ciğer'den kaçınmak için siyah 5. hamlede ne oynamalıydı?", options = ["5...Nxd5", "5...Na5", "5...Qe7"], answer = 1 }

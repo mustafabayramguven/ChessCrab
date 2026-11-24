@@ -1,0 +1,23 @@
+[package]
+name = "chesscrab-lessons"
+description = "Dersler, kurslar, açılış repertuvarı ve aralıklı tekrar (SRS)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[dependencies]
+chesscrab-core.workspace = true
+shakmaty.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+
+chesscrab-engine = { workspace = true, optional = true }
+
+[features]
+audit = ["dep:chesscrab-engine"]
+
+[dev-dependencies]
+chesscrab-engine.workspace = true

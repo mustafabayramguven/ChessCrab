@@ -1,0 +1,36 @@
+id = "italyan-giuoco-piano"
+title = "İtalyan Oyunu: Giuoco Piano"
+summary = "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5: en eski açılışlardan biri ve fikirleri."
+level = "baslangic"
+tags = ["açılış", "e4", "italyan"]
+
+[[steps]]
+text = "İtalyan Oyunu 1500'lerden beri oynanır ve prensipleri öğrenmek için mükemmeldir: hızlı gelişim, merkez ve f7'ye baskı. Başla:"
+expect = "e4"
+reply = "e5"
+
+[[steps]]
+expect = "Nf3"
+reply = "Nc6"
+text = "Atını e5'e saldıracak şekilde geliştir."
+
+[[steps]]
+text = "Fil c4: f7'ye bakar, d5'i kontrol eder."
+expect = "Bc4"
+reply = "Bc5"
+arrows = ["c4f7"]
+success = "Siyah da aynı mantıkla filini c5'e getirdi: f2'ye bakıyor. Bu Giuoco Piano ('sessiz oyun')."
+
+[[steps]]
+text = "Beyazın iki ana planı var: c3 + d4 ile büyük merkez kurmak (klasik) ya da d3 ile sakin manevra oyunu (Pianissimo). İkisini de göreceğiz. Şimdi c3 oyna."
+expect = "c3"
+also = ["d3"]
+reply = "Nf6"
+success = "c3, d4'ü piyonla destekler. Siyah Nf6 ile e4'e karşı saldırıya geçti."
+arrows = ["c3d4"]
+
+[[steps]]
+quiz = { question = "c3 hamlesinin bir dezavantajı nedir?", options = ["Şahı açar", "b1 atının doğal karesi c3'ü kapatır", "Fili hapseder"], answer = 1, explain = "Bu yüzden at genellikle d2'den (Nbd2) ya da a3'ten oyuna girer." }
+
+[[steps]]
+quiz = { question = "Siyahın c5 filinin en önemli hedefi hangisi?", options = ["a2", "f2", "h2", "e4"], answer = 1, explain = "f2 tıpkı f7 gibi açılışta sadece şahla korunan zayıf karedir." }

@@ -1,0 +1,42 @@
+id = "prensip-erken-vezir"
+title = "Vezirini erken çıkarma"
+summary = "Erken çıkan vezir kovalanır; rakip bunu yaparken tempo kazanır."
+level = "baslangic"
+orientation = "black"
+tags = ["prensip"]
+
+[[steps]]
+play = "e4"
+text = "Bu derste siyahsın. Vezir en değerli taşın; erken çıkarsa rakip onu kovalarken taşlarını tempo kazanarak geliştirir. Önce merkez:"
+expect = "e5"
+reply = "Qh5"
+
+[[steps]]
+text = "Beyaz vezirini erken çıkardı: e5'e ve f7'ye bakıyor. Önce e5'i korurken bir taş geliştir."
+expect = "Nc6"
+reply = "Bc4"
+arrows = ["h5e5"]
+success = "At gelişti ve e5'i korudu."
+
+[[steps]]
+text = "Dikkat: Qxf7# tehdidi var! Vezir ve fil f7'ye saldırıyor. Veziri kovalayarak savun."
+expect = "g6"
+also = ["Qe7", "Qf6"]
+reply = "Qf3"
+arrows = ["h5f7", "c4f7"]
+success = "g6 veziri kovaladı. Vezir yine f7'ye bakıyor."
+
+[[steps]]
+text = "f7 yine tehdit altında. Bir taş geliştirerek vezirin yolunu kapat."
+expect = "Nf6"
+reply = "Qb3"
+success = "Nf6 f-hattını kapattı ve gelişti. Beyaz vezir üçüncü kez oynuyor!"
+
+[[steps]]
+text = "Şimdi b3 vezir + c4 fil yine f7'ye bakıyor (fil önde, vezir arkada: batarya). f7'yi bir kez daha koru."
+expect = "Qe7"
+also = ["Nd4"]
+success = "Siyah iki at geliştirdi ve sağlam. Beyaz vezirle dört hamle oynadı ve gelişimde geride. (Daha keskin seçenek: ...Nd4 ile vezire saldırmak.)"
+
+[[steps]]
+quiz = { question = "Rakibin veziri erken çıktığında en iyi tepki genellikle hangisidir?", options = ["Kendi vezirini de çıkarmak", "Tehditleri savunurken veziri kovalayan taşlar geliştirmek", "Kenar piyonlarıyla veziri kovalamak"], answer = 1, explain = "Her kovalama hamlen aynı zamanda bir gelişim hamlesiyse tempo kazanırsın." }

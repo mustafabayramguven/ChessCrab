@@ -1,0 +1,44 @@
+id = "prensip-gelisim"
+title = "Taşlarını geliştir"
+summary = "Önce atlar ve filler, aynı taşı iki kez oynama, tempo kavramı."
+level = "baslangic"
+tags = ["prensip"]
+
+[[steps]]
+text = "Gelişim: taşları başlangıç karelerinden aktif karelere çıkarmak. Kural: önce hafif taşlar (at ve fil), sonra rok, sonra kaleler ve vezir. Her hamle yeni bir taşı oyuna sokmalı."
+
+[[steps]]
+text = "Başlayalım: merkez piyonu."
+expect = "e4"
+reply = "e5"
+
+[[steps]]
+text = "Şimdi bir at."
+expect = "Nf3"
+reply = "Nc6"
+
+[[steps]]
+text = "Şimdi şah kanadındaki fili geliştir. En aktif kare hangisi?"
+expect = "Bc4"
+also = ["Bb5"]
+reply = "Bc5"
+arrows = ["c4f7"]
+success = "Fil c4'te siyahın en zayıf karesine, f7'ye bakıyor: f7'yi başlangıçta sadece şah korur."
+
+[[steps]]
+text = "Şah kanadı boşaldı. Şahını güvenceye al!"
+expect = "O-O"
+also = ["c3", "d3", "Nc3"]
+reply = "Nf6"
+success = "Dört hamlede: merkez piyonu, iki taş geliştirildi ve rok yapıldı. İşte iyi bir açılış."
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 a6 d4 h6 Nf3 a5 Bc4 h5 O-O"
+text = "Kötü örnek: siyah dört kez kenar piyonu oynadı, hiçbir taş geliştirmedi. Beyaz aynı sürede merkezi aldı, iki taşını geliştirdi ve rok yaptı. Kaybedilen her hamleye 'tempo kaybı' denir; açılışta tempo altın değerindedir."
+
+[[steps]]
+quiz = { question = "Açılışta genellikle önce hangi taşlar geliştirilir?", options = ["Vezir ve kaleler", "Atlar ve filler", "Kenar piyonları", "Şah"], answer = 1, explain = "Hafif taşlar önce; kaleler ve vezir hatlar açılınca devreye girer." }
+
+[[steps]]
+quiz = { question = "Açılışta aynı taşı iki kez oynamak neden genelde kötüdür?", options = ["Kurala aykırıdır", "Diğer taşların gelişimini geciktirir (tempo kaybı)", "Rok hakkını kaybettirir"], answer = 1, explain = "İstisnalar var (ör. bir taşı almak ya da tehditten kaçmak) ama kural olarak her taşı bir kez oynayıp geliştirmeye devam et." }
