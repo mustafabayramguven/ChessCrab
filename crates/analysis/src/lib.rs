@@ -6,6 +6,7 @@
 //! ardışık bir dilimi analiz eder (TT'den faydalanmak için). Go brr.
 
 pub mod accuracy;
+pub mod coach;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -190,6 +191,9 @@ pub struct MoveAnalysis {
     pub best_uci: Option<String>,
     pub best_line: Vec<String>,
     pub comment: String,
+    /// Kötü hamlelerde rakibin en iyi cevabı
+    #[serde(default)]
+    pub refutation_san: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -401,19 +405,24 @@ fn fmt_score_tr(s: Score) -> String {
     }
 }
 
-pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>, engine: String, time_ms: u64) -> GameAnalysis {
+/// Tek bir hamleyi sınıflandır ve yorumla. `i`: hamle indeksi (0'dan),
+/// `before`/`after`: hamleden önceki/sonraki pozisyon değerlendirmeleri.
+pub fn analyse_move(
+    game: &Game,
+    positions: &[Chess],
+    i: usize,
+    before: &PositionEval,
+    after: &PositionEval,
+    book: usize,
+    prev_class: Option<MoveClass>,
+) -> MoveAnalysis {
     let start = &positions[0];
     let white_first = start.turn() == Color::White;
-    let sans = game.sans();
-    let book = book_depth(&sans);
-    let mut moves: Vec<MoveAnalysis> = Vec::with_capacity(game.moves().len());
     let fullmove0 = u32::from(start.fullmoves());
-
-    for (i, &m) in game.moves().iter().enumerate() {
+    let sans = game.sans();
+    let m = game.moves()[i];
         let pos = &positions[i];
         let white_moved = pos.turn() == Color::White;
-        let before = &evals[i];
-        let after = &evals[i + 1];
         let cp_b = mover_cp(before.cp, white_moved);
         let cp_a = mover_cp(after.cp, white_moved);
         let win_b = win_percent(cp_b);
@@ -425,7 +434,6 @@ pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>
         let is_best = before.best_uci.as_deref() == Some(uci.as_str());
         let n_legal = pos.legal_moves().len();
 
-        let prev_class = moves.last().map(|x: &MoveAnalysis| x.class);
         let mut class = if i < book {
             MoveClass::Book
         } else if n_legal == 1 {
@@ -474,6 +482,8 @@ pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>
 
         // Yorum
         let best_san = before.best_san.clone();
+        let bad = matches!(class, MoveClass::Inaccuracy | MoveClass::Mistake | MoveClass::Miss | MoveClass::Blunder);
+        let refutation_san = if bad { after.pv_san.first().cloned() } else { None };
         let mut comment = String::new();
         let mover_after = if white_moved { after.score } else { after.score.negate() };
         let mover_before = if white_moved { before.score } else { before.score.negate() };
@@ -482,7 +492,7 @@ pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>
             MoveClass::Forced => comment.push_str("Tek yasal hamle."),
             MoveClass::Brilliant => comment.push_str("Parlak bir feda! Materyal veriyorsun ama pozisyon bunu karşılıyor."),
             MoveClass::Great => comment.push_str("Harika — buradaki tek iyi hamle."),
-            MoveClass::Best => comment.push_str("Motorun da en iyi bulduğu hamle."),
+            MoveClass::Best => comment.push_str(if m.is_capture() { "En iyi hamle: doğru alım." } else if pos.clone().play(m).map(|p| p.is_check()).unwrap_or(false) { "En iyi hamle: güçlü bir şah." } else { "En iyi hamle." }),
             MoveClass::Excellent => comment.push_str("Neredeyse en iyisi kadar güçlü."),
             MoveClass::Good => comment.push_str("Sağlam bir hamle."),
             _ => {}
@@ -502,13 +512,31 @@ pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>
                 && n > 0 && !matches!(mover_after, Score::Mate(k) if k > 0) {
                     comment.push_str(&format!(" {n} hamlede mat vardı."));
                 }
+            if let Some(r) = &refutation_san {
+                let what = if r.contains('#') {
+                    "mat eder".to_string()
+                } else if r.contains('x') {
+                    let target: String = r.trim_end_matches(['+', '#']).chars().rev().take(2).collect::<Vec<_>>().into_iter().rev().collect();
+                    let promo_free = target.chars().all(|c| c.is_ascii_alphanumeric());
+                    if promo_free && uci.get(2..4) == Some(target.as_str()) {
+                        "geri alır".to_string()
+                    } else {
+                        "taş alır".to_string()
+                    }
+                } else if r.contains('+') {
+                    "şah çekerek inisiyatifi alır".to_string()
+                } else {
+                    "üstünlük kazanır".to_string()
+                };
+                comment.push_str(&format!(" Rakip {r} ile {what}."));
+            }
             if let Some(b) = &best_san {
                 comment.push_str(&format!(" En iyisi {b} ({}).", fmt_score_tr(before.score)));
             }
         }
 
         let move_number = fullmove0 + ((i as u32 + if white_first { 0 } else { 1 }) / 2);
-        moves.push(MoveAnalysis {
+        MoveAnalysis {
             ply: i + 1,
             move_number,
             white: white_moved,
@@ -525,7 +553,20 @@ pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>
             best_uci: before.best_uci.clone(),
             best_line: before.pv_san.clone(),
             comment,
-        });
+            refutation_san,
+        }
+}
+
+pub fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>, engine: String, time_ms: u64) -> GameAnalysis {
+    let start = &positions[0];
+    let white_first = start.turn() == Color::White;
+    let sans = game.sans();
+    let book = book_depth(&sans);
+    let mut moves: Vec<MoveAnalysis> = Vec::with_capacity(game.moves().len());
+
+    for i in 0..game.moves().len() {
+        let prev_class = moves.last().map(|x: &MoveAnalysis| x.class);
+        moves.push(analyse_move(game, positions, i, &evals[i], &evals[i + 1], book, prev_class));
     }
 
     let cps: Vec<i32> = evals.iter().map(|e| e.cp).collect();

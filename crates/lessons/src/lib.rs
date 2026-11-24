@@ -31,6 +31,18 @@ pub struct Catalog {
     pub repertoires: Vec<Repertoire>,
 }
 
+/// Derslerden çıkarılan, motorla doğrulanmış bulmaca.
+#[derive(Debug, Clone, Serialize)]
+pub struct Puzzle {
+    pub id: String,
+    pub lesson_id: String,
+    pub lesson_title: String,
+    pub prompt: String,
+    pub fen: String,
+    /// Çözüm: sırayla kullanıcı hamlesi, rakip cevabı, kullanıcı hamlesi... (UCI)
+    pub moves: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct LessonSummary {
     pub id: String,
@@ -132,6 +144,76 @@ impl Catalog {
                 }
             })
             .collect()
+    }
+
+    /// `puzzle = true` işaretli ders adımlarından bulmacalar.
+    pub fn puzzles(&self) -> Vec<Puzzle> {
+        use chesscrab_core::{parse_fen, parse_move, uci_of};
+        use shakmaty::Position;
+        let mut ids: Vec<&String> = self.lessons.keys().collect();
+        ids.sort();
+        let mut out = Vec::new();
+        for id in ids {
+            let lesson = &self.lessons[id];
+            let Ok(mut s) = LessonSession::new(lesson.clone()) else { continue };
+            let mut cur: Option<Puzzle> = None;
+            let mut guard = 0;
+            while !s.is_done() && guard < 1000 {
+                guard += 1;
+                let v = s.view();
+                let step = &lesson.steps[s.index()];
+                let continues = step.fen.is_none() && step.play.is_none() && step.expect.is_some();
+                if (!(v.mode == Mode::Move && continues) || step.puzzle)
+                    && let Some(p) = cur.take() {
+                        out.push(p);
+                    }
+                match v.mode {
+                    Mode::Move => {
+                        let exp = step.expect.clone().unwrap_or_default();
+                        if step.puzzle && cur.is_none() {
+                            cur = Some(Puzzle {
+                                id: format!("{}#{}", lesson.id, s.index()),
+                                lesson_id: lesson.id.clone(),
+                                lesson_title: lesson.title.clone(),
+                                prompt: step.text.clone(),
+                                fen: v.fen.clone(),
+                                moves: Vec::new(),
+                            });
+                        }
+                        if let Some(p) = cur.as_mut()
+                            && let Ok(mut pos) = parse_fen(&v.fen)
+                                && let Ok(m) = parse_move(&pos, &exp) {
+                                    p.moves.push(uci_of(m));
+                                    pos.play_unchecked(m);
+                                    if let Some(r) = &step.reply
+                                        && let Ok(rm) = parse_move(&pos, r) {
+                                            p.moves.push(uci_of(rm));
+                                        }
+                                }
+                        s.submit_move(&exp);
+                        s.next();
+                    }
+                    Mode::Quiz => {
+                        let a = step.quiz.as_ref().map(|q| q.answer).unwrap_or(0);
+                        s.answer(a);
+                        s.next();
+                    }
+                    Mode::Read => s.next(),
+                    Mode::Done => {}
+                }
+            }
+            if let Some(p) = cur.take() {
+                out.push(p);
+            }
+        }
+        // Sonu rakip hamlesiyle biten çözümleri kırp (son hamle kullanıcının olmalı)
+        for p in out.iter_mut() {
+            if p.moves.len() % 2 == 0 {
+                p.moves.pop();
+            }
+        }
+        out.retain(|p| !p.moves.is_empty());
+        out
     }
 
     /// Motorun kitabına eklenebilecek tüm repertuvar hatları.

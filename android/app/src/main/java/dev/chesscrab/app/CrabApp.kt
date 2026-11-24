@@ -4,6 +4,7 @@ import android.app.Application
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.chesscrab_ffi.CrabEngine
+import uniffi.chesscrab_ffi.LiveCoach
 import uniffi.chesscrab_ffi.SyncStore
 import java.io.File
 
@@ -22,8 +23,14 @@ object Crab {
     /** Oyun motoru (oyna ekranı). Analiz kendi motorlarını açar. */
     val engine: CrabEngine by lazy { CrabEngine(32u) }
 
-    /** Analiz tahtası için ayrı motor (oyun motoruyla çakışmasın). */
+    /** Analiz tahtası / keşif için ayrı motor (oyun motoruyla çakışmasın). */
     val evalEngine: CrabEngine by lazy { CrabEngine(32u) }
+
+    /** Canlı koç: oyunda her hamleyi anında değerlendirir. */
+    val coach: LiveCoach by lazy { LiveCoach(setting("coach_depth", "12").toUInt()) }
+
+    /** İnceleme ekranındaki "daha iyisini dene" karşılaştırmaları için */
+    val reviewCoach: LiveCoach by lazy { LiveCoach(12u) }
 
     fun init(app: Application) {
         store = SyncStore.open(File(app.filesDir, "chesscrab.db").absolutePath)

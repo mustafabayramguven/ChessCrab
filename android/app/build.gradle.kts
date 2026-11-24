@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("io.github.takahirom.roborazzi")
 }
 
 android {
@@ -39,6 +40,7 @@ android {
         compose = true
     }
     testOptions {
+        unitTests.isIncludeAndroidResources = true
         unitTests.all {
             it.systemProperty("jna.library.path", System.getenv("CRAB_LIB_DIR") ?: "${rootDir}/../target/release")
         }
@@ -60,6 +62,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("androidx.compose.animation:animation")
     // UniFFI Kotlin bağları JNA kullanır
     implementation("net.java.dev.jna:jna:5.15.0@aar")
 
@@ -67,4 +70,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("net.java.dev.jna:jna:5.15.0")
     testImplementation("org.json:json:20240303")
+
+    // Ekran görüntüsü testleri (Robolectric + Roborazzi): arayüz CI'da çizilip kontrol edilir
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test.ext:junit:1.2.1")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.36.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.36.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:1.36.0")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

@@ -51,10 +51,21 @@ jobs:
         with:
           gradle-version: "8.11.1"
 
-      - name: Kotlin ↔ Rust birim testleri (JVM)
+      - name: Kotlin ↔ Rust testleri + ekran görüntüleri (Robolectric)
         run: |
           cargo build --release -p chesscrab-ffi
-          CRAB_LIB_DIR="$GITHUB_WORKSPACE/target/release" gradle -p android testReleaseUnitTest --no-daemon
+          CRAB_LIB_DIR="$GITHUB_WORKSPACE/target/release" gradle -p android recordRoborazziDebug --no-daemon --stacktrace
+
+      - name: Ekran görüntülerini "screenshots" dalına koy
+        if: always()
+        run: |
+          mkdir -p /tmp/shots
+          cp android/app/build/screens/*.png /tmp/shots/ 2>/dev/null || true
+          cp -r android/app/build/reports/tests /tmp/shots/test-raporu 2>/dev/null || true
+          cd /tmp/shots
+          git init -q && git checkout -q -b screenshots
+          git add -A && git -c user.name=ci -c user.email=ci@chesscrab commit -qm "Ekran görüntüleri ${GITHUB_SHA::7}" || exit 0
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" screenshots
 
       - name: APK
         env:

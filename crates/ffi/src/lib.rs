@@ -255,6 +255,68 @@ pub fn analyze_pgn(pgn_text: String, depth: u32, threads: u32, progress: Option<
     Ok(to_json(&a))
 }
 
+// ---------------- canlı koç ----------------
+
+fn parse_class(c: &str) -> Option<chesscrab_analysis::MoveClass> {
+    serde_json::from_value(serde_json::Value::String(c.to_string())).ok()
+}
+
+/// Oyun sırasında her hamleyi anında değerlendiren koç (kendi motoruyla).
+#[derive(uniffi::Object)]
+pub struct LiveCoach {
+    inner: Mutex<chesscrab_analysis::coach::LiveCoach>,
+}
+
+#[uniffi::export]
+impl LiveCoach {
+    #[uniffi::constructor]
+    pub fn new(depth: u32) -> Arc<Self> {
+        Arc::new(LiveCoach { inner: Mutex::new(chesscrab_analysis::coach::LiveCoach::new(depth, 32)) })
+    }
+
+    pub fn clear(&self) {
+        self.inner.lock().expect("kilit").clear();
+    }
+
+    pub fn set_depth(&self, depth: u32) {
+        self.inner.lock().expect("kilit").depth = depth.clamp(4, 30);
+    }
+
+    /// Son hamlenin incelemesi: {"move": MoveAnalysis, "white_cp": int}. Hamle yoksa None.
+    pub fn review_last(&self, game: Arc<ChessGame>, prev_class: Option<String>) -> Option<String> {
+        let g = game.inner.lock().expect("kilit").clone();
+        let mut c = self.inner.lock().expect("kilit");
+        let mv = c.review_last(&g, prev_class.as_deref().and_then(parse_class))?;
+        let cp = c.evaluate(&g).cp;
+        Some(to_json(&serde_json::json!({ "move": mv, "white_cp": cp })))
+    }
+
+    /// Mevcut pozisyon için en iyi hamle (ipucu).
+    pub fn hint(&self, game: Arc<ChessGame>) -> String {
+        let g = game.inner.lock().expect("kilit").clone();
+        to_json(&self.inner.lock().expect("kilit").hint(&g))
+    }
+
+    /// Bir pozisyonda bir hamlenin en iyiye göre kaybı ("Daha iyisini dene").
+    pub fn compare(&self, fen: String, mv: String) -> Result<String, CrabError> {
+        let pos = chesscrab_core::parse_fen(&fen).map_err(fail)?;
+        let m = chesscrab_core::parse_move(&pos, &mv).map_err(fail)?;
+        Ok(to_json(&self.inner.lock().expect("kilit").compare(&pos, m)))
+    }
+
+    /// Önbellekten anında tam oyun incelemesi (GameAnalysis JSON).
+    pub fn full_review(&self, game: Arc<ChessGame>) -> String {
+        let g = game.inner.lock().expect("kilit").clone();
+        to_json(&self.inner.lock().expect("kilit").full_review(&g))
+    }
+}
+
+/// Derslerden çıkarılmış bulmacalar (günün bulmacası için).
+#[uniffi::export]
+pub fn puzzles_json() -> String {
+    to_json(&Catalog::get().puzzles())
+}
+
 // ---------------- dersler ----------------
 
 #[derive(uniffi::Object)]
@@ -442,5 +504,14 @@ mod tests {
         assert_eq!(st.pending_count(), 1);
         assert!(st.prepare_sync_json().unwrap().contains("\"games\""));
         assert!(courses_json().contains("Açılıştan Orta Oyuna"));
+        let coach = LiveCoach::new(8);
+        let g2 = ChessGame::new();
+        g2.play("e4".into()).unwrap();
+        let r: serde_json::Value = serde_json::from_str(&coach.review_last(g2.clone(), None).unwrap()).unwrap();
+        assert_eq!(r["move"]["class"], "book");
+        assert!(coach.full_review(g2.clone()).contains("accuracy"));
+        let ps: serde_json::Value = serde_json::from_str(&puzzles_json()).unwrap();
+        assert!(ps.as_array().unwrap().len() > 20);
+        println!("bulmaca: {}", ps.as_array().unwrap().len());
     }
 }

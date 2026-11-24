@@ -71,3 +71,18 @@ fn repertoire_drill() {
     }
     assert_eq!(Grade::from_mistakes(d.mistakes()), Grade::Hard);
 }
+
+#[test]
+fn puzzles_extracted() {
+    let cat = Catalog::get();
+    let ps = cat.puzzles();
+    assert!(ps.len() >= 20, "bulmaca sayısı {}", ps.len());
+    for p in &ps {
+        let mut g = chesscrab_core::Game::from_fen(&p.fen).unwrap();
+        for m in &p.moves {
+            g.play(m).unwrap_or_else(|e| panic!("{}: {m}: {e}", p.id));
+        }
+    }
+    let catal = ps.iter().find(|p| p.lesson_id == "taktik-arka-yatay" && p.moves.len() == 3).expect("çok hamleli bulmaca");
+    assert_eq!(catal.moves[0], "e2e8");
+}
