@@ -116,7 +116,7 @@ fun EvalBar(whiteCp: Int, whiteBottom: Boolean, modifier: Modifier = Modifier) {
     val target = winPercent(whiteCp) / 100f
     val w by animateFloatAsState(target, tween(650, easing = FastOutSlowInEasing), label = "eval")
     val whiteAhead = whiteCp >= 0
-    Box(modifier.width(16.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF07101A)).border(1.dp, Crabs.Line, RoundedCornerShape(8.dp))) {
+    Box(modifier.width(17.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF07101A)).border(1.dp, Crabs.Line, RoundedCornerShape(8.dp))) {
         Canvas(Modifier.fillMaxSize()) {
             val hWhite = size.height * w
             val top = if (whiteBottom) size.height - hWhite else 0f
@@ -126,8 +126,8 @@ fun EvalBar(whiteCp: Int, whiteBottom: Boolean, modifier: Modifier = Modifier) {
         }
         val atBottom = whiteAhead == whiteBottom
         Text(
-            scoreLabel(whiteCp).removePrefix("+"),
-            fontSize = 7.5.sp, fontFamily = Mono, fontWeight = FontWeight.Bold,
+            scoreLabel(whiteCp).removePrefix("+").removePrefix("-").let { if (it.length > 3 && !it.startsWith("M")) it.substringBefore('.') else it },
+            fontSize = 7.sp, fontFamily = Mono, fontWeight = FontWeight.Bold,
             color = if (whiteAhead) Crabs.Ink else Crabs.Sand,
             textAlign = TextAlign.Center,
             modifier = Modifier.align(if (atBottom) Alignment.BottomCenter else Alignment.TopCenter).padding(vertical = 4.dp).fillMaxWidth(),

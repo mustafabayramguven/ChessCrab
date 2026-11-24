@@ -12,7 +12,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.chesscrab.app.Crab
@@ -41,15 +40,21 @@ object Crabs {
     val Faint = Color(0xFF5E7782)
 }
 
-@OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
-private fun vf(res: Int, w: Int) = Font(res, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
-
 val Display = FontFamily(
     Font(R.font.dm_serif, FontWeight.Normal),
     Font(R.font.dm_serif_italic, FontWeight.Normal, FontStyle.Italic),
 )
-val Body = FontFamily(listOf(400, 500, 600, 700, 800).map { vf(R.font.manrope, it) })
-val Mono = FontFamily(listOf(400, 500, 700).map { vf(R.font.jetbrains_mono, it) })
+val Body = FontFamily(
+    Font(R.font.manrope_400, FontWeight.Normal),
+    Font(R.font.manrope_500, FontWeight.Medium),
+    Font(R.font.manrope_600, FontWeight.SemiBold),
+    Font(R.font.manrope_700, FontWeight.Bold),
+    Font(R.font.manrope_800, FontWeight.ExtraBold),
+)
+val Mono = FontFamily(
+    Font(R.font.jetbrains_mono_400, FontWeight.Normal),
+    Font(R.font.jetbrains_mono_700, FontWeight.Bold),
+)
 
 private val Scheme = darkColorScheme(
     primary = Crabs.Coral,
