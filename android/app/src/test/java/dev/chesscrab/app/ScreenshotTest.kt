@@ -107,8 +107,16 @@ class ScreenshotTest {
 
     @Test fun rushRun() {
         dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"
-        compose.setContent { CrabTheme { dev.chesscrab.app.ui.learn.RushScreen(androidx.compose.ui.Modifier, onExit = {}, startRunning = true) } }
-        compose.waitForIdle(); compose.mainClock.advanceTimeBy(3000); compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            CrabTheme {
+                androidx.compose.material3.Surface(color = dev.chesscrab.app.ui.Crabs.Bg) {
+                    dev.chesscrab.app.ui.learn.RushScreen(androidx.compose.ui.Modifier, onExit = {}, startRunning = true)
+                }
+            }
+        }
+        // süre işlesin ama fırtına bitmesin: elle 12 saniye ilerlet
+        repeat(120) { compose.mainClock.advanceTimeBy(100) }
         compose.onRoot().captureRoboImage("build/screens/15-firtina-oyun.png")
     }
 
