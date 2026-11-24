@@ -24,41 +24,8 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings -A clippy::needless_range_loop -A clippy::if_same_then_else -A clippy::too_many_arguments -A clippy::large_enum_variant
 
-  web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: web
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: wasm-bindgen-cli@0.2.130
-      - name: WASM web uygulaması
-        run: |
-          cargo build --release -p chesscrab-wasm --target wasm32-unknown-unknown
-          wasm-bindgen --target web --out-dir web/pkg target/wasm32-unknown-unknown/release/chesscrab_wasm.wasm
-          ls -la web/pkg
-      - name: Senkronizasyon sunucusu
-        run: cargo build --release -p chesscrab-server
-      - name: Tarayıcı testi (Playwright)
-        run: |
-          pip install playwright
-          python -m playwright install --with-deps chromium
-          CHESSCRAB_DB=/tmp/cc/c.db CHESSCRAB_WEB_DIR=web CHESSCRAB_ADDR=127.0.0.1:3437 ./target/release/chesscrab-server &
-          sleep 2
-          SHOTS=shots python tests/web_e2e.py http://127.0.0.1:3437
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: web-ekran-goruntuleri
-          path: shots
-
   docker:
-    needs: [rust, web]
+    needs: rust
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:

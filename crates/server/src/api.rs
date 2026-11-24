@@ -1,14 +1,12 @@
 use std::sync::{Arc, Mutex};
 
 use axum::extract::{FromRequestParts, Path, State};
-use axum::http::{HeaderValue, StatusCode, header, request::Parts};
+use axum::http::{StatusCode, header, request::Parts};
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tower_http::services::{ServeDir, ServeFile};
-use tower_http::set_header::SetResponseHeaderLayer;
 
 use chesscrab_sync::SyncRequest;
 
@@ -142,12 +140,13 @@ async fn health() -> Json<Value> {
     Json(json!({ "ok": true, "version": env!("CARGO_PKG_VERSION"), "role": "sync" }))
 }
 
-async fn no_web() -> Html<&'static str> {
-    Html("<!doctype html><meta charset=utf-8><title>ChessCrab</title><p>ChessCrab senkronizasyon sunucusu çalışıyor. Web uygulaması bu kurulumda yok (CHESSCRAB_WEB_DIR).</p>")
+async fn root() -> Html<&'static str> {
+    Html("<!doctype html><meta charset=utf-8><title>ChessCrab</title><p>ChessCrab senkronizasyon sunucusu çalışıyor. Uygulamadan bu adresi girerek giriş yap.</p>")
 }
 
-pub fn router(state: St, web_dir: &str) -> Router {
-    let api = Router::new()
+pub fn router(state: St) -> Router {
+    Router::new()
+        .route("/", get(root))
         .route("/api/health", get(health))
         .route("/api/auth/register", post(register))
         .route("/api/auth/login", post(login))
@@ -156,17 +155,5 @@ pub fn router(state: St, web_dir: &str) -> Router {
         .route("/api/sync", post(sync))
         .route("/api/records/{collection}", get(records))
         .layer(axum::extract::DefaultBodyLimit::max(8 * 1024 * 1024))
-        .layer(tower_http::cors::CorsLayer::permissive())
-        .with_state(state);
-
-    let index = std::path::Path::new(web_dir).join("index.html");
-    if index.exists() {
-        let files = ServeDir::new(web_dir).fallback(ServeFile::new(index));
-        api.fallback_service(files).layer(SetResponseHeaderLayer::if_not_present(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static("no-cache"),
-        ))
-    } else {
-        api.fallback(get(no_web))
-    }
+        .with_state(state)
 }

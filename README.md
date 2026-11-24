@@ -2,13 +2,13 @@
 
 Kendi sunucunda çalışan, **tamamen offline** kullanılabilen, chess.com/lichess tarzı bir satranç uygulaması. Baştan sona Rust.
 
-**Bütün satranç hesabı cihazda yapılır.** Motor, analiz ve dersler telefonda (Rust + UniFFI) ve tarayıcıda (Rust + WebAssembly) çalışır. Sunucu sadece hesapları ve senkronizasyonu tutar; satranç hesabı yapmaz, bu yüzden çok az kaynak harcar (128 MB yeter).
+**Bütün satranç hesabı cihazda yapılır.** Motor, analiz ve dersler telefonda (Rust + UniFFI) çalışır. Sunucu sadece hesapları ve senkronizasyonu tutar; satranç hesabı yapmaz, bu yüzden çok az kaynak harcar (128 MB yeter).
 
-- **CrabFish**: kendi satranç motorumuz (Rust). Telefonda ve tarayıcıda aynı motor.
+- **CrabFish**: kendi satranç motorumuz (Rust). Telefonda çalışır; masaüstünde UCI motoru olarak da kullanılabilir.
 - **Oyun doğruluğu analizi**: lichess formülüyle doğruluk yüzdesi, ACPL, chess.com tarzı hamle sınıfları (Parlak !!, Harika !, En iyi, Mükemmel, İyi, Kitap, Belirsiz ?!, Hata ?, Kaçırılan, Büyük hata ??, Zorunlu), değerlendirme grafiği, kritik anlar ve Türkçe yorumlar. Bütün çekirdeklerde paralel çalışır.
 - **Dersler**: *Satranç Temelleri* ve *Açılıştan Orta Oyuna* kursları (53 ders): prensipler, İtalyan/İki At, İspanyol/İskoç/Petrov, Sicilya, Fransız/Caro-Kann/İskandinav, Vezir Gambiti/Londra, Hint savunmaları, piyon yapıları ve planlar, taktik motifler.
 - **Repertuvar çalışması** (Chessable tarzı) + aralıklı tekrar (SRS): beyaz için 1.e4/İtalyan, siyah için Caro-Kann ve VG Reddi.
-- **Senkronizasyon**: telefon ↔ sunucu ↔ web. Oyunlar, ders ilerlemesi, SRS kartları. Offline-first; çakışmada HLC + "son yazan kazanır".
+- **Senkronizasyon**: telefon ↔ sunucu (birden fazla cihaz). Oyunlar, ders ilerlemesi, SRS kartları. Offline-first; çakışmada HLC + "son yazan kazanır".
 - **Android**: Rust çekirdek (UniFFI) + Jetpack Compose, Material You. Motor, analiz ve dersler internetsiz çalışır.
 
 ## Mimari
@@ -21,14 +21,12 @@ crates/
   analysis/   doğruluk, ACPL, hamle sınıflandırma, çok iş parçacıklı / dağıtık oyun analizi
   lessons/    kurs/ders/repertuvar içeriği (TOML, ikiliye gömülü), ders oturumu, SRS
   sync/       HLC, LWW birleştirme, SQLite yerel depo
-  server/     Axum + SQLite: sadece kimlik ve /api/sync (+ web dosyalarını sunar)
+  server/     Axum + SQLite: sadece kimlik ve /api/sync
   ffi/        UniFFI → Kotlin (Android)
-  wasm/       wasm-bindgen → tarayıcı (motor/analiz Web Worker'larda)
 android/      Jetpack Compose uygulaması
-web/          tarayıcı uygulaması (WASM + Web Worker + çevrimdışı service worker)
 ```
 
-Tüm istemciler aynı Rust kodunu kullanır: ders oturumu mantığı, analiz, motor ve birleştirme bir kez yazıldı. Tarayıcıda analiz, pozisyonlar çekirdek sayısı kadar Web Worker'a bölünerek yapılır.
+Tüm istemciler aynı Rust kodunu kullanır: ders oturumu mantığı, analiz, motor ve birleştirme bir kez yazıldı.
 
 ## Sunucu
 
@@ -41,13 +39,6 @@ docker compose up -d        # http://sunucu:3437
 Kaynaktan:
 
 ```sh
-# web uygulaması (WASM)
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.130
-cargo build --release -p chesscrab-wasm --target wasm32-unknown-unknown
-wasm-bindgen --target web --out-dir web/pkg target/wasm32-unknown-unknown/release/chesscrab_wasm.wasm
-
-# senkronizasyon sunucusu (web/ klasörünü de sunar)
 cargo run --release -p chesscrab-server
 ```
 
@@ -56,11 +47,10 @@ cargo run --release -p chesscrab-server
 | `CHESSCRAB_ADDR` | `0.0.0.0:3437` | dinlenecek adres |
 | `CHESSCRAB_DB` | `./data/chesscrab.db` | SQLite dosyası |
 | `CHESSCRAB_ALLOW_REGISTER` | `0` | `1` ise herkes kayıt olabilir; değilse sadece ilk kullanıcı |
-| `CHESSCRAB_WEB_DIR` | `./web` | web uygulaması klasörü (yoksa sadece API) |
 
 API: `/api/auth/{register,login,logout,me}`, `/api/sync`, `/api/records/{koleksiyon}`, `/api/health`. Başka bir şey yok.
 
-Web uygulaması sunucunun kökünde: CrabFish'e karşı oyna (saatli/saatsiz), PGN analizi, dersler, repertuvar ve oyun listesi. Hepsi tarayıcıda çalışır, giriş yapmadan da kullanılabilir; bir kez açıldıktan sonra internet olmadan da açılır. **Hesap** sekmesinden kayıt olursan telefonla eşitlenir; ilk kullanıcı sunucunun sahibidir.
+Uygulamada **Daha → Senkronizasyon**'a sunucu adresini girip kayıt ol; ilk kullanıcı sunucunun sahibidir.
 
 Caddy ile:
 

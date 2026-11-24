@@ -1,13 +1,11 @@
 //! ChessCrab senkronizasyon sunucusu.
 //!
 //! Sunucu satranç hesabı YAPMAZ: motor, analiz ve dersler telefonda (Rust/UniFFI)
-//! ve tarayıcıda (Rust/WASM) çalışır. Burada sadece hesaplar, senkronizasyon ve
-//! web uygulamasının statik dosyaları var.
+//! çalışır. Burada sadece hesaplar ve senkronizasyon var.
 //!
 //! Ortam değişkenleri:
 //! - `CHESSCRAB_ADDR` (varsayılan `0.0.0.0:3437`)
 //! - `CHESSCRAB_DB` (varsayılan `./data/chesscrab.db`)
-//! - `CHESSCRAB_WEB_DIR` (varsayılan `./web`): WASM web uygulaması; yoksa sadece API
 //! - `CHESSCRAB_ALLOW_REGISTER` = `1` ise herkes kayıt olabilir; aksi halde sadece ilk kullanıcı
 
 mod api;
@@ -30,11 +28,10 @@ async fn main() {
             std::fs::create_dir_all(dir).expect("veritabanı klasörü oluşturulamadı");
         }
     let conn = db::open(&db_path).expect("veritabanı açılamadı");
-    let web_dir = std::env::var("CHESSCRAB_WEB_DIR").unwrap_or_else(|_| "./web".into());
     let state = Arc::new(api::AppState::new(conn, api::Config::from_env()));
-    let app = api::router(state, &web_dir);
+    let app = api::router(state);
     let listener = tokio::net::TcpListener::bind(&addr).await.expect("adres dinlenemedi");
-    tracing::info!("ChessCrab senkronizasyon sunucusu http://{addr} (web: {web_dir})");
+    tracing::info!("ChessCrab senkronizasyon sunucusu http://{addr}");
     axum::serve(listener, app)
         .with_graceful_shutdown(async {
             let _ = tokio::signal::ctrl_c().await;

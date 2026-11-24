@@ -8,7 +8,6 @@ members = [
     "crates/sync",
     "crates/server",
     "crates/ffi",
-    "crates/wasm",
 ]
 
 [workspace.package]
