@@ -21,7 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.FirstPage
+import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.automirrored.filled.LastPage
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
@@ -174,7 +174,7 @@ fun AnalysisScreen(m: AnalysisModel, modifier: Modifier) {
         )
         EvalBar(winPercent(ev.getInt("cp")))
         Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = { m.ply = 0 }) { Icon(Icons.AutoMirrored.Filled.FirstPage, "başa") }
+            IconButton(onClick = { m.ply = 0 }) { Icon(Icons.Filled.FirstPage, "başa") }
             IconButton(onClick = { m.ply = (ply - 1).coerceAtLeast(0) }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "geri") }
             IconButton(onClick = { m.ply = (ply + 1).coerceAtMost(moves.size) }) { Icon(Icons.AutoMirrored.Filled.ArrowForward, "ileri") }
             IconButton(onClick = { m.ply = moves.size }) { Icon(Icons.AutoMirrored.Filled.LastPage, "sona") }
