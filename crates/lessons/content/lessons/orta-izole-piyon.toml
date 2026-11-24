@@ -1,0 +1,30 @@
+id = "orta-izole-piyon"
+title = "İzole vezir piyonu: iki tarafın da planı"
+summary = "Tarrasch yapısında IQP'ye karşı abluka; IQP'li tarafın aktif oyunu."
+level = "ileri"
+tags = ["orta oyun", "piyon yapısı", "IQP"]
+setup = "d4 d5 c4 e6 Nc3 c5 cxd5 exd5 Nf3 Nc6 g3 Nf6 Bg2 Be7 O-O O-O Bg5 cxd4 Nxd4 h6 Be3 Re8"
+
+[[steps]]
+text = "Tarrasch Savunması: siyahın d5'te izole piyonu var. Beyaz olarak üç kural: 1) d4 karesini ablukaya al (at d4'te mükemmel), 2) d5'e baskı yap (Bg2 zaten bakıyor), 3) taş değiştir: her değişim IQP'yi zayıflatır."
+highlights = ["d4", "d5"]
+
+[[steps]]
+text = "Kaleyi açık c-hattına getir."
+expect = "Rc1"
+also = ["Qb3", "a3", "Qa4"]
+reply = "Bf8"
+success = "Siyah fili f8'e çekti: g7'yi korur, e-hattını kaleye bırakır."
+
+[[steps]]
+text = "Şimdi d4 atının d5 piyonuna bakan baskısını artırmak için bir değişim: c6 atını değiş, böylece siyahın d5'i savunan ve d4'e bakan taşı gider."
+expect = "Nxc6"
+also = ["a3", "Qb3"]
+reply = "bxc6"
+success = "Bir değişim oldu. Siyahın d5 piyonu artık c6 ile destekli ama c6 da yarı açık c-hattında yeni bir hedef. 'Asılı piyonlar' (c6+d5) yapısına benziyor."
+
+[[steps]]
+text = "Siyah tarafından bakış: IQP'li taraf pasif savunma yapmamalı. Fikirler: ...Bg4 ve ...Qd7 ile beyaz şaha baskı, ...Ne4 ile karakol, ...Rb8 ile b2'ye baskı, doğru anda ...d4 itişiyle merkezi açmak. Taşlar ne kadar aktifse IQP o kadar güçlü; taşlar değiştikçe o kadar zayıf."
+
+[[steps]]
+quiz = { question = "IQP'li taraf için hangisi genelde İYİ fikir DEĞİLDİR?", options = ["Şah kanadında taş saldırısı", "Taşları aktif tutmak", "Erken vezir değişimi", "d-piyonunu doğru anda sürmek"], answer = 2 }

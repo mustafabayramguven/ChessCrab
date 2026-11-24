@@ -1,0 +1,43 @@
+id = "ispanyol-berlin"
+title = "Berlin Savunması: Berlin Duvarı"
+summary = "Kramnik'in Kasparov'a karşı dünya şampiyonluğu silahı: vezirsiz orta oyun."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "e4", "ispanyol"]
+setup = "e4 e5 Nf3 Nc6 Bb5"
+
+[[steps]]
+text = "Siyahsın. 3...a6 yerine hemen e4'e saldır: Berlin Savunması."
+expect = "Nf6"
+reply = "O-O"
+
+[[steps]]
+text = "e4'ü al! Beyaz geri alacak ama bu hat siyaha sağlam bir yapı verir."
+expect = "Nxe4"
+reply = "d4"
+
+[[steps]]
+text = "At d6'ya: hem b5 filine saldırır hem e5'e destek olur."
+expect = "Nd6"
+reply = "Bxc6"
+
+[[steps]]
+text = "Merkeze doğru değil, d-piyonuyla al: fil c8'in yolu açılsın."
+expect = "dxc6"
+reply = "dxe5"
+
+[[steps]]
+expect = "Nf5"
+reply = "Qxd8+"
+text = "At f5'e: d4 ve e7 karelerini kontrol eder."
+
+[[steps]]
+expect = "Kxd8"
+text = "Vezirleri değiştir."
+success = "Berlin Duvarı. Siyah rok hakkını kaybetti ve çift c-piyonu var; ama vezirler yokken şah d8'de güvende, iki fil uzun vadede güçlü ve siyahın yapısı çok sağlam."
+
+[[steps]]
+text = "Planlar: beyazın şah kanadında piyon çoğunluğu var (e5 piyonu) ve geçer piyon yaratmaya çalışır; siyah ...h6, ...Ke8 ile şahı toparlar, filleri aktifleştirir ve ...h5 ile beyazın g4-f4 ilerleyişini yavaşlatır. Kramnik bu hatla 2000'de Kasparov'u yenip dünya şampiyonu oldu; o zamandan beri elit seviyenin en sağlam silahlarından biri."
+
+[[steps]]
+quiz = { question = "Berlin Duvarında siyahın uzun vadeli kozu nedir?", options = ["Geçer piyon", "Fil çifti ve sağlam yapı", "Şah saldırısı"], answer = 1 }

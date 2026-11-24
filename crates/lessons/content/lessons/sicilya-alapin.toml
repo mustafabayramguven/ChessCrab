@@ -1,0 +1,51 @@
+id = "sicilya-alapin"
+title = "Beyaz için Alapin: 2.c3"
+summary = "Teori ezberlemeden Sicilya'ya karşı sağlam bir sistem; izole piyon yapısına geçiş."
+level = "orta"
+tags = ["açılış", "e4", "sicilya"]
+setup = "e4 c5"
+
+[[steps]]
+text = "Açık Sicilya'nın devasa teorisi yerine: c3 ile d4'ü piyonla almaya hazırlan."
+expect = "c3"
+reply = "d5"
+success = "Siyahın en iyi cevaplarından biri: hemen merkezde mücadele (2...Nf6 de ana hattır)."
+
+[[steps]]
+expect = "exd5"
+reply = "Qxd5"
+text = "Al."
+success = "Normalde merkezdeki vezir Nc3 ile kovalanır; ama burada c3'te piyon var! Alapin'in dezavantajı bu."
+
+[[steps]]
+expect = "d4"
+reply = "Nf6"
+text = "Merkezi kur."
+
+[[steps]]
+expect = "Nf3"
+reply = "e6"
+
+[[steps]]
+expect = "Be2"
+also = ["Bd3", "Na3"]
+reply = "Nc6"
+text = "Sakin gelişim."
+
+[[steps]]
+expect = "O-O"
+reply = "cxd4"
+
+[[steps]]
+expect = "cxd4"
+reply = "Be7"
+text = "Piyonla geri al."
+
+[[steps]]
+expect = "Nc3"
+reply = "Qd6"
+text = "Tempoyla geliş: veziri kovala."
+success = "Beyazın d4'te izole vezir piyonu var: aktif taşlar, açık c- ve e-hatları, e5/c5 karakolları ve şah kanadı saldırısı şansı karşılığında yapısal zayıflık. Bu yapıyı orta oyun bölümünde detaylı inceleyeceğiz."
+
+[[steps]]
+quiz = { question = "2.c3'ün amacı nedir?", options = ["Vezir kanadı saldırısı", "d4'ü piyonla destekleyip tam merkez kurmak", "Filin önünü açmak"], answer = 1 }

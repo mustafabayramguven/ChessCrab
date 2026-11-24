@@ -1,0 +1,59 @@
+id = "petrov-savunmasi"
+title = "Petrov Savunması ve tuzağı"
+summary = "Simetrik karşı saldırı. Neden 3...Nxe4? hatalı, doğrusu 3...d6!"
+level = "orta"
+tags = ["açılış", "e4", "petrov", "tuzak"]
+setup = "e4 e5 Nf3 Nf6"
+
+[[steps]]
+text = "Siyah e5'i korumak yerine e4'e saldırdı: Petrov. Piyonu al."
+expect = "Nxe5"
+reply = "Nxe4"
+success = "Siyah 'simetriyi' sürdürdü: 3...Nxe4? Bu bir hata."
+
+[[steps]]
+text = "Vezirle e4'teki ata saldır: e-hattında arkada siyah şah var!"
+expect = "Qe2"
+reply = "Nf6"
+success = "Siyah 4...Nf6?? ile atı kaçırdı ve e-hattını açtı."
+
+[[steps]]
+text = "Açarak şah! Atın, şah çekilirken d8'deki veziri de tehdit edecek."
+expect = "Nc6+"
+reply = "Be7"
+puzzle = true
+
+[[steps]]
+expect = "Nxd8"
+reply = "Kxd8"
+text = "Veziri al."
+success = "Vezir karşılığı sadece bir at."
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 e5 Nf3 Nf6 Nxe5 d6"
+text = "Doğrusu 3...d6!: önce atı kovala. (4...Nf6 yerine 4...Qe7 bile 5.Qxe4 d6 6.d4 ile beyaza bir piyon fazlası bırakır.) Şimdi at geri çekilsin."
+expect = "Nf3"
+reply = "Nxe4"
+
+[[steps]]
+text = "Merkezi kur."
+expect = "d4"
+reply = "d5"
+
+[[steps]]
+expect = "Bd3"
+reply = "Nc6"
+text = "Fil aktif kareye: e4 atına baskı."
+
+[[steps]]
+expect = "O-O"
+reply = "Be7"
+
+[[steps]]
+text = "Klasik Petrov: c4 ile siyahın merkezine (d5) meydan oku."
+expect = "c4"
+success = "Petrov çok sağlam bir savunmadır; beyaz küçük ama kalıcı bir alan üstünlüğü için oynar."
+
+[[steps]]
+quiz = { question = "Petrov'da 2...Nf6 3.Nxe5'ten sonra siyahın doğru hamlesi?", options = ["3...Nxe4", "3...d6", "3...Qe7"], answer = 1 }

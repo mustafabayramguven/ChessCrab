@@ -1,0 +1,63 @@
+id = "vg-red"
+title = "Vezir Gambiti Reddi ve Fil Tuzağı"
+summary = "2...e6: sağlam merkez, Ortodoks kurulum ve Bg5 açmazına karşı kurulan tuzak."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "d4", "vezir gambiti", "tuzak"]
+setup = "d4 d5 c4"
+
+[[steps]]
+text = "Siyahsın. Piyonu almak yerine merkezi sağlamlaştır: VG Reddi."
+expect = "e6"
+reply = "Nc3"
+
+[[steps]]
+expect = "Nf6"
+reply = "Bg5"
+text = "Geliş."
+success = "Bg5 atı açmaza aldı: at oynarsa d8 vezirine yol açılır."
+
+[[steps]]
+expect = "Be7"
+also = ["Nbd7"]
+reply = "e3"
+text = "Açmazı kır: fil e7'ye."
+
+[[steps]]
+expect = "O-O"
+reply = "Nf3"
+
+[[steps]]
+text = "Fili soru: h6."
+expect = "h6"
+reply = "Bh4"
+
+[[steps]]
+text = "Tartakower Varyantı: ...b6 ile c8 fili b7'ye, uzun köşegene. (Alternatif: Lasker'in ...Ne4 ile değişim fikri.)"
+expect = "b6"
+success = "VGR'de siyahın ana sorunu yine c8 fili; ...b6-Bb7 ve ...c5 ile merkezi kırmak bunu çözer."
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 d5 c4 e6 Nc3 Nf6 Bg5 Nbd7 cxd5 exd5 Nxd5"
+text = "Fil Tuzağı: 4...Nbd7 oynadığında d5 piyonu askıda gibi görünür. Beyaz 6.Nxd5?? ile 'açmazdaki' atı unutup piyonu aldı. Ama f6 atı aslında açmazda değil! Al!"
+expect = "Nxd5"
+reply = "Bxd8"
+puzzle = true
+success = "Beyaz veziri aldı... ama sıra sende."
+
+[[steps]]
+text = "Şah çek!"
+expect = "Bb4+"
+reply = "Qd2"
+
+[[steps]]
+expect = "Bxd2+"
+reply = "Kxd2"
+
+[[steps]]
+expect = "Kxd8"
+success = "Fil Tuzağı! Vezirler değişti ve siyah bir taş fazlasıyla kaldı."
+
+[[steps]]
+quiz = { question = "Fil Tuzağı neden çalıştı?", options = ["f6 atı açmazda değildi; ...Bb4+ ara hamlesi veziri geri kazandırdı", "Beyaz yanlış şah çekti", "Siyah veziri feda etti"], answer = 0 }

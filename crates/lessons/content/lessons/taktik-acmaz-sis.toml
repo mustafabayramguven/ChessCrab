@@ -1,0 +1,37 @@
+id = "taktik-acmaz-sis"
+title = "Açmaz ve şiş"
+summary = "Aynı hatta iki taş: arkadaki daha değerliyse açmaz, öndeki daha değerliyse şiş."
+level = "baslangic"
+tags = ["taktik", "bulmaca"]
+
+[[steps]]
+text = "AÇMAZ: uzun menzilli bir taş (fil, kale, vezir) bir taşa saldırır ve o taş kaçarsa arkasındaki daha değerli taş alınır. Arkadaki şahsa 'mutlak açmaz'dır: öndeki taş yasal olarak oynayamaz."
+
+[[steps]]
+fen = "4k3/8/8/4q3/8/8/PP3K2/R7 w - - 0 1"
+text = "Siyah vezir ile şah aynı e-hattında. Açmaza al!"
+expect = "Re1"
+reply = "Qxe1+"
+puzzle = true
+success = "Vezir açmazda ve kaçamaz; siyah en azından kaleyi alarak bir şey kurtarmaya çalışıyor."
+
+[[steps]]
+expect = "Kxe1"
+success = "Kale (5) karşılığında vezir (9). Piyonlarınla son oyun kazanılmış."
+
+[[steps]]
+text = "ŞİŞ: açmazın tersi. Öndeki taş daha değerlidir (çoğu zaman şah), kaçınca arkadaki alınır."
+
+[[steps]]
+fen = "q3k3/8/8/8/8/8/8/4K2R w - - 0 1"
+text = "Şah ve vezir 8. yatayda. Şiş!"
+expect = "Rh8+"
+reply = "Kd7"
+puzzle = true
+
+[[steps]]
+expect = "Rxa8"
+success = "Şah kaçtı, arkasındaki vezir düştü."
+
+[[steps]]
+quiz = { question = "Göreli açmaz ile mutlak açmazın farkı nedir?", options = ["Mutlak açmazda arkada şah vardır ve öndeki taş oynayamaz; göreli açmazda oynayabilir ama arkadaki taş kaybedilir", "Fark yoktur", "Göreli açmaz sadece atlarla olur"], answer = 0, explain = "Legal matında Nf3 göreli açmazdaydı ve oynadı!" }

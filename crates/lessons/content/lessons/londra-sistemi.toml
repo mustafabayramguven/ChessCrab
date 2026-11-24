@@ -1,0 +1,50 @@
+id = "londra-sistemi"
+title = "Londra Sistemi"
+summary = "Her şeye karşı aynı kurulum: d4, Bf4, e3, c3, Nf3, Nbd2, Bd3."
+level = "baslangic"
+tags = ["açılış", "d4", "londra", "sistem"]
+
+[[steps]]
+text = "Londra az teoriyle sağlam bir sistemdir. Başla:"
+expect = "d4"
+reply = "d5"
+
+[[steps]]
+text = "Fil e3 sürülmeden ÖNCE dışarı: f4'e."
+expect = "Bf4"
+also = ["Nf3"]
+reply = "Nf6"
+
+[[steps]]
+expect = "e3"
+reply = "e6"
+
+[[steps]]
+expect = "Nf3"
+reply = "c5"
+
+[[steps]]
+text = "Piramidi kur: c3 ile d4'ü sağlamlaştır."
+expect = "c3"
+reply = "Nc6"
+
+[[steps]]
+expect = "Nbd2"
+reply = "Bd6"
+text = "At d2'ye: c3 piyonunu engellemeden gelişir, e4 ya da Ne5 için destek."
+
+[[steps]]
+text = "Siyah f4 filini değiştirmek istiyor. Fil g3'e çekilsin: değişim olursa h-hattı açılır."
+expect = "Bg3"
+also = ["Bxd6"]
+reply = "O-O"
+
+[[steps]]
+expect = "Bd3"
+success = "Londra kurulumu tamam: c3-d4-e3 üçgeni, Bf4/g3, Bd3 h7'ye bakıyor. Planlar: O-O, Ne5, Qe2/f4 ile şah kanadı ya da Qe2 + e4."
+
+[[steps]]
+text = "Dikkat edilecek tek tuzak: siyah erken ...c5 ve ...Qb6 ile b2'ye saldırır. Qb3 ya da Qc1 ile karşıla; b2'yi bedava verme."
+
+[[steps]]
+quiz = { question = "Londra'da beyaz neden e3'ü fil f4'e çıktıktan SONRA oynar?", options = ["e3 önce oynanırsa c1 fili piyon zincirinin içinde kalır", "Kural bu", "Rok için"], answer = 0 }

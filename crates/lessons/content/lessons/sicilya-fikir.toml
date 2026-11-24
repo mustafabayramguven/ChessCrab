@@ -1,0 +1,40 @@
+id = "sicilya-fikir"
+title = "Sicilya Savunması: asimetrinin mantığı"
+summary = "1...c5 neden en popüler cevap? Açık Sicilya'da iki tarafın kozları."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "e4", "sicilya"]
+
+[[steps]]
+play = "e4"
+text = "Siyahsın. 1...e5 simetriktir; 1...c5 ise d4'ü kanattan kontrol eder ve oyunu dengesizleştirir. Kazanmak isteyen siyahın bir numaralı silahı."
+expect = "c5"
+reply = "Nf3"
+arrows = ["c5d4"]
+
+[[steps]]
+expect = "d6"
+also = ["Nc6", "e6"]
+reply = "d4"
+text = "Esnek bir hamle: e5'i kontrol et, filin yolunu aç."
+
+[[steps]]
+text = "Al: c-piyonunu merkez piyonuyla değiş!"
+expect = "cxd4"
+reply = "Nxd4"
+success = "İşte Sicilya'nın özü: siyah bir kanat piyonu verdi, beyaz bir merkez piyonu. Siyahın merkezde iki piyonu kaldı (d6, e7), beyazın bir (e4)."
+
+[[steps]]
+expect = "Nf6"
+reply = "Nc3"
+text = "e4'e saldırarak geliş: beyaz Nc3 ile koruyacak (c-piyonuyla koruyamaz, çünkü d4'te at var)."
+
+[[steps]]
+text = "Açık Sicilya'nın temel pozisyonu. Beyazın kozları: gelişim üstünlüğü, alan ve d5 karesi. Siyahın kozları: yarı açık c-hattı (kaleler için), merkez piyon çoğunluğu ve sağlam yapı. Çoğu zaman taraflar zıt yönlere rok yapar ve piyon fırtınası yarışı başlar."
+highlights = ["c8", "c1", "d5"]
+
+[[steps]]
+quiz = { question = "Açık Sicilya'da siyahın kaleleri hangi hatta doğal olarak aktif olur?", options = ["e-hattı", "c-hattı (yarı açık)", "h-hattı"], answer = 1 }
+
+[[steps]]
+quiz = { question = "Bu pozisyonda (5.Nc3'ten sonra) siyahın en popüler hamlesi ve adı?", options = ["5...a6 Najdorf", "5...h5 Ejderha", "5...Qb6 Petrov"], answer = 0, explain = "5...g6 Ejderha, 5...e6 Scheveningen, 5...Nc6 Klasik de oynanır." }

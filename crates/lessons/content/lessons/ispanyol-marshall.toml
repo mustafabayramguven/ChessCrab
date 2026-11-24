@@ -1,0 +1,48 @@
+id = "ispanyol-marshall"
+title = "Marshall Atağı"
+summary = "Bir piyon feda et, şaha saldır: siyahın en ünlü gambiti."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "e4", "ispanyol", "gambit"]
+setup = "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 O-O c3"
+
+[[steps]]
+text = "Siyahsın. Kapalı İspanyol'da beyaz d4'ü hazırlarken sen merkezi patlat: Marshall Atağı (1918)."
+expect = "d5"
+also = ["d6"]
+reply = "exd5"
+
+[[steps]]
+expect = "Nxd5"
+reply = "Nxe5"
+text = "Atla geri al."
+
+[[steps]]
+expect = "Nxe5"
+reply = "Rxe5"
+text = "Değiş."
+
+[[steps]]
+text = "Piyonu geri isteme! ...c6 ile d5 atını sağlamlaştır ve taşları şaha yönelt."
+expect = "c6"
+also = ["Nf6"]
+reply = "d4"
+success = "Siyah bir piyon eksik."
+
+[[steps]]
+text = "Fil d6'ya: kaleyi kovalar ve h2'ye bakar."
+expect = "Bd6"
+reply = "Re1"
+
+[[steps]]
+expect = "Qh4"
+reply = "g3"
+text = "Vezir şaha saldırıda!"
+
+[[steps]]
+expect = "Qh3"
+text = "h3'e gir."
+success = "Vezir h3'te, fil d6'da, sırada ...Bg4 ve ...Rae8 / ...f5 var. Beyaz Be3, Qd3, Re4 ile savunur. Teori çok derin ama siyahın inisiyatifi tam bir piyona değer: bu yüzden birçok beyaz oyuncu 8.c3 yerine 8.h3 / 8.a4 ile Marshall'dan kaçar."
+
+[[steps]]
+quiz = { question = "Marshall Atağında siyah piyon karşılığında ne alır?", options = ["Daha iyi son oyun", "Hızlı gelişim ve beyaz şaha karşı kalıcı inisiyatif", "Fil çifti"], answer = 1 }

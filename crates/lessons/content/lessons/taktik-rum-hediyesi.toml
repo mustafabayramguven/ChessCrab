@@ -1,0 +1,31 @@
+id = "taktik-rum-hediyesi"
+title = "Rum hediyesi: Bxh7+"
+summary = "Klasik fil fedası: Bxh7+, Ng5+, Qh5 ve h-hattı."
+level = "ileri"
+tags = ["taktik", "saldırı", "bulmaca"]
+
+[[steps]]
+fen = "r1bq1rk1/pp1nbppp/2n1p3/2ppP3/3P3P/2PB1N2/PP3PP1/RNBQK2R w KQ - 0 9"
+text = "Rum hediyesi koşulları: Bd3 h7'ye bakıyor, at g5'e gidebiliyor, vezir h5'e ulaşabiliyor, e5 piyonu f6'yı siyah atlardan alıyor ve h7'yi savunacak siyah at f6'da değil. Burada bir bonus da var: h4 piyonu ve h1 kalesi. Fedayı yap!"
+expect = "Bxh7+"
+reply = "Kxh7"
+puzzle = true
+
+[[steps]]
+text = "Şah çekerek atı getir."
+expect = "Ng5+"
+reply = "Bxg5"
+success = "Siyah atı aldı ama..."
+
+[[steps]]
+text = "Piyonla geri al: h-hattı açılıyor ve h1 kalesi devreye giriyor!"
+expect = "hxg5+"
+reply = "Kg8"
+
+[[steps]]
+text = "Vezir h5'e: mat tehdidi."
+expect = "Qh5"
+success = "Qh8# ve Qh7# tehditleri var. Siyah ...f5/...f6 ile kaçış yolu arar ama beyazın saldırısı çok güçlü. Rum hediyesinde hesap şarttır: Kg6 ve Kg8 savunmalarını her seferinde kontrol et."
+
+[[steps]]
+quiz = { question = "Rum hediyesinin işe yaraması için en kritik koşul hangisi?", options = ["Siyahın f6'da h7'yi savunan atı olmaması", "Beyazın rok yapmış olması", "Siyahın vezirinin d8'de olması"], answer = 0 }

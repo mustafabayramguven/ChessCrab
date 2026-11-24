@@ -1,0 +1,65 @@
+id = "ispanyol-ana-hat"
+title = "İspanyol Oyunu (Ruy Lopez): Kapalı ana hat"
+summary = "Bb5'in gerçek amacı, e5 neden hemen düşmez ve Chigorin kurulumunun planları."
+level = "orta"
+tags = ["açılış", "e4", "ispanyol"]
+setup = "e4 e5 Nf3 Nc6"
+
+[[steps]]
+text = "İspanyol Oyunu 500 yıldır en üst seviyenin açılışıdır. Fil b5'e: e5'i koruyan c6 atına baskı."
+expect = "Bb5"
+reply = "a6"
+arrows = ["b5c6", "f3e5"]
+success = "Morphy Savunması: siyah filin niyetini soruyor."
+
+[[steps]]
+quiz = { question = "4.Bxc6 dxc6 5.Nxe5 ile beyaz bir piyon kazanır mı?", options = ["Evet, temiz bir piyon", "Hayır: 5...Qd4! hem atı hem e4'ü tehdit eder ve piyon geri alınır"], answer = 1, explain = "Bu yüzden Bb5 hemen bir tehdit değil, uzun vadeli bir baskıdır. Değişim Varyantında (4.Bxc6) beyaz piyon kazanmak için değil, siyahın çift piyonlarına karşı iyi bir son oyun için değişir." }
+
+[[steps]]
+text = "Fili koru: geri çek ama baskıyı sürdür."
+expect = "Ba4"
+reply = "Nf6"
+
+[[steps]]
+text = "e4 tehdit altında görünüyor ama rok yap: 5...Nxe4 olursa 6.d4 ile beyaz merkezi açar (Açık İspanyol)."
+expect = "O-O"
+reply = "Be7"
+
+[[steps]]
+text = "Kale e4'ü korusun. Artık Bxc6 + Nxe5 gerçek bir tehdit!"
+expect = "Re1"
+reply = "b5"
+
+[[steps]]
+expect = "Bb3"
+reply = "d6"
+text = "Fil en iyi köşegenine: a2-g8, yine f7'ye bakıyor."
+
+[[steps]]
+text = "c3: d4'ü hazırlar ve file c2 kaçış karesi açar."
+expect = "c3"
+reply = "O-O"
+
+[[steps]]
+text = "h3: ...Bg4 ile f3 atının açmaza alınmasını engeller. Sonra d4 güvenle gelir."
+expect = "h3"
+reply = "Na5"
+success = "Chigorin Varyantı: siyah atı fili kovalamak ve ...c5 ile vezir kanadında alan kazanmak için a5'e götürüyor."
+
+[[steps]]
+expect = "Bc2"
+reply = "c5"
+text = "Fil c2'ye: hâlâ şah kanadına (h7) bakıyor."
+
+[[steps]]
+text = "Şimdi merkezi kur."
+expect = "d4"
+reply = "Qc7"
+
+[[steps]]
+text = "Klasik manevra başlıyor: Nbd2-f1-g3. At şah kanadına gidecek."
+expect = "Nbd2"
+success = "Planlar: beyaz şah kanadında (Nf1-g3, Nf5 karesi, d5 ile merkezi kapatıp kanatta oynamak). Siyah vezir kanadında (...cxd4, ...Nc6, ...Bd7, ...Rac8 ve c-hattı). Uzun ve stratejik bir savaş."
+
+[[steps]]
+quiz = { question = "9.h3 hamlesinin asıl amacı nedir?", options = ["Şaha kaçış karesi açmak", "...Bg4 ile f3 atının açmaza alınmasını engellemek", "g4 ile saldırı hazırlığı"], answer = 1 }

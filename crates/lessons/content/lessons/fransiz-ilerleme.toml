@@ -1,0 +1,49 @@
+id = "fransiz-ilerleme"
+title = "Fransız: İlerleme Varyantı ve piyon zincirleri"
+summary = "Zincirin tabanına saldır! ...c5, ...Nc6, ...Qb6 ve kötü fil sorunu."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "e4", "fransız", "piyon yapısı"]
+
+[[steps]]
+play = "e4"
+text = "Siyahsın. Fransız: önce ...e6, sonra ...d5. Sağlam ama c8 fili e6 piyonunun arkasında kalır."
+expect = "e6"
+reply = "d4"
+
+[[steps]]
+expect = "d5"
+reply = "e5"
+text = "Merkezde meydan oku."
+success = "İlerleme: piyon zincirleri kilitlendi. Beyaz: d4-e5. Siyah: e6-d5."
+highlights = ["d4", "e5", "e6", "d5"]
+
+[[steps]]
+text = "Nimzowitsch'in kuralı: piyon zincirine TABANINDAN saldır. Beyaz zincirin tabanı d4!"
+expect = "c5"
+reply = "c3"
+arrows = ["c5d4"]
+
+[[steps]]
+expect = "Nc6"
+reply = "Nf3"
+text = "d4'e ikinci saldırı."
+
+[[steps]]
+text = "Üçüncü saldırı ve b2'ye bakış."
+expect = "Qb6"
+reply = "a3"
+success = "Siyah d4'e üç kez saldırıyor (c5, Nc6, Qb6). Beyaz a3 ile b4'ü hazırlıyor."
+
+[[steps]]
+text = "Vezir kanadında alan kazan ve b4'ü engelle."
+expect = "c4"
+also = ["Nh6", "Bd7"]
+success = "Sonraki planlar: ...Bd7, ...Na5-b3, ...Ne7-f5 ve doğru anda zincirin diğer ucuna ...f6 ile saldırı."
+
+[[steps]]
+text = "Kötü fil: c8 fili kendi piyonları e6 ve d5'in (açık kareler) arkasında kalmış. Fransız oyuncusunun hep çözdüğü sorun bu: fili ...b6-Ba6 ile değiştirmek, ...Bd7-e8-h5 yoluyla dışarı çıkarmak ya da ...f6 ile zinciri açmak."
+highlights = ["c8", "e6", "d5"]
+
+[[steps]]
+quiz = { question = "Fransız İlerleme'de siyahın ikinci kırılma hamlesi (zincirin başına saldırı) hangisi?", options = ["...g5", "...f6", "...a5"], answer = 1 }

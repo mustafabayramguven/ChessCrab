@@ -1,0 +1,40 @@
+id = "vg-slav"
+title = "Slav Savunması"
+summary = "2...c6: d5'i korur ve c8 filine özgürlük verir."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "d4", "slav"]
+setup = "d4 d5 c4"
+
+[[steps]]
+text = "Siyahsın. Caro-Kann'ın d4 versiyonu: ...c6 ile d5'i koru, e6'yı sonraya bırak."
+expect = "c6"
+reply = "Nf3"
+
+[[steps]]
+expect = "Nf6"
+reply = "Nc3"
+
+[[steps]]
+text = "Şimdi piyonu al: beyaz e4 kurmak isterse merkez kolay değil."
+expect = "dxc4"
+also = ["e6", "a6"]
+reply = "a4"
+success = "a4: ...b5 ile piyonu tutmayı engeller ama b4 karesini zayıflatır."
+
+[[steps]]
+text = "Fil e6'dan önce dışarı!"
+expect = "Bf5"
+reply = "e3"
+
+[[steps]]
+expect = "e6"
+reply = "Bxc4"
+
+[[steps]]
+text = "Fil b4'e: zayıflayan b4 karesini kullan."
+expect = "Bb4"
+success = "Ana hat: 8.O-O O-O 9.Qe2. Siyahın yapısı sağlam, filleri aktif; beyaz e4 ile merkezde biraz alan kazanmaya çalışır."
+
+[[steps]]
+quiz = { question = "Slav'ı VGR'den (2...e6) ayıran ana fark nedir?", options = ["c8 fili e6'dan önce dışarı çıkabilir", "Daha hızlı rok", "d5 korunmaz"], answer = 0 }

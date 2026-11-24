@@ -1,0 +1,38 @@
+id = "final-sinav"
+title = "Final sınavı"
+summary = "Tüm kursun özeti: açılış fikirleri, yapılar ve taktikler."
+level = "orta"
+tags = ["sınav"]
+
+[[steps]]
+quiz = { question = "Fransız ve Caro-Kann'da siyahın ortak sorunu hangi taştır?", options = ["c8 fili", "g8 atı", "a8 kalesi"], answer = 0 }
+
+[[steps]]
+quiz = { question = "Açık Sicilya'da siyahın c-piyonunu d4 ile değişmesinin ana kazancı?", options = ["Merkezde piyon çoğunluğu ve yarı açık c-hattı", "Rok hakkı", "Fil çifti"], answer = 0 }
+
+[[steps]]
+quiz = { question = "İtalyan'da beyazın 'h3' ve İspanyol'da '9.h3' hamlelerinin ortak amacı?", options = ["...Bg4 açmazını engellemek", "g4 saldırısı", "Şaha kaçış karesi"], answer = 0 }
+
+[[steps]]
+quiz = { question = "Carlsbad yapısında azınlık saldırısını kim yapar?", options = ["Beyaz, b4-b5 ile", "Siyah, ...f5 ile", "Kimse"], answer = 0 }
+
+[[steps]]
+fen = "6k1/3q1p1p/6p1/8/4N3/8/5PPP/6K1 w - - 0 1"
+text = "Bulmaca 1: materyal kazan."
+expect = "Nf6+"
+puzzle = true
+
+[[steps]]
+fen = "2r3k1/2q2ppp/8/8/8/8/1Q3PPP/2R3K1 w - - 0 1"
+text = "Bulmaca 2: kazanan hamle."
+expect = "Rxc7"
+reply = "Rxc7"
+puzzle = true
+
+[[steps]]
+expect = "Qb8+"
+reply = "Rc8"
+
+[[steps]]
+expect = "Qxc8#"
+success = "Kursu bitirdin! Şimdi CrabFish'e karşı oyna, oyunlarını analiz et ve repertuvar çalışmasıyla açılışlarını pekiştir."

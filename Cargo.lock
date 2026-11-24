@@ -70,6 +70,7 @@ version = "0.1.0"
 dependencies = [
  "chesscrab-core",
  "chesscrab-engine",
+ "chesscrab-lessons",
  "serde",
  "serde_json",
  "shakmaty",

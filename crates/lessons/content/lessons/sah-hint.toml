@@ -1,0 +1,36 @@
+id = "sah-hint"
+title = "Şah Hint Savunması: kapalı merkez, kanat yarışı"
+summary = "Fianketto, ...e5, d5 sonrası iki kanatta piyon fırtınası."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "d4", "şah hint"]
+setup = "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2"
+
+[[steps]]
+text = "Siyahsın. Beyaz büyük bir merkez kurdu (c4-d4-e4). Hipermodern fikir: önce bırak, sonra saldır. Merkezde vur:"
+expect = "e5"
+reply = "O-O"
+
+[[steps]]
+expect = "Nc6"
+reply = "d5"
+text = "d4'e baskı."
+success = "Beyaz merkezi kilitledi. Artık her iki taraf da piyon zincirinin yönündeki kanatta oynar."
+highlights = ["d5", "e4", "e5", "d6"]
+
+[[steps]]
+text = "At e7'ye: f5 itişine yol açacak."
+expect = "Ne7"
+reply = "Ne1"
+
+[[steps]]
+expect = "Nd7"
+reply = "Nd3"
+text = "f6 atı d7'ye: f-piyonunun önünü aç."
+
+[[steps]]
+expect = "f5"
+success = "Mar del Plata ruhu: siyah ...f5-f4, ...g5-g4 ve ...Rf6-h6 ile şaha gider; beyaz c5 ile c-hattını açıp c7'ye girmeye çalışır. Zinciri tabanından kır: siyah için e4, beyaz için d6. Bir yarış: tempo her şey!"
+
+[[steps]]
+quiz = { question = "d5 kapandıktan sonra siyah neden şah kanadında oynar?", options = ["Piyon zinciri (d6-e5) şah kanadına bakıyor; alan o tarafta", "Beyaz şah orada", "Rastgele"], answer = 0, explain = "Kural: piyon zincirinin baktığı yönde oyna." }

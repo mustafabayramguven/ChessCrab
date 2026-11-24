@@ -1,0 +1,48 @@
+id = "sicilya-ejderha"
+title = "Ejderha ve Yugoslav Atağı"
+summary = "Uzun köşegen fili, c-hattı fedası ve h-hattı saldırısı."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "e4", "sicilya"]
+setup = "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3"
+
+[[steps]]
+text = "Piyon yapısı ejderha takımyıldızına benzer: ...g6 ve fil g7'den uzun köşegene."
+expect = "g6"
+reply = "Be3"
+
+[[steps]]
+expect = "Bg7"
+reply = "f3"
+text = "Ejderha fili."
+arrows = ["g7a1"]
+
+[[steps]]
+expect = "O-O"
+reply = "Qd2"
+text = "Rok."
+
+[[steps]]
+expect = "Nc6"
+reply = "Bc4"
+text = "Geliş ve d4'e baskı yap."
+success = "Yugoslav Atağı: beyaz Bc4 ile ...d5 kırılmasını engeller ve O-O-O ile h4-h5 saldırısına hazırlanır."
+
+[[steps]]
+expect = "Bd7"
+reply = "O-O-O"
+text = "Fili geliştir: kaleler birbirini görsün."
+
+[[steps]]
+expect = "Rc8"
+reply = "Bb3"
+text = "Kale yarı açık c-hattına."
+
+[[steps]]
+text = "At e5'e: oradan c4'e sıçrayıp beyazın fili ve d2 vezirine baskı yapacak."
+expect = "Ne5"
+reply = "h4"
+success = "Beyazın planı: h4-h5, Bh6 ile ejderha filini değiştir, sonra Qh6 ve mat. Siyahın planı: ...Nc4, ...Rxc3!? kalite fedası ile beyaz şahın önünü açmak ve ...h5 (Soltis) ile h-hattını kapalı tutmak."
+
+[[steps]]
+quiz = { question = "Yugoslav Atağında beyaz neden Bh6 ile fil değişimi ister?", options = ["Siyahın şahını koruyan ve uzun köşegeni tutan en önemli savunma ve saldırı taşı g7 filidir", "Fili sevmez", "Materyal kazanmak için"], answer = 0 }

@@ -21,3 +21,4 @@ audit = ["dep:chesscrab-engine"]
 
 [dev-dependencies]
 chesscrab-engine.workspace = true
+chesscrab-lessons = { path = ".", features = ["audit"] }

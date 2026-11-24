@@ -1,0 +1,29 @@
+id = "caro-ilerleme"
+title = "Caro-Kann: İlerleme Varyantı"
+summary = "3.e5 Bf5: fil zincirin dışında, ...e6 ve ...c5 ile tabana saldırı."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "e4", "caro-kann", "piyon yapısı"]
+setup = "e4 c6 d4 d5 e5"
+
+[[steps]]
+text = "Beyaz merkezi kilitledi. Önce fili zincirin dışına çıkar!"
+expect = "Bf5"
+reply = "Nf3"
+
+[[steps]]
+expect = "e6"
+reply = "Be2"
+text = "Şimdi ...e6: fil zaten dışarıda."
+
+[[steps]]
+text = "Fransız'daki gibi tabana saldır, ama bu sefer bir tempo kaybıyla (...c6-c5) — karşılığında filin iyi."
+expect = "c5"
+reply = "O-O"
+
+[[steps]]
+expect = "Nc6"
+success = "Short Sistemi'nde beyaz sakin gelişir (O-O, c3, Be3). Siyahın planı: ...Nc6, ...Qb6 ya da ...cxd4 ile c-hattını açmak, sonra ...Nge7-c6/f5. Keskin seçenekler (4.Nc3 e6 5.g4) bambaşka bir dünyadır."
+
+[[steps]]
+quiz = { question = "İlerleme Varyantında siyah neden ...e6'dan ÖNCE ...Bf5 oynar?", options = ["e6'dan sonra fil zincirin içinde kalır", "Bf5 e5'e saldırır", "Rok için"], answer = 0 }

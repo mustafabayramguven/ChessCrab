@@ -1,0 +1,47 @@
+id = "iskandinav"
+title = "İskandinav Savunması"
+summary = "1...d5: hemen merkezde çatışma. Vezir a5'te, fil f5'te."
+level = "baslangic"
+orientation = "black"
+tags = ["açılış", "e4", "iskandinav"]
+
+[[steps]]
+play = "e4"
+text = "Siyahsın. En dolaysız cevap: e4'e hemen saldır."
+expect = "d5"
+reply = "exd5"
+
+[[steps]]
+expect = "Qxd5"
+also = ["Nf6"]
+reply = "Nc3"
+text = "Vezirle geri al. (1...Nf6 ile Modern İskandinav da var.)"
+success = "Beyaz tempoyla veziri kovaladı: İskandinav'ın bedeli bu tempo."
+
+[[steps]]
+text = "Vezir a5'e: c3 atını açmaza alabilir, oradan kovalanması zordur."
+expect = "Qa5"
+also = ["Qd6", "Qd8"]
+reply = "d4"
+
+[[steps]]
+expect = "Nf6"
+reply = "Nf3"
+
+[[steps]]
+text = "c6: vezire geri çekilme karesi (c7) ve d5'i kontrol et."
+expect = "c6"
+reply = "Bc4"
+
+[[steps]]
+expect = "Bf5"
+reply = "Bd2"
+text = "Fil e6 sürülmeden dışarı."
+success = "Dikkat: Bd2 ile beyaz Nd5 açarak saldırı tuzağı kurar (d2 fili a5 vezirine bakar)!"
+
+[[steps]]
+expect = "e6"
+success = "Caro-Kann'a benzeyen sağlam bir yapı: filler dışarıda, ...Nbd7, ...Bb4/Be7 ve rok. Beyaz gelişimde biraz önde ama siyahın hiçbir zaafı yok."
+
+[[steps]]
+quiz = { question = "Bd2'den sonra neden vezirin e1-a5 köşegeninde olması dikkat ister?", options = ["Nd5 gibi bir hamle c3 atını açıp d2 filini vezire saldırtabilir", "Vezir kapana girer", "Bir şey olmaz"], answer = 0 }

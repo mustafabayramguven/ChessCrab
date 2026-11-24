@@ -1,0 +1,41 @@
+id = "vg-kabul"
+title = "Vezir Gambiti Kabulü ve c4 piyonu"
+summary = "VG gerçek bir gambit değil: piyonu tutmaya çalışan siyahı bekleyen tuzak."
+level = "baslangic"
+tags = ["açılış", "d4", "vezir gambiti", "tuzak"]
+setup = "d4 d5"
+
+[[steps]]
+text = "Vezir Gambiti: c4 ile siyahın d5 piyonuna kanattan saldır."
+expect = "c4"
+reply = "dxc4"
+
+[[steps]]
+text = "Piyonu hemen geri almak için acele etme. e3 ile filin yolunu aç: Bxc4 tehdidi var."
+expect = "e3"
+also = ["e4", "Nf3"]
+reply = "b5"
+success = "Siyah piyonu b5 ile tutmaya çalışıyor. Bu bir hata!"
+
+[[steps]]
+text = "b5 piyonuna kanattan saldır."
+expect = "a4"
+reply = "c6"
+
+[[steps]]
+expect = "axb5"
+reply = "cxb5"
+text = "Al."
+
+[[steps]]
+text = "Şimdi uzun köşegen açıldı ve a8'de kale var..."
+expect = "Qf3"
+puzzle = true
+arrows = ["f3a8"]
+success = "Vezir a8 kalesine saldırıyor ve ...Nc6 / ...Bb7 ile kapatılamaz: kale ya da taş kazanılıyor."
+
+[[steps]]
+text = "Ders: VG'de c4 piyonu çoğu zaman kendiliğinden düşer. Siyah onu tutmaya çalışırsa vezir kanadını zayıflatır. Doğru VGK'de siyah piyonu geri verir ve ...e6, ...c5, ...Nf6 ile gelişir."
+
+[[steps]]
+quiz = { question = "VG Kabulünde siyah için doğru yaklaşım hangisi?", options = ["c4 piyonunu ne pahasına olursa olsun tutmak", "Piyonu geri verip hızlı gelişmek ve ...c5 ile merkezi kırmak", "Hemen ...Qd5"], answer = 1 }

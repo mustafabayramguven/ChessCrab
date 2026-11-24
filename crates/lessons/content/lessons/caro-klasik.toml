@@ -1,0 +1,61 @@
+id = "caro-klasik"
+title = "Caro-Kann: Klasik Varyant"
+summary = "Fil e6'dan önce dışarı! 4...Bf5, h4-h5 tehdidi ve sağlam yapı."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "e4", "caro-kann"]
+
+[[steps]]
+play = "e4"
+text = "Siyahsın. Caro-Kann: önce ...c6, sonra ...d5. Fransız gibi sağlam ama c8 filinin önü kapanmaz."
+expect = "c6"
+reply = "d4"
+
+[[steps]]
+expect = "d5"
+reply = "Nc3"
+text = "d5 piyonu c6 ile destekli."
+
+[[steps]]
+expect = "dxe4"
+reply = "Nxe4"
+text = "Al."
+
+[[steps]]
+text = "İşte Caro'nun fikri: fili e6 sürülmeden ÖNCE dışarı çıkar ve tempoyla e4 atına saldır."
+expect = "Bf5"
+also = ["Nd7"]
+reply = "Ng3"
+arrows = ["c8f5"]
+
+[[steps]]
+expect = "Bg6"
+reply = "h4"
+text = "Fil g6'ya."
+success = "Beyaz h4-h5 ile fili kovalamak istiyor."
+
+[[steps]]
+text = "h6 ile fil için h7 karesini aç: h5 gelirse fil oraya çekilir."
+expect = "h6"
+reply = "Nf3"
+
+[[steps]]
+expect = "Nd7"
+reply = "h5"
+text = "Ne5 karesini kontrol et."
+
+[[steps]]
+expect = "Bh7"
+reply = "Bd3"
+
+[[steps]]
+text = "Filleri değiş: kötü fil sorunu çözüldü."
+expect = "Bxd3"
+reply = "Qxd3"
+
+[[steps]]
+expect = "e6"
+success = "Şimdi ...e6 güvenle oynanır: fil zaten dışarıda değişildi. Siyah ...Ngf6, ...Qc7/...Be7 ve çoğunlukla ...O-O-O ile kurulur. Beyazın h5 piyonu alan verir ama ileride zayıflayabilir."
+
+[[steps]]
+quiz = { question = "Caro-Kann'ın Fransız'a göre ana avantajı?", options = ["Daha hızlı rok", "c8 fili e-piyonu sürülmeden dışarı çıkabilir", "Vezir daha aktif"], answer = 1 }

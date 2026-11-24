@@ -1,0 +1,41 @@
+id = "orta-piyon-yapilari"
+title = "Piyon yapıları: planın haritası"
+summary = "Carlsbad, izole piyon, asılı piyonlar, Maroczy ve piyon zincirleri: yapı planı söyler."
+level = "orta"
+tags = ["orta oyun", "piyon yapısı"]
+
+[[steps]]
+text = "Philidor: 'Piyonlar satrancın ruhudur.' Taşlar hızla yer değiştirir, piyonlar geri gidemez. Bu yüzden orta oyunda planını piyon yapısına bakarak seçersin. En önemli yapıları tanıyalım."
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 d5 c4 e6 Nc3 Nf6 cxd5 exd5"
+text = "1) CARLSBAD: beyazın vezir kanadında azınlığı (a,b vs a,b,c). Beyaz: azınlık saldırısı (b4-b5), e4 kırılması. Siyah: şah kanadında taş saldırısı, e4 karakolu."
+highlights = ["d4", "e3", "d5", "c6"]
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 d5 c4 e6 Nc3 c5 cxd5 exd5 Nf3 Nc6 g3 Nf6 Bg2 Be7 O-O O-O Bg5 cxd4 Nxd4"
+text = "2) İZOLE VEZİR PİYONU (IQP): siyahın d5 piyonunu yanındaki piyonlar koruyamaz. Piyonlu taraf: aktif taşlar, e4/c4 karakolları, d4 itişi, şah saldırısı. Karşı taraf: d4'te abluka, taş değişimi, son oyunda piyonu kazan."
+highlights = ["d5", "d4"]
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7 e3 O-O Nf3 h6 Bh4 b6 cxd5 Nxd5 Bxe7 Qxe7 Nxd5 exd5 Rc1 Be6 Qa4 c5 Qa3 Rc8 Bb5 a6 dxc5 bxc5"
+text = "3) ASILI PİYONLAR (c5+d5): yan yana ama komşu piyonsuz iki piyon. Güçlü: merkezi kontrol eder, ...d4 ya da ...c4 ile hamle yapabilir. Zayıf: sabitlenirlerse hedeftir. Beyaz onlara b- ve d-hatlarından baskı yapar, birini ilerlemeye zorlar (Fischer–Spassky 1972, 6. oyun bu yapıdan)."
+highlights = ["c5", "d5"]
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6 c4"
+text = "4) MAROCZY BAĞI (c4+e4): beyaz d5'i kilitler ve siyahın ...d5 ile ...b5 kırılmalarını zorlaştırır. Siyah sabırla ...a5, ...Nd7-c5 ve ...f5 gibi yavaş planlarla oynar."
+highlights = ["c4", "e4", "d5"]
+
+[[steps]]
+text = "5) PİYON ZİNCİRLERİ (Fransız d4-e5 / Şah Hint d5-e4): zincirin baktığı kanatta oyna, zincire tabanından saldır. Fransız'da siyah ...c5 ve ...f6, Şah Hint'te siyah ...f5, beyaz c5 kırar."
+
+[[steps]]
+quiz = { question = "IQP'ye karşı oynayan taraf için en doğru genel strateji?", options = ["Mümkün olduğunca taş değiştirip son oyuna geçmek ve piyonun önündeki kareyi ablukaya almak", "Piyonları sürüp saldırmak", "Vezirleri tutmak"], answer = 0 }
+
+[[steps]]
+quiz = { question = "Asılı piyonlara (c5+d5) karşı tipik baskı nasıl olur?", options = ["Kaleleri c- ve d-hatlarına yerleştirip birini ilerlemeye zorlamak", "Şah kanadında piyon sürmek", "Hiçbir şey; onlar hep güçlüdür"], answer = 0 }

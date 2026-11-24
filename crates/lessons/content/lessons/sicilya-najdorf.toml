@@ -1,0 +1,50 @@
+id = "sicilya-najdorf"
+title = "Najdorf: 5...a6"
+summary = "Fischer'in ve Kasparov'un açılışı. İngiliz Atağı ve zıt rok yarışı."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "e4", "sicilya"]
+setup = "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3"
+
+[[steps]]
+text = "Najdorf'un mütevazı ama derin hamlesi: ...a6. b5'i kontrol eder (beyaz atları ve fili oraya giremez) ve ...e5 ile ...b5'i hazırlar."
+expect = "a6"
+reply = "Be3"
+success = "İngiliz Atağı: Be3, f3, Qd2, O-O-O ve g4 ile şah kanadı fırtınası."
+
+[[steps]]
+text = "Merkezde yer kap: d4 atını kov."
+expect = "e5"
+also = ["e6"]
+reply = "Nb3"
+success = "...e5 ile d5 karesi zayıfladı (d6 piyonu ve d5 deliği), ama siyah merkezde söz sahibi oldu. Bu takas Najdorf'un kalbidir: d5'i taşlarla kontrol edeceksin."
+highlights = ["d5"]
+
+[[steps]]
+text = "Fil e6'ya: d5'i kontrol eden en önemli taş."
+expect = "Be6"
+reply = "f3"
+
+[[steps]]
+expect = "Be7"
+reply = "Qd2"
+text = "Geliştir."
+
+[[steps]]
+expect = "O-O"
+reply = "O-O-O"
+text = "Rok."
+success = "Zıt yönlerde rok: artık bir yarış var. Kim önce rakip şaha ulaşırsa kazanır."
+
+[[steps]]
+expect = "Nbd7"
+reply = "g4"
+text = "Son taşı da geliştir; d7'deki at gerekirse b6'dan c4/a4'e gidecek."
+
+[[steps]]
+text = "Beyaz g4-g5 ile f6 atını kovalayacak. Sen de vezir kanadında piyonlarını yürüt!"
+expect = "b5"
+success = "...b5-b4 ile c3 atını kovalayıp e4'ü zayıflatmak, ...Nb6-c4 ve ...Rc8 ile c-hattında baskı. Bu pozisyonlarda her tempo önemlidir."
+
+[[steps]]
+quiz = { question = "Najdorf'ta ...e5 sonrası siyahın en önemli stratejik sorumluluğu nedir?", options = ["h-hattını açmak", "d5 karesini kontrol etmek (Be6, Nf6, Nbd7-b6)", "Şahı ortada tutmak"], answer = 1 }

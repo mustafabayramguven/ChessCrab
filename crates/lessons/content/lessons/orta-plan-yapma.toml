@@ -1,0 +1,29 @@
+id = "orta-plan-yapma"
+title = "Plan nasıl yapılır?"
+summary = "Dengesizlikleri say, hedef seç, en kötü taşını iyileştir."
+level = "orta"
+tags = ["orta oyun", "plan"]
+
+[[steps]]
+text = "Açılış bitti, sıra planda. Basit bir yöntem: pozisyondaki DENGESİZLİKLERİ listele. 1) Materyal, 2) Piyon yapısı (zayıf piyonlar, geçer piyon, zayıf kareler), 3) Şah güvenliği, 4) Taş aktivitesi ve fil-at farkı, 5) Alan ve açık hatlar, 6) Gelişim/inisiyatif."
+
+[[steps]]
+text = "Sonra: kendi avantajlarını büyüten, rakibin avantajlarını azaltan bir hedef seç. Hedef yoksa 'en kötü taşını iyileştir' kuralını uygula. Ve her hamlede önce rakibin tehdidine bak!"
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 d5 c4 e6 Nc3 Nf6 cxd5 exd5 Bg5 c6 e3 Be7 Bd3 Nbd7 Qc2 O-O Nf3 Re8 O-O Nf8"
+quiz = { question = "Carlsbad yapısında beyaz için en tipik plan hangisi?", options = ["b4-b5 azınlık saldırısıyla c6'da zayıflık yaratmak", "h4-h5 ile g-piyonu sürmek", "d5'e piyon itmek"], answer = 0 }
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O Nc6 d5 Ne7"
+quiz = { question = "Kapalı Şah Hint'te siyahın planı?", options = ["...f5 ile şah kanadında piyon saldırısı", "...c6 ile merkezi açmak", "...b5 ile vezir kanadı"], answer = 0 }
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e5 Nb3 Be6 f3 Be7 Qd2 O-O O-O-O Nbd7 g4"
+quiz = { question = "Zıt rok pozisyonunda (Najdorf, İngiliz Atağı) en önemli şey?", options = ["Tempo: kendi saldırını hızlandırıp rakibinkini yavaşlatmak", "Merkezi açmak", "Taş değiştirmek"], answer = 0 }
+
+[[steps]]
+text = "Son öğüt: plan bir hikâyedir, ezber değil. Bir açılışı oynadığında o açılışın tipik yapısını ve planlarını bil; hamleler buradan doğar. Oyunlarını ChessCrab'ın analizinde incele, 'Hata' ve 'Kaçırılan' anlarda hangi planın doğru olduğunu düşün."

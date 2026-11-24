@@ -1,0 +1,34 @@
+id = "siyah-vgr"
+title = "Siyah: 1.d4'e Vezir Gambiti Reddi"
+description = "Ortodoks Tartakower, Değişim (Carlsbad), Bf4 hattı, Katalan ve Londra/Colle'ye karşı kurulumlar."
+side = "black"
+
+[[lines]]
+name = "Ortodoks: Tartakower"
+moves = "d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7 e3 O-O Nf3 h6 Bh4 b6"
+note = "...Bb7 ve ...c5."
+
+[[lines]]
+name = "Değişim: Carlsbad"
+moves = "d4 d5 c4 e6 Nc3 Nf6 cxd5 exd5 Bg5 c6 e3 Be7 Bd3 Nbd7 Qc2 O-O"
+note = "...Re8, ...Nf8 ve şah kanadında taş oyunu."
+
+[[lines]]
+name = "Nf3 + Bf4"
+moves = "d4 d5 c4 e6 Nf3 Nf6 Nc3 Be7 Bf4 O-O e3 c5"
+note = "...c5 ile merkezi kır."
+
+[[lines]]
+name = "Katalan"
+moves = "d4 d5 c4 e6 Nf3 Nf6 g3 Be7 Bg2 O-O O-O dxc4"
+note = "Açık Katalan: piyonu al, ...a6 ve ...b5 ya da ...Nc6 ile."
+
+[[lines]]
+name = "Londra"
+moves = "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O"
+note = "Fil değişimi teklifi ve ...c5 baskısı."
+
+[[lines]]
+name = "Colle / Nf3 e3"
+moves = "d4 d5 Nf3 Nf6 e3 e6 Bd3 c5 b3 Nc6"
+note = "Sağlam kurulum, ...Bd6 ve ...O-O."

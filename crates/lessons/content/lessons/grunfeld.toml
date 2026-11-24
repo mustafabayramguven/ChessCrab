@@ -1,0 +1,35 @@
+id = "grunfeld"
+title = "Grünfeld Savunması"
+summary = "Merkezi ver, sonra yık: Bg7, ...c5 ve ...Nc6 ile d4'e saldırı."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "d4", "grünfeld"]
+setup = "d4 Nf6 c4 g6 Nc3"
+
+[[steps]]
+text = "Siyahsın. Şah Hint yerine hemen merkezde vur."
+expect = "d5"
+reply = "cxd5"
+
+[[steps]]
+expect = "Nxd5"
+reply = "e4"
+
+[[steps]]
+text = "Atı değiş: beyaz devasa bir merkez kurdu (c3-d4-e4)."
+expect = "Nxc3"
+reply = "bxc3"
+
+[[steps]]
+expect = "Bg7"
+reply = "Nf3"
+arrows = ["g7d4"]
+text = "Fil uzun köşegende: d4 ve c3'e bakıyor."
+
+[[steps]]
+text = "Merkeze kanattan saldır."
+expect = "c5"
+success = "Plan: ...Nc6, ...Bg4, ...Qa5 ve ...cxd4 ile d4'ü çökertmek. Beyazın kozu merkez ve d5 itişi; siyahın kozu bu merkeze karşı tüm taşlarıyla baskı. Kasparov'un ve Fischer'in silahı."
+
+[[steps]]
+quiz = { question = "'Hipermodern' yaklaşımın özü nedir?", options = ["Merkezi piyonlarla hemen işgal etmek", "Merkezi önce rakibe bırakıp uzaktan (fianketto, kanat piyonları) kontrol etmek ve sonra saldırmak", "Merkezi tamamen görmezden gelmek"], answer = 1 }

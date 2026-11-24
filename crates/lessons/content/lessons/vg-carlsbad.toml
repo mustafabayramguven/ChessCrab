@@ -1,0 +1,62 @@
+id = "vg-carlsbad"
+title = "Değişim Varyantı: Carlsbad yapısı ve azınlık saldırısı"
+summary = "cxd5 exd5: satrancın en öğretici piyon yapısı. b4-b5 ile c6'yı zayıflat."
+level = "orta"
+tags = ["açılış", "d4", "vezir gambiti", "piyon yapısı"]
+setup = "d4 d5 c4 e6 Nc3 Nf6"
+
+[[steps]]
+text = "Piyon yapısını belirle: d5'te değiş."
+expect = "cxd5"
+reply = "exd5"
+success = "Carlsbad yapısı: beyaz a2-b2-d4-e3 (vezir kanadında 2'ye karşı 3: azınlık), siyah a7-b7-c6-d5."
+
+[[steps]]
+expect = "Bg5"
+reply = "c6"
+
+[[steps]]
+expect = "e3"
+reply = "Be7"
+
+[[steps]]
+text = "Fil d3'e: siyahın c8 filinin en iyi karesi olan f5'i kontrol eder."
+expect = "Bd3"
+reply = "Nbd7"
+
+[[steps]]
+expect = "Qc2"
+reply = "O-O"
+text = "Vezir c2: Bxh7 tehditleri ve f5 kontrolü."
+
+[[steps]]
+expect = "Nf3"
+reply = "Re8"
+
+[[steps]]
+expect = "O-O"
+reply = "Nf8"
+success = "Siyah klasik savunma kurulumunda: ...Nf8 h7'yi korur ve e6/g6'ya gidebilir."
+
+[[steps]]
+text = "Azınlık saldırısı başlıyor: kale b1'e, b-piyonunun arkasına."
+expect = "Rab1"
+reply = "a5"
+
+[[steps]]
+text = "b4'ü hazırla."
+expect = "a3"
+reply = "g6"
+success = "Siyah ...g6 ile şah kanadını sağlamlaştırdı (Bxh7+ ihtimalleri kalktı) ve ...Ne6 / ...Ng7 manevrasına hazırlanıyor."
+
+[[steps]]
+expect = "b4"
+reply = "axb4"
+text = "Ve şimdi b4!"
+
+[[steps]]
+expect = "axb4"
+success = "Sıradaki b5! ile bxc6'yı zorla: siyahta c6'da ya da d5'te zayıf bir piyon kalır ve beyaz c-hattında ona baskı yapar. İşte 'azınlık saldırısı': iki piyonla üç piyona saldırıp zayıflık yaratmak."
+
+[[steps]]
+quiz = { question = "Carlsbad yapısında siyahın tipik karşı planı nedir?", options = ["Vezir kanadında piyon değişimi", "Şah kanadında ...Ne4, ...f5, ...Qh4 gibi taş saldırısı", "Erken vezir değişimi"], answer = 1 }

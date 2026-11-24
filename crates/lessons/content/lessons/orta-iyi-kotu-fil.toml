@@ -1,0 +1,27 @@
+id = "orta-iyi-kotu-fil"
+title = "İyi fil, kötü fil"
+summary = "Fil kendi piyonlarıyla aynı renkteyse 'kötü'dür. Nasıl düzeltilir?"
+level = "orta"
+orientation = "black"
+tags = ["orta oyun", "fil"]
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 a3 c4"
+text = "Fransız İlerleme. Siyahın piyonları e6, d5, c4: hepsi beyaz karelerde. c8 fili de beyaz kareli: kendi piyonları önünü kesiyor. Bu kötü fil. Beyazın f1 fili ise koyu kareli siyah piyonlara engel olmayan iyi bir fil olabilir."
+highlights = ["c8", "e6", "d5", "c4"]
+
+[[steps]]
+text = "Kötü fil kötü taş demek değildir: piyon zincirini savunan 'kötü' fil çok önemli bir savunucu olabilir. Ama son oyunda kötü fil iyi bir ata karşı genelde kaybeder."
+
+[[steps]]
+quiz = { question = "Siyah kötü c8 filini nasıl iyileştirebilir?", options = ["...Bd7-e8-h5 ya da ...b6/...Ba6 ile değiştirmek veya ...f6 ile zinciri açmak", "Hiçbir şey yapamaz", "...g5 ile"], answer = 0 }
+
+[[steps]]
+quiz = { question = "Kendi filin kötüyse piyonlarını hangi renkte karelere koymalısın?", options = ["Filinle aynı renk karelere", "Filinin TERSİ renk karelere", "Fark etmez"], answer = 1, explain = "Böylece fil serbest kalır ve piyonlar filin kontrol edemediği kareleri tutar." }
+
+[[steps]]
+fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+play = "e4 c6 d4 d5 e5 Bf5"
+text = "Karşılaştır: Caro-Kann İlerleme'de siyah fili zincirin DIŞINA çıkardı, sonra ...e6 oynayacak. Aynı yapı, iyi fil!"
+highlights = ["f5"]

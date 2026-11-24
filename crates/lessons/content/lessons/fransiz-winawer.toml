@@ -1,0 +1,39 @@
+id = "fransiz-winawer"
+title = "Fransız: Winawer"
+summary = "3...Bb4: açmaz, çift c-piyonları ve siyah karelerin zayıflığı."
+level = "ileri"
+orientation = "black"
+tags = ["açılış", "e4", "fransız"]
+setup = "e4 e6 d4 d5 Nc3"
+
+[[steps]]
+text = "Siyahsın. c3 atını açmaza al: e4'e baskı."
+expect = "Bb4"
+also = ["Nf6", "dxe4"]
+reply = "e5"
+
+[[steps]]
+expect = "c5"
+reply = "a3"
+text = "Yine zincirin tabanı!"
+
+[[steps]]
+text = "Fil ile atı al: beyaz çift piyona razı olmak zorunda."
+expect = "Bxc3+"
+reply = "bxc3"
+success = "Beyaz: çift c-piyonları ama fil çifti ve siyah karelerde (özellikle g7) baskı şansı. Siyah: koyu kare filini verdi, g7 zayıf."
+
+[[steps]]
+expect = "Ne7"
+reply = "Qg4"
+text = "At e7'ye: f5 karesine gidebilir ve f6'yı (e5 piyonunun kontrol ettiği) boşa çıkarır."
+success = "Beyaz hemen g7'ye saldırdı."
+
+[[steps]]
+text = "Ne yapacaksın? En sağlam yol rok; en keskin yol ...Qc7 ile g7'yi feda edip merkezde karşı oyun (Zehirli Piyon)."
+expect = "O-O"
+also = ["Qc7", "Kf8"]
+success = "Winawer dengesizlik sever: siyahın vezir kanadında baskısı, beyazın şah kanadında atakları. Kim inisiyatifi alırsa..."
+
+[[steps]]
+quiz = { question = "Winawer'da beyazın yapısal zayıflığı nedir?", options = ["İzole piyon", "Çift c-piyonları (c2-c3)", "Geri kalmış e-piyonu"], answer = 1 }

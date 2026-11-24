@@ -1,0 +1,38 @@
+id = "taktik-arka-yatay"
+title = "Arka yatay ve saptırma"
+summary = "Rok yapmış şahın piyonları onu hapsedebilir. Savunanı uzaklaştır, mat et."
+level = "orta"
+tags = ["taktik", "bulmaca", "mat"]
+
+[[steps]]
+text = "Rok yapmış şah f7-g7-h7 piyonlarının arkasında güvendedir... ta ki arka yatay boşalana kadar. Arka yatayı tek bir taş savunuyorsa onu SAPTIR."
+
+[[steps]]
+fen = "3rr1k1/5ppp/8/8/8/8/4QPPP/4R1K1 w - - 0 1"
+text = "e8 kalesi arka yatayı savunuyor. Vezirini feda et!"
+expect = "Qxe8+"
+reply = "Rxe8"
+puzzle = true
+
+[[steps]]
+expect = "Rxe8#"
+success = "Saptırma ile arka yatay matı."
+
+[[steps]]
+fen = "2r3k1/2q2ppp/8/8/8/8/1Q3PPP/2R3K1 w - - 0 1"
+text = "Siyah vezir hem c8 kalesini hem arka yatayı savunuyor (aşırı yük). Önce vezirleri ilgilendir!"
+expect = "Rxc7"
+reply = "Rxc7"
+puzzle = true
+
+[[steps]]
+text = "Şimdi arka yatayı kim savunuyor?"
+expect = "Qb8+"
+reply = "Rc8"
+
+[[steps]]
+expect = "Qxc8#"
+success = "Aşırı yüklenmiş savunucu iki görevi birden yapamadı."
+
+[[steps]]
+quiz = { question = "Arka yatay matına karşı en basit önlem?", options = ["Şah için 'hava' açmak (ör. h3 / ...h6)", "Rok yapmamak", "Kaleleri değiştirmek"], answer = 0 }

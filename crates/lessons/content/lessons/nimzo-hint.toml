@@ -1,0 +1,31 @@
+id = "nimzo-hint"
+title = "Nimzo-Hint Savunması"
+summary = "3...Bb4: e4'ü engelle, gerekirse Bxc3 ile çift piyon yarat."
+level = "orta"
+orientation = "black"
+tags = ["açılış", "d4", "nimzo-hint"]
+setup = "d4 Nf6 c4 e6 Nc3"
+
+[[steps]]
+text = "Siyahsın. Beyaz e4'ü planlıyor. c3 atını açmaza al: e4'ü kontrol eden taşı etkisizleştir."
+expect = "Bb4"
+reply = "e3"
+success = "Rubinstein Varyantı: beyaz sakin gelişir."
+
+[[steps]]
+expect = "O-O"
+reply = "Bd3"
+
+[[steps]]
+expect = "d5"
+reply = "Nf3"
+text = "Merkezde pay al."
+
+[[steps]]
+text = "Ve klasik kırılma: ...c5."
+expect = "c5"
+reply = "O-O"
+success = "Siyah iki merkez kırılmasıyla aktif. Bir sonraki karar ...Bxc3 ne zaman oynanacak: fil çiftini vermek ama beyaza çift c-piyonu bırakmak."
+
+[[steps]]
+quiz = { question = "...Bxc3 bxc3 değişiminin beyaza verdiği yapısal zayıflık?", options = ["İzole piyon", "Çift c-piyonları", "Geri kalmış e-piyonu"], answer = 1, explain = "Karşılığında beyaz fil çiftini alır. Nimzo bu dengesizliği yönetmektir." }

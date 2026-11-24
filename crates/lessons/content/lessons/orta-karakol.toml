@@ -1,0 +1,35 @@
+id = "orta-karakol"
+title = "Karakol ve zayıf kare: d5"
+summary = "Sveshnikov'da beyazın klasik fikri: d5'i savunan atı değiş, atını d5'e kur."
+level = "ileri"
+tags = ["orta oyun", "karakol", "sicilya"]
+setup = "e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 e5 Ndb5 d6"
+
+[[steps]]
+text = "Karakol: rakip piyonun kovalayamayacağı, kendi piyonunla korunan ileri bir kare. Sveshnikov Sicilya'da siyah ...e5 ile alan aldı ama d5 karesi sonsuza dek zayıfladı: siyahın c- ve e-piyonları artık d5'i kontrol edemez."
+highlights = ["d5"]
+
+[[steps]]
+text = "d5'i kontrol eden en önemli siyah taş f6 atı. Fili g5'e getir ve onu değişmeyi tehdit et."
+expect = "Bg5"
+reply = "a6"
+
+[[steps]]
+expect = "Na3"
+reply = "b5"
+text = "b5 atı geri çekilsin."
+
+[[steps]]
+text = "Şimdi atı al: siyah piyon yapısı bozulacak ve d5'i kontrol eden taş gidecek."
+expect = "Bxf6"
+also = ["Nd5"]
+reply = "gxf6"
+
+[[steps]]
+text = "Karakola!"
+expect = "Nd5"
+success = "d5'teki at hiçbir siyah piyonla kovalanamaz. Beyaz c3 + Nc2-e3 ile ikinci bir atı da d5'e yönlendirebilir. Siyahın karşılığı fil çifti ve ...f5 ile merkezdeki dinamizm. Bu dengesizlik Sveshnikov'un özüdür."
+highlights = ["d5"]
+
+[[steps]]
+quiz = { question = "Karakol en iyi hangi taş için uygundur?", options = ["At: kısa menzilli olduğu için ileri bir sabit kareye ihtiyaç duyar", "Şah", "Vezir"], answer = 0 }

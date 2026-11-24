@@ -1,0 +1,43 @@
+id = "iskoc-oyunu"
+title = "İskoç Oyunu"
+summary = "3.d4: merkezi hemen aç. Mieses hattında e5 piyonu ve c4 itişi."
+level = "orta"
+tags = ["açılış", "e4", "iskoç"]
+setup = "e4 e5 Nf3 Nc6"
+
+[[steps]]
+text = "İspanyol'un uzun manevraları yerine merkezi hemen açmak istersen: İskoç."
+expect = "d4"
+reply = "exd4"
+
+[[steps]]
+expect = "Nxd4"
+reply = "Nf6"
+text = "Atla geri al: merkezde güçlü at."
+success = "Schmidt Varyantı: siyah e4'e saldırıyor. (4...Bc5 de ana hattır.)"
+
+[[steps]]
+text = "Atları değiş: siyaha çift c-piyonu ver."
+expect = "Nxc6"
+also = ["Nc3"]
+reply = "bxc6"
+
+[[steps]]
+text = "Tempoyla ilerle: f6 atını kovala."
+expect = "e5"
+reply = "Qe7"
+success = "Siyah e5 piyonunu açmaza aldı: e-hattında vezir, arkada beyaz şah."
+
+[[steps]]
+expect = "Qe2"
+reply = "Nd5"
+text = "Açmazı kır: vezirle koru."
+
+[[steps]]
+text = "Atı merkezden kov."
+expect = "c4"
+reply = "Ba6"
+success = "Mieses Varyantı. Siyah ...Ba6 ile c4 piyonunu vezire karşı açmaza aldı. Beyazın kozu e5 piyonunun verdiği alan; siyahın kozu aktif taşlar ve beyazın gelişim gecikmesi. Ana hat: 9.b3."
+
+[[steps]]
+quiz = { question = "6.e5'ten sonra beyaz piyonu neden hemen koruyamaz da Qe2 oynar?", options = ["e5 açmazda: vezir e7'den e5'e bakıyor ve arkada beyaz şah var", "e5 değersiz", "Qe2 rok hazırlığı"], answer = 0 }

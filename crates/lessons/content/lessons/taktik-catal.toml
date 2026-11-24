@@ -1,0 +1,57 @@
+id = "taktik-catal"
+title = "Çatal"
+summary = "Tek taşla iki hedefe saldır: at çatalı, piyon çatalı, vezir çatalı."
+level = "baslangic"
+tags = ["taktik", "bulmaca"]
+
+[[steps]]
+text = "Çatal: bir taşın aynı anda iki (veya daha fazla) rakip taşa saldırması. Rakip ikisini birden kurtaramaz. En ünlü çatalcı attır, çünkü saldırdığı taşlar ona geri saldıramaz."
+
+[[steps]]
+fen = "6k1/3q1p1p/6p1/8/4N3/8/5PPP/6K1 w - - 0 1"
+text = "Atınla şah ve vezire aynı anda saldır."
+expect = "Nf6+"
+reply = "Kg7"
+puzzle = true
+
+[[steps]]
+expect = "Nxd7"
+text = "Veziri al."
+success = "At çatalı!"
+
+[[steps]]
+fen = "r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1"
+text = "Şah ve kale: 'kraliyet çatalı'."
+expect = "Nc7+"
+reply = "Kd7"
+puzzle = true
+
+[[steps]]
+expect = "Nxa8"
+text = "Al."
+
+[[steps]]
+fen = "4k3/8/2n1r3/8/3P4/7P/6PK/8 w - - 0 1"
+text = "En mütevazı taş da çatal yapabilir: piyon!"
+expect = "d5"
+reply = "Re5"
+puzzle = true
+
+[[steps]]
+expect = "dxc6"
+text = "Taşı al."
+success = "Piyon çatalı. Piyon 1 puan, saldırdığı taşlar 3 ve 5: ne yapsalar kayıp."
+
+[[steps]]
+fen = "4k3/8/2n5/8/8/8/2Q3r1/4K3 w - - 0 1"
+text = "Vezir de çatal yapar: şah çek ve iki taşı birden hedefle."
+expect = "Qxc6+"
+reply = "Kf7"
+puzzle = true
+
+[[steps]]
+expect = "Qxg2"
+success = "Vezir çatalı."
+
+[[steps]]
+quiz = { question = "Çatal tehdidini önceden görmek için ne yapmalısın?", options = ["Korumasız taşlarını ve şahınla aynı karelerden saldırılabilecek taşlarını kontrol et", "Hiç at oynamamak", "Şahı ortada tutmak"], answer = 0, explain = "Korumasız taşlar (Hanging) ve şahla 'at mesafesinde' duran taşlar çatal hedefidir." }
