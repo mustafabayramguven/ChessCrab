@@ -1,6 +1,8 @@
 package dev.chesscrab.app
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.chesscrab_ffi.CrabEngine
@@ -12,6 +14,7 @@ class CrabApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Crab.init(this)
+        dev.chesscrab.app.ui.Prefs.load()
     }
 }
 
@@ -93,5 +96,39 @@ fun fmtScore(score: JSONObject?): String {
         if (v == 0) "#" else if (v > 0) "M$v" else "-M${-v}"
     } else {
         (if (v >= 0) "+" else "") + String.format(java.util.Locale.US, "%.2f", v / 100.0)
+    }
+}
+
+/** Günlük seri: etkinlik olan günler (oyun, ders, bulmaca, tekrar) */
+object Streak {
+    /** Değişince ekranlar yenilensin diye sayaç */
+    var version by androidx.compose.runtime.mutableIntStateOf(0)
+
+    fun today(): Long = java.time.LocalDate.now().toEpochDay()
+
+    fun days(): Set<Long> = runCatching { Crab.setting("active_days").split(',').mapNotNull { it.trim().toLongOrNull() }.toSet() }.getOrDefault(emptySet())
+
+    fun mark() {
+        runCatching {
+            val d = days()
+            if (today() in d) return
+            Crab.setSetting("active_days", (d + today()).sorted().takeLast(400).joinToString(","))
+            version++
+        }
+    }
+
+    /** Bugün (ya da henüz bugün oynanmadıysa dün) biten ardışık gün sayısı */
+    fun current(d: Set<Long> = days()): Int {
+        var t = today()
+        if (t !in d) t -= 1
+        var n = 0
+        while (t in d) { n++; t-- }
+        return n
+    }
+
+    fun best(d: Set<Long> = days()): Int {
+        var best = 0; var run = 0; var prev = Long.MIN_VALUE
+        for (x in d.sorted()) { run = if (x == prev + 1) run + 1 else 1; best = maxOf(best, run); prev = x }
+        return best
     }
 }

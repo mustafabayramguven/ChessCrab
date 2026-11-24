@@ -1,5 +1,7 @@
 package dev.chesscrab.app.ui.more
 
+import androidx.compose.ui.graphics.graphicsLayer
+import dev.chesscrab.app.ui.components.bounceClick
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,10 +63,10 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onThemeChanged: () -> Unit) {
+fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onThemeChanged: () -> Unit, onProgress: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var refresh by remember { mutableIntStateOf(0) }
-    var theme by remember { mutableStateOf(Crab.setting("board_theme", "sand")) }
+    val theme = dev.chesscrab.app.ui.Prefs.boardTheme
     var sound by remember { mutableStateOf(Crab.setting("sound", "1") == "1") }
     var depth by remember { mutableStateOf(Crab.setting("coach_depth", "12")) }
     var server by remember { mutableStateOf(Crab.setting("server")) }
@@ -77,12 +79,52 @@ fun MoreScreen(modifier: Modifier, onOpenGame: (String, String) -> Unit, onTheme
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         dev.chesscrab.app.ui.components.Overline("Tercihler · kayıtlar · eşitleme")
         Text("Ayarlar", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(14.dp))
+        dev.chesscrab.app.ui.components.CrabCard(onClick = onProgress) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("📈", fontSize = 26.sp)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("İlerleme", fontWeight = FontWeight.ExtraBold)
+                    Text("Seri, doğruluk eğrisi, açılışların, rakiplerin", color = Crabs.Muted, fontSize = 12.sp)
+                }
+                Text("→", color = Crabs.Coral, fontSize = 18.sp)
+            }
+        }
+        SectionTitle("Uygulama teması")
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            for (pl in dev.chesscrab.app.ui.PALETTES) {
+                val sel = dev.chesscrab.app.ui.Prefs.appTheme == pl.id
+                val sc by androidx.compose.animation.core.animateFloatAsState(if (sel) 1.06f else 1f, androidx.compose.animation.core.spring(dampingRatio = 0.5f), label = "th")
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.bounceClick(scaleTo = 0.92f) { dev.chesscrab.app.ui.Prefs.setApp(pl.id) }) {
+                    Box(
+                        Modifier.graphicsLayer { scaleX = sc; scaleY = sc }.size(width = 78.dp, height = 96.dp).clip(RoundedCornerShape(16.dp)).background(pl.bg)
+                            .border(2.dp, if (sel) Crabs.Coral else Crabs.Line, RoundedCornerShape(16.dp)).padding(8.dp),
+                    ) {
+                        // küçük önizleme: kart, vurgu hapı, iki nokta
+                        Column {
+                            Box(Modifier.fillMaxWidth().height(30.dp).clip(RoundedCornerShape(8.dp)).background(pl.card))
+                            Spacer(Modifier.height(6.dp))
+                            Box(Modifier.width(40.dp).height(12.dp).clip(RoundedCornerShape(50)).background(pl.coral))
+                            Spacer(Modifier.height(6.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(Modifier.size(10.dp).clip(RoundedCornerShape(50)).background(pl.sea))
+                                Box(Modifier.size(10.dp).clip(RoundedCornerShape(50)).background(pl.gold))
+                                Box(Modifier.size(10.dp).clip(RoundedCornerShape(50)).background(pl.text))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(pl.name, fontSize = 12.sp, color = if (sel) Crabs.Text else Crabs.Muted, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
+                }
+            }
+        }
         SectionTitle("Tahta")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             for (t in BOARD_THEMES) {
                 val sel = theme == t.id
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
-                    theme = t.id; Crab.setSetting("board_theme", t.id); dev.chesscrab.app.ui.Prefs.boardTheme = t.id; onThemeChanged()
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.bounceClick(scaleTo = 0.92f) {
+                    dev.chesscrab.app.ui.Prefs.setBoard(t.id); onThemeChanged()
                 }) {
                     Box(Modifier.size(84.dp).clip(RoundedCornerShape(14.dp)).border(2.dp, if (sel) Crabs.Coral else Crabs.Line, RoundedCornerShape(14.dp)).padding(4.dp)) {
                         ChessBoard("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", true, emptyList(), theme = t, coordinates = false)

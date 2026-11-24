@@ -1,5 +1,9 @@
 package dev.chesscrab.app.ui.learn
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.spring
+import dev.chesscrab.app.ui.components.bounceClick
+import dev.chesscrab.app.ui.components.staggerIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -78,8 +82,7 @@ fun isDue(cardId: String, now: Long = System.currentTimeMillis()) = cardOf(cardI
 
 private fun syncLater() { if (SyncClient.loggedIn) CoroutineScope(Dispatchers.IO).launch { SyncClient.sync() } }
 
-private val COURSE_COLORS = listOf(listOf(Color(0xFF1B4351), Color(0xFF0F2A35)), listOf(Color(0xFF4A2621), Color(0xFF221A20)))
-private val COURSE_ACCENT = listOf(Crabs.Sea, Crabs.Coral)
+private val COURSE_ACCENT get() = listOf(Crabs.Sea, Crabs.Coral)
 private val ROMAN = listOf("I", "II", "III", "IV", "V")
 
 /** Kurs listesi: kurs kartları, bölümler açılır-kapanır, dersler yıldızlı */
@@ -94,8 +97,8 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                 val done = all.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
                 val accent = COURSE_ACCENT[ci % 2]
                 Box(
-                    Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(26.dp))
-                        .background(Brush.linearGradient(COURSE_COLORS[ci % 2])).border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
+                    Modifier.staggerIn(ci * 3).fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(26.dp))
+                        .background(Crabs.Card).background(Brush.linearGradient(listOf(COURSE_ACCENT[ci % 2].copy(alpha = 0.30f), COURSE_ACCENT[ci % 2].copy(alpha = 0.06f)))).border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
                 ) {
                     dev.chesscrab.app.ui.components.WaveBackdrop(Modifier.matchParentSize(), color = accent, lines = 3, phase = ci * 2f)
                     Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -117,15 +120,16 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                 item(key = "$chId-h") {
                     val done = lessons.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
                     Row(
-                        Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(18.dp))
-                            .clickable { expanded = if (expanded == chId) "" else chId }.padding(horizontal = 16.dp, vertical = 14.dp),
+                        Modifier.staggerIn(ci * 3 + 1).bounceClick(scaleTo = 0.98f) { expanded = if (expanded == chId) "" else chId }
+                            .fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(ch.getString("title"), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                             Text("$done / ${lessons.size} ders", fontSize = 12.sp, color = if (done == lessons.size) Crabs.Sea else Crabs.Muted)
                         }
-                        Icon(if (expanded == chId) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, tint = Crabs.Muted)
+                        val rot by animateFloatAsState(if (expanded == chId) 180f else 0f, spring(dampingRatio = 0.6f), label = "chev")
+                        Icon(Icons.Filled.ExpandMore, null, tint = Crabs.Muted, modifier = Modifier.graphicsLayer { rotationZ = rot })
                     }
                 }
                 if (expanded == chId) {
@@ -135,8 +139,8 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                             val p = progressOf(l.getString("id"))
                             val doneL = p?.optBoolean("completed") == true
                             Row(
-                                Modifier.fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(16.dp))
-                                    .clickable { onOpen(l.getString("id")) }.padding(horizontal = 8.dp, vertical = 10.dp),
+                                Modifier.staggerIn(li, 35L).bounceClick(scaleTo = 0.97f) { onOpen(l.getString("id")) }
+                                    .fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(16.dp)).padding(horizontal = 8.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
@@ -194,6 +198,7 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
         val stars = maxOf(player.stars().toInt(), prev?.optInt("stars") ?: 0)
         Crab.store.put("lesson_progress", lessonId, JSONObject().put("lesson_id", lessonId).put("completed", true).put("stars", stars)
             .put("best_mistakes", minOf(player.mistakes().toInt(), prev?.optInt("best_mistakes", 99) ?: 99)).put("completed_ms", System.currentTimeMillis()).toString())
+        dev.chesscrab.app.Streak.mark()
         syncLater()
     }
     val total = view.getInt("total").coerceAtLeast(1)
@@ -362,6 +367,7 @@ fun DrillScreen(repId: String, line: Int, modifier: Modifier, onNext: (Int?) -> 
                         val now = System.currentTimeMillis()
                         val card = srsReviewJson(Crab.store.get("srs_cards", drill.cardId()), drill.cardId(), drill.grade(), now)
                         Crab.store.put("srs_cards", drill.cardId(), card)
+                        dev.chesscrab.app.Streak.mark()
                         val days = (JSONObject(card).getLong("due_ms") - now) / 86_400_000L
                         say = (if (drill.grade() == "again") "mistake" else "best") to "Hat bitti · ${view.getInt("mistakes")} hata · sonraki tekrar: ${if (days <= 0) "bugün" else "$days gün sonra"}. ${view.optString("note")}"
                         syncLater()
@@ -440,6 +446,7 @@ fun PuzzleScreen(modifier: Modifier, onExit: () -> Unit) {
                                 }
                             } else {
                                 Sounds.play(Sounds.S.CORRECT)
+                                dev.chesscrab.app.Streak.mark()
                                 say = "brilliant" to "Çözdün! ${view.sans.lastOrNull() ?: ""}"
                             }
                             showSol = false
@@ -462,3 +469,49 @@ fun PuzzleScreen(modifier: Modifier, onExit: () -> Unit) {
     }
 }
 
+
+/** Öğren → Bulmaca sekmesi: günün bulmacası ve fırtına */
+@Composable
+fun PuzzleHub(modifier: Modifier, onDaily: () -> Unit, onRush: () -> Unit) {
+    val pz = remember { dailyPuzzle() }
+    val best = remember { runCatching { Crab.setting("rush_best", "0") }.getOrDefault("0") }
+    Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 14.dp)) {
+        Row(
+            Modifier.staggerIn(0).bounceClick(scaleTo = 0.97f, onClick = onDaily).fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(Crabs.Card)
+                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)).padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(112.dp).clip(RoundedCornerShape(12.dp))) {
+                ChessBoard(pz.getString("fen"), pz.getString("fen").split(' ').getOrNull(1) != "b", emptyList(), coordinates = false)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                dev.chesscrab.app.ui.components.Overline("Günün bulmacası", color = Crabs.Sea)
+                Spacer(Modifier.height(4.dp))
+                Text(pz.getString("lesson_title"), style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(4.dp))
+                Text("Her gün yeni bir konum. İpucu ve çözüm hazır.", color = Crabs.Muted, fontSize = 12.5.sp)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Box(
+            Modifier.staggerIn(1).bounceClick(scaleTo = 0.97f, onClick = onRush).fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(Crabs.Card)
+                .background(Brush.linearGradient(listOf(Crabs.Gold.copy(alpha = 0.26f), Crabs.Coral.copy(alpha = 0.08f), Color.Transparent)))
+                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
+        ) {
+            dev.chesscrab.app.ui.components.WaveBackdrop(Modifier.matchParentSize(), color = Crabs.Gold, lines = 4)
+            Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    dev.chesscrab.app.ui.components.Overline("Bulmaca fırtınası", color = Crabs.Gold)
+                    Spacer(Modifier.height(6.dp))
+                    Text("3 dakika, 3 can", style = MaterialTheme.typography.headlineSmall)
+                    Text("Zamana karşı art arda bulmaca", color = Crabs.Muted, fontSize = 12.5.sp)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(best, fontFamily = dev.chesscrab.app.ui.Display, fontSize = 38.sp, color = Crabs.Gold)
+                    dev.chesscrab.app.ui.components.Overline("rekor")
+                }
+            }
+        }
+    }
+}

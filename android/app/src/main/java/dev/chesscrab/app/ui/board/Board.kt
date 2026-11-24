@@ -1,5 +1,6 @@
 package dev.chesscrab.app.ui.board
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -162,17 +163,27 @@ fun ChessBoard(
     badge: SquareBadge? = null,
     flash: Flash? = null,
     shake: Int = 0,
-    theme: BoardTheme = boardTheme(dev.chesscrab.app.ui.Prefs.boardTheme),
+    theme: BoardTheme? = null,
     coordinates: Boolean = true,
     onMove: (String) -> Unit = {},
 ) {
+    // Tema her çizimde tercihten okunur: ayarlardan değişince tahta anında güncellenir
+    val themeId = dev.chesscrab.app.ui.Prefs.boardTheme
+    val theme = theme ?: boardTheme(themeId)
     val pieces = rememberPieces()
     val board = remember(fen) { parseBoard(fen) }
     val holder = remember { Holder() }
     val plan = remember(fen) { planFor(holder.lastBoard, board, lastMove, holder.skipNext) }
+    // alım olduysa (sürüklenerek bile) hedef karede halka dalgası
+    val burst = remember(fen) {
+        val prev = holder.lastBoard
+        if (prev != null && lastMove != null && lastMove.length >= 4 && prev.size > board.size) lastMove.substring(2, 4) else null
+    }
+    val fx = remember(fen) { Animatable(if (holder.lastBoard == null || holder.lastBoard == board) 1f else 0f) }
+    LaunchedEffect(fen) { fx.animateTo(1f, tween(620, easing = LinearOutSlowInEasing)) }
     SideEffect { holder.lastBoard = board; holder.skipNext = false }
     val progress = remember(fen) { Animatable(if (plan == null) 1f else 0f) }
-    LaunchedEffect(fen) { if (plan != null) progress.animateTo(1f, tween(190, easing = FastOutSlowInEasing)) }
+    LaunchedEffect(fen) { if (plan != null) progress.animateTo(1f, tween(240, easing = FastOutSlowInEasing)) }
 
     val badgeScale = remember(badge) { Animatable(if (badge == null) 1f else 0f) }
     LaunchedEffect(badge) { if (badge != null) badgeScale.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) }
@@ -184,6 +195,8 @@ fun ChessBoard(
     }
 
     var selected by remember(fen) { mutableStateOf<String?>(null) }
+    val selAnim = remember { Animatable(0f) }
+    LaunchedEffect(selected) { selAnim.snapTo(0f); if (selected != null) selAnim.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium)) }
     var dragFrom by remember(fen) { mutableStateOf<String?>(null) }
     var dragPos by remember { mutableStateOf(Offset.Zero) }
     var promo by remember(fen) { mutableStateOf<List<String>?>(null) }
@@ -261,7 +274,8 @@ fun ChessBoard(
                 val tl = Offset(x * s, y * s)
                 val light = (f + r) % 2 == 1
                 drawRect(if (light) theme.light else theme.dark, tl, Size(s, s))
-                if (lastMove != null && lastMove.length >= 4 && (lastMove.startsWith(name) || lastMove.substring(2, 4) == name)) drawRect(LAST_MOVE, tl, Size(s, s))
+                if (lastMove != null && lastMove.length >= 4 && (lastMove.startsWith(name) || lastMove.substring(2, 4) == name)) drawRect(LAST_MOVE.copy(alpha = LAST_MOVE.alpha * (0.35f + 0.65f * fx.value)), tl, Size(s, s))
+                if (dragFrom != null && name == squareAt(dragPos, s) && legal.any { it.startsWith(dragFrom!! + name) }) drawRect(Color(0x33FFFFFF), tl, Size(s, s), style = Stroke(s * 0.06f))
                 if (name in highlights) drawRect(Color(0x6654D1BE), tl, Size(s, s))
                 if (selected == name) drawRect(SELECTED, tl, Size(s, s))
                 if (flash != null && flash.square == name && flashAlpha.value > 0f) drawRect(flash.color.copy(alpha = flashAlpha.value), tl, Size(s, s))
@@ -287,7 +301,8 @@ fun ChessBoard(
                 val k = if (turnWhite) 'K' else 'k'
                 board.entries.firstOrNull { it.value == k }?.let { e ->
                     val c = topLeft(e.key, s) + Offset(s / 2, s / 2)
-                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF0000), Color(0xAAE70000), Color.Transparent), center = c, radius = s * 0.72f), radius = s * 0.72f, center = c)
+                    val rr = s * 0.72f * (1f + 0.3f * (1f - fx.value))
+                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF3B4E), Color(0xAAE7243A), Color.Transparent), center = c, radius = rr), radius = rr, center = c)
                 }
             }
             // taşlar
@@ -301,15 +316,32 @@ fun ChessBoard(
                 plan.captured?.let { (cs, cp) -> pieces[cp]?.let { drawPieceImage(it, topLeft(cs, s), s, alpha = 1f - p) } }
                 for (sl in plan.slides) {
                     val a = topLeft(sl.from, s); val b = topLeft(sl.to, s)
-                    pieces[sl.piece]?.let { drawPieceImage(it, Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p), s) }
+                    val pos = Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p)
+                    // taş havaya kalkar, gölgesi yerde kalır
+                    val lift = kotlin.math.sin(p * Math.PI).toFloat()
+                    drawOval(Color(0x33000000), pos + Offset(s * 0.18f, s * 0.72f), Size(s * 0.64f * (1 - 0.2f * lift), s * 0.18f))
+                    val sz = s * (1f + 0.14f * lift)
+                    pieces[sl.piece]?.let { drawPieceImage(it, pos - Offset((sz - s) / 2, (sz - s) / 2 + s * 0.12f * lift), sz) }
                 }
             }
-            // yasal hamle noktaları
+            // alım dalgası: genişleyen halka + saçılan kıvılcımlar
+            if (burst != null && fx.value < 1f) {
+                val c = topLeft(burst, s) + Offset(s / 2, s / 2)
+                val k = fx.value
+                drawCircle(Color(0xFFFF7A59).copy(alpha = 0.7f * (1 - k)), s * (0.3f + 0.6f * k), c, style = Stroke(s * 0.07f * (1 - k) + 1f))
+                for (i in 0 until 8) {
+                    val ang = i * (Math.PI / 4).toFloat() + 0.4f
+                    val d = s * (0.25f + 0.55f * k)
+                    drawCircle(Color(0xFFF2C46D).copy(alpha = 1 - k), s * 0.045f * (1 - k) + 0.5f, c + Offset(cos(ang) * d, sin(ang) * d))
+                }
+            }
+            // yasal hamle noktaları (yayla büyüyerek belirir)
             selected?.let { sel ->
+                val g = selAnim.value
                 legal.filter { it.startsWith(sel) }.map { it.substring(2, 4) }.distinct().forEach { t ->
                     val c = topLeft(t, s) + Offset(s / 2, s / 2)
-                    if (board.containsKey(t)) drawCircle(Color(0x400B161D), s * 0.45f, c, style = Stroke(s * 0.09f))
-                    else drawCircle(Color(0x400B161D), s * 0.16f, c)
+                    if (board.containsKey(t)) drawCircle(Color(0x400B161D), s * 0.45f * g.coerceAtMost(1.1f), c, style = Stroke(s * 0.09f))
+                    else drawCircle(Color(0x400B161D), s * 0.16f * g, c)
                 }
             }
             // oklar
@@ -345,7 +377,10 @@ fun ChessBoard(
                 }
             }
             // sürüklenen taş
-            dragFrom?.let { d -> board[d]?.let { pc -> pieces[pc]?.let { drawPieceImage(it, dragPos - Offset(s * 0.65f, s * 0.9f), s * 1.3f) } } }
+            dragFrom?.let { d -> board[d]?.let { pc -> pieces[pc]?.let {
+                drawOval(Color(0x40000000), dragPos + Offset(-s * 0.4f, s * 0.25f), Size(s * 0.8f, s * 0.22f))
+                drawPieceImage(it, dragPos - Offset(s * 0.65f, s * 0.9f), s * 1.3f)
+            } } }
         }
     }
 

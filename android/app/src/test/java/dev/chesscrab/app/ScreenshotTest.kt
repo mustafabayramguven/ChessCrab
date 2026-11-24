@@ -27,6 +27,11 @@ class ScreenshotTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
+    init {
+        // sonsuz ortam animasyonları test saatini meşgul etmesin
+        dev.chesscrab.app.ui.Motion.ambient = false
+    }
+
     private val opera = """[White "Paul Morphy"]
 [Black "Sen"]
 [Result "1-0"]
@@ -34,6 +39,7 @@ class ScreenshotTest {
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0"""
 
     private fun shot(name: String, startTab: Tab = Tab.Home, route: Route? = null, play: PlayModel = PlayModel(), review: ReviewModel = ReviewModel()) {
+        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
         compose.setContent { CrabTheme { App(mutableStateOf(null), startTab, route, play, review) } }
         compose.waitForIdle()
         compose.mainClock.advanceTimeBy(3000)
@@ -76,4 +82,54 @@ class ScreenshotTest {
     @Test fun drill() = shot("11-repertuvar", route = Route.Drill("siyah-caro", 0))
 
     @Test fun more() = shot("12-ayarlar", startTab = Tab.More)
+
+    /** İlerleme ekranı için örnek oyunlar ve seri */
+    private fun seed() {
+        val opens = listOf("İtalyan Oyunu", "Sicilya Savunması", "Caro-Kann Savunması", "İtalyan Oyunu", "Londra Sistemi")
+        val accs = listOf(62.0, 70.5, 66.0, 74.2, 71.0, 79.8, 76.4, 83.1, 80.2, 86.5)
+        accs.forEachIndexed { i, a ->
+            val white = i % 2 == 0
+            val res = listOf("1-0", "0-1", "1/2-1/2", "1-0", "1-0")[i % 5]
+            val d = org.json.JSONObject()
+                .put("pgn", "1. e4 e5 *").put("white", if (white) "Sen" else "Ahtapot Ayla (1300)").put("black", if (white) "Fok Fikret (1600)" else "Sen")
+                .put("result", res).put("opening", opens[i % opens.size]).put("created_ms", 1_700_000_000_000L + i * 86_400_000L)
+                .put("white_accuracy", if (white) a else 60.0).put("black_accuracy", if (white) 60.0 else a)
+            Crab.store.put("games", "g$i", d.toString())
+        }
+        val t = Streak.today()
+        Crab.setSetting("active_days", ((t - 6)..t).plus(listOf(t - 12, t - 13, t - 20)).joinToString(","))
+        Crab.setSetting("rush_best", "14")
+    }
+
+    @Test fun progress() { seed(); shot("13-ilerleme", route = Route.Progress) }
+
+    @Test fun rushIntro() { Crab.setSetting("rush_best", "14"); shot("14-firtina", route = Route.Rush) }
+
+    @Test fun rushRun() {
+        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"
+        compose.setContent { CrabTheme { dev.chesscrab.app.ui.learn.RushScreen(androidx.compose.ui.Modifier, onExit = {}, startRunning = true) } }
+        compose.waitForIdle(); compose.mainClock.advanceTimeBy(3000); compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screens/15-firtina-oyun.png")
+    }
+
+    @Test fun lightTheme() {
+        seed()
+        dev.chesscrab.app.ui.Prefs.appTheme = "kumsal"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
+        compose.setContent { CrabTheme { App(mutableStateOf(null)) } }
+        compose.waitForIdle(); compose.mainClock.advanceTimeBy(3000); compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screens/16-tema-kumsal.png")
+    }
+
+    /** Tema çalışırken değişince tahta ve uygulama hemen güncellenmeli */
+    @Test fun themeSwitchLive() {
+        val p = PlayModel()
+        p.loadForPreview(listOf("e2e4", "e7e5", "g1f3", "b8c6"), BOTS[2], analyse = false)
+        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
+        compose.setContent { CrabTheme { App(mutableStateOf(null), Tab.Play, null, p, ReviewModel()) } }
+        compose.waitForIdle(); compose.mainClock.advanceTimeBy(1500); compose.waitForIdle()
+        compose.runOnUiThread { dev.chesscrab.app.ui.Prefs.setApp("resif"); dev.chesscrab.app.ui.Prefs.setBoard("coral") }
+        compose.waitForIdle(); compose.mainClock.advanceTimeBy(1500); compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screens/17-tema-canli-degisim.png")
+        org.junit.Assert.assertEquals("coral", Crab.setting("board_theme"))
+    }
 }

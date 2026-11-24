@@ -277,6 +277,7 @@ class PlayModel {
             .put("result", view.result).put("mode", "engine").put("engine_level", bot.level)
             .put("created_ms", System.currentTimeMillis()).put("opening", view.opening ?: JSONObject.NULL)
         Crab.store.put("games", id, data.toString())
+        dev.chesscrab.app.Streak.mark()
     }
 
     fun classAt(ply: Int): String? = reviews.getOrNull(ply - 1)?.optStr("class")

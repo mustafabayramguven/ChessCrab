@@ -1,5 +1,9 @@
 package dev.chesscrab.app.ui.home
 
+import androidx.compose.animation.core.animateFloat
+import dev.chesscrab.app.ui.components.CountUpInt
+import dev.chesscrab.app.ui.components.bounceClick
+import dev.chesscrab.app.ui.components.staggerIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,6 +67,8 @@ fun HomeScreen(
     onContinueGame: () -> Unit,
     onLesson: (String) -> Unit,
     onPuzzle: () -> Unit,
+    onRush: () -> Unit = {},
+    onProgress: () -> Unit = {},
     onRepertoire: () -> Unit,
     onReviewPgn: () -> Unit,
     onOpenGame: (String, String) -> Unit,
@@ -78,18 +84,25 @@ fun HomeScreen(
                 Spacer(Modifier.height(4.dp))
                 Text(if (name.isNotEmpty()) "$greeting,\n$name." else "$greeting.", style = MaterialTheme.typography.displaySmall)
             }
-            Box(Modifier.size(52.dp).clip(CircleShape).background(Crabs.Card).border(1.dp, Crabs.Line, CircleShape), contentAlignment = Alignment.Center) {
-                Text("🦀", fontSize = 26.sp)
+            // günlük seri rozeti
+            val streak = remember(dev.chesscrab.app.Streak.version) { dev.chesscrab.app.Streak.current() }
+            val doneToday = remember(dev.chesscrab.app.Streak.version) { dev.chesscrab.app.Streak.today() in dev.chesscrab.app.Streak.days() }
+            Row(
+                Modifier.bounceClick(scaleTo = 0.9f, onClick = onProgress).clip(RoundedCornerShape(50)).background(Crabs.Card)
+                    .border(1.dp, if (doneToday) Crabs.Coral else Crabs.Line, RoundedCornerShape(50)).padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(if (streak > 0) "🔥" else "🦀", fontSize = 20.sp)
+                if (streak > 0) { Spacer(Modifier.width(6.dp)); Text("$streak", fontFamily = Display, fontSize = 22.sp, color = Crabs.Coral) }
             }
         }
         Spacer(Modifier.height(20.dp))
 
         // Kahraman kartı: yeni oyun
         Box(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF1B4351), Color(0xFF102A35), Color(0xFF0D1F29))))
-                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp))
-                .clickable(onClick = onPlay),
+            Modifier.staggerIn(0).bounceClick(scaleTo = 0.97f, onClick = onPlay).fillMaxWidth().clip(RoundedCornerShape(26.dp))
+                .background(Crabs.Card).background(Brush.linearGradient(listOf(Crabs.Sea.copy(alpha = 0.26f), Crabs.Sea.copy(alpha = 0.06f), Color.Transparent)))
+                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
         ) {
             WaveBackdrop(Modifier.matchParentSize(), lines = 5)
             Column(Modifier.padding(20.dp)) {
@@ -100,15 +113,18 @@ fun HomeScreen(
                 Text("Her hamlen anında analiz edilir, gelgit çizgisinde görürsün.", color = Crabs.Muted, fontSize = 13.5.sp)
                 Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.clip(RoundedCornerShape(50)).background(Crabs.Coral).clickable(onClick = onPlay).padding(horizontal = 22.dp, vertical = 12.dp)) {
+                    Box(Modifier.bounceClick(scaleTo = 0.92f, onClick = onPlay).clip(RoundedCornerShape(50)).background(Crabs.Coral).padding(horizontal = 22.dp, vertical = 12.dp)) {
                         Text("Oyna  →", color = Crabs.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                     }
                     Spacer(Modifier.width(14.dp))
                     // rakip yüzleri üst üste
-                    Box(Modifier.height(34.dp).width((BOTS.size * 18 + 16).dp)) {
+                    // rakip yüzleri dalga gibi hafifçe sallanır
+                    val bob = if (dev.chesscrab.app.ui.Motion.ambient) androidx.compose.animation.core.rememberInfiniteTransition(label = "bob")
+                        .animateFloat(0f, (2 * Math.PI).toFloat(), androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(2600, easing = androidx.compose.animation.core.LinearEasing)), label = "b").value else 0f
+                    Box(Modifier.height(40.dp).width((BOTS.size * 18 + 16).dp)) {
                         BOTS.forEachIndexed { i, b ->
                             Box(
-                                Modifier.offset(x = (i * 18).dp).size(34.dp).clip(CircleShape).background(Color(0xFF0D1F29)).border(1.5.dp, b.color, CircleShape),
+                                Modifier.offset(x = (i * 18).dp, y = (3 + 3 * kotlin.math.sin(bob + i * 0.8f)).dp).size(34.dp).clip(CircleShape).background(Crabs.Card).border(1.5.dp, b.color, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) { Text(b.emoji, fontSize = 16.sp) }
                         }
@@ -120,8 +136,8 @@ fun HomeScreen(
         if (play.started && !play.view.over) {
             Spacer(Modifier.height(12.dp))
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Crabs.Card).border(1.dp, Crabs.Coral.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
-                    .clickable(onClick = onContinueGame).padding(12.dp),
+                Modifier.staggerIn(1).bounceClick(scaleTo = 0.97f, onClick = onContinueGame)
+                    .fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Crabs.Card).border(1.dp, Crabs.Coral.copy(alpha = 0.5f), RoundedCornerShape(20.dp)).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.size(78.dp).clip(RoundedCornerShape(10.dp))) { ChessBoard(play.view.fen, play.whiteBottom, emptyList(), coordinates = false) }
@@ -134,7 +150,7 @@ fun HomeScreen(
             }
         }
 
-        StatsStrip()
+        StatsStrip(onProgress)
 
         SectionTitle("Bugünün çalışması")
         val next = remember { nextLesson() }
@@ -142,13 +158,14 @@ fun HomeScreen(
         val pz = remember { dailyPuzzle() }
         StudyRow("01", "Ders", next?.second ?: "Tüm dersler bitti, tekrar zamanı", Crabs.Coral) { next?.let { onLesson(it.first) } }
         StudyRow("02", "Repertuvar", if (due > 0) "$due hat tekrar bekliyor" else "Bugünlük tamam ✓", Crabs.Sea, onClick = onRepertoire)
-        StudyRow("03", "Günün bulmacası", pz.getString("lesson_title"), Crabs.Gold, onClick = onPuzzle, trailing = {
+        StudyRow("03", "Günün bulmacası", pz.getString("lesson_title"), Crabs.Sand, onClick = onPuzzle, trailing = {
             Box(Modifier.size(58.dp).clip(RoundedCornerShape(8.dp))) {
                 val white = pz.getString("fen").split(' ').getOrNull(1) != "b"
                 ChessBoard(pz.getString("fen"), white, emptyList(), coordinates = false)
             }
         })
-        StudyRow("04", "Oyun incele", "PGN yapıştır, cihazında analiz edilsin", Crabs.Muted, onClick = onReviewPgn)
+        StudyRow("04", "Bulmaca fırtınası", "3 dakika, 3 can · rekor ${remember { runCatching { Crab.setting("rush_best", "0") }.getOrDefault("0") }}", Crabs.Gold, onClick = onRush)
+        StudyRow("05", "Oyun incele", "PGN yapıştır, cihazında analiz edilsin", Crabs.Muted, onClick = onReviewPgn)
 
         val games = remember { JSONArray(Crab.store.listJson("games")).objects().take(5) }
         if (games.isNotEmpty()) {
@@ -179,8 +196,9 @@ fun HomeScreen(
 @Composable
 private fun StudyRow(no: String, title: String, sub: String, accent: Color, trailing: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card)
-            .border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),
+        Modifier.staggerIn(2 + (no.toIntOrNull() ?: 0)).padding(vertical = 4.dp).bounceClick(scaleTo = 0.97f, onClick = onClick)
+            .fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Crabs.Card)
+            .border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(no, fontFamily = Display, fontStyle = FontStyle.Italic, fontSize = 30.sp, color = accent, modifier = Modifier.width(46.dp))
@@ -193,7 +211,7 @@ private fun StudyRow(no: String, title: String, sub: String, accent: Color, trai
 }
 
 @Composable
-private fun StatsStrip() {
+private fun StatsStrip(onClick: () -> Unit) {
     val games = remember { JSONArray(Crab.store.listJson("games")).objects().map { it.getJSONObject("data") } }
     val me = SyncClient.username.ifEmpty { "Sen" }
     val accs = games.mapNotNull { d ->
@@ -204,12 +222,12 @@ private fun StatsStrip() {
     val lessons = remember { JSONArray(Crab.store.listJson("lesson_progress")).length() }
     if (games.isEmpty() && lessons == 0) return
     Spacer(Modifier.height(18.dp))
-    Row(Modifier.fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.staggerIn(2).bounceClick(scaleTo = 0.97f, onClick = onClick).fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
         val items = listOf("${games.size}" to "oyun", "$wins" to "galibiyet", (if (accs.isEmpty()) "–" else "%.0f".format(accs.takeLast(10).average())) to "doğruluk", "$lessons" to "ders")
         items.forEachIndexed { i, (v, l) ->
             if (i > 0) Box(Modifier.width(1.dp).height(34.dp).background(Crabs.Line))
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(v, fontFamily = Display, fontSize = 28.sp, color = if (i == 2) Crabs.Coral else Crabs.Text)
+                Text(v.toIntOrNull()?.let { CountUpInt(it) } ?: v, fontFamily = Display, fontSize = 28.sp, color = if (i == 2) Crabs.Coral else Crabs.Text)
                 Overline(l)
             }
         }

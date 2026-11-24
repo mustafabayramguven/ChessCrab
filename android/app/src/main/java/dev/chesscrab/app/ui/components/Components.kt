@@ -1,5 +1,14 @@
 package dev.chesscrab.app.ui.components
 
+import dev.chesscrab.app.ui.Motion
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.composed
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -92,7 +101,11 @@ fun Overline(text: String, modifier: Modifier = Modifier, color: Color = Crabs.M
 
 /** Arka plan için yumuşak dalga çizgileri */
 @Composable
-fun WaveBackdrop(modifier: Modifier = Modifier, color: Color = Crabs.Sand, lines: Int = 4, phase: Float = 0f) {
+fun WaveBackdrop(modifier: Modifier = Modifier, color: Color = Crabs.Sand, lines: Int = 4, phase: Float = 0f, animated: Boolean = true) {
+    val t = if (animated && Motion.ambient) {
+        val inf = rememberInfiniteTransition(label = "wave")
+        inf.animateFloat(0f, (2 * PI).toFloat(), infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "ph").value
+    } else 0f
     Canvas(modifier) {
         val w = size.width; val h = size.height
         for (k in 0 until lines) {
@@ -102,7 +115,7 @@ fun WaveBackdrop(modifier: Modifier = Modifier, color: Color = Crabs.Sand, lines
             var x = 0f
             path.moveTo(0f, baseY)
             while (x <= w) {
-                val y = baseY + amp * sin((x / w * 2 * PI * (1.2 + k * 0.25) + phase + k).toFloat())
+                val y = baseY + amp * sin((x / w * 2 * PI * (1.2 + k * 0.25) + phase + k + t * (1 + k * 0.3)).toFloat())
                 path.lineTo(x, y); x += 6f
             }
             drawPath(path, color.copy(alpha = 0.10f - k * 0.018f), style = Stroke(1.6.dp.toPx()))
@@ -116,11 +129,11 @@ fun EvalBar(whiteCp: Int, whiteBottom: Boolean, modifier: Modifier = Modifier) {
     val target = winPercent(whiteCp) / 100f
     val w by animateFloatAsState(target, tween(650, easing = FastOutSlowInEasing), label = "eval")
     val whiteAhead = whiteCp >= 0
-    Box(modifier.width(17.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF07101A)).border(1.dp, Crabs.Line, RoundedCornerShape(8.dp))) {
+    Box(modifier.width(17.dp).clip(RoundedCornerShape(8.dp)).background(Crabs.Abyss).border(1.dp, Crabs.Line, RoundedCornerShape(8.dp))) {
         Canvas(Modifier.fillMaxSize()) {
             val hWhite = size.height * w
             val top = if (whiteBottom) size.height - hWhite else 0f
-            drawRect(Brush.verticalGradient(listOf(Crabs.Sand, Color(0xFFE2D2AE)), startY = top, endY = top + hWhite), Offset(0f, top), Size(size.width, hWhite))
+            drawRect(Brush.verticalGradient(listOf(Crabs.Ivory, Color(0xFFE2D2AE)), startY = top, endY = top + hWhite), Offset(0f, top), Size(size.width, hWhite))
             // orta çizgi
             drawLine(Crabs.Coral.copy(alpha = 0.8f), Offset(0f, size.height / 2), Offset(size.width, size.height / 2), 1.5f)
         }
@@ -128,7 +141,7 @@ fun EvalBar(whiteCp: Int, whiteBottom: Boolean, modifier: Modifier = Modifier) {
         Text(
             scoreLabel(whiteCp).removePrefix("+").removePrefix("-").let { if (it.length > 3 && !it.startsWith("M")) it.substringBefore('.') else it },
             fontSize = 7.sp, fontFamily = Mono, fontWeight = FontWeight.Bold,
-            color = if (whiteAhead) Crabs.Ink else Crabs.Sand,
+            color = if (whiteAhead) Crabs.Abyss else Crabs.Ivory,
             textAlign = TextAlign.Center,
             modifier = Modifier.align(if (atBottom) Alignment.BottomCenter else Alignment.TopCenter).padding(vertical = 4.dp).fillMaxWidth(),
         )
@@ -151,9 +164,12 @@ fun EvalGraph(
 ) {
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(wins.size) { reveal.snapTo(0f); reveal.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
+    // ilk görünüşte grafik soldan sağa çizilir
+    val intro = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { intro.animateTo(1f, tween(900, easing = FastOutSlowInEasing)) }
     val sel by animateFloatAsState((selected ?: -1).toFloat(), tween(220), label = "sel")
     val n = (wins.size - 1).coerceAtLeast(1)
-    var m = Modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(16.dp)).background(Color(0xFF07101A)).border(1.dp, Crabs.Line, RoundedCornerShape(16.dp))
+    var m = Modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(16.dp)).background(Crabs.ChartBg).border(1.dp, Crabs.Line, RoundedCornerShape(16.dp))
     if (onSelect != null) {
         m = m.pointerInput(wins.size) { detectTapGestures { o -> onSelect(((o.x / size.width) * n + 0.5f).toInt().coerceIn(0, n)) } }
             .pointerInput(wins.size) { detectHorizontalDragGestures { ch, _ -> onSelect(((ch.position.x / size.width) * n + 0.5f).toInt().coerceIn(0, n)) } }
@@ -172,6 +188,7 @@ fun EvalGraph(
                 Offset(px, py)
             } else Offset(x(i.toFloat()), y(wins[i]))
         }
+        clipRect(right = w * intro.value) {
         // yumuşak eğri (Catmull-Rom → Bezier)
         val curve = Path().apply {
             moveTo(pts[0].x, pts[0].y)
@@ -181,8 +198,8 @@ fun EvalGraph(
             }
         }
         val fill = Path().apply { addPath(curve); lineTo(pts.last().x, h); lineTo(pts[0].x, h); close() }
-        drawPath(fill, Brush.verticalGradient(listOf(Crabs.Sand.copy(alpha = 0.95f), Crabs.Sand.copy(alpha = 0.55f))))
-        drawPath(curve, Crabs.Sand, style = Stroke(2.dp.toPx()))
+        drawPath(fill, Brush.verticalGradient(listOf(Crabs.Ivory.copy(alpha = 0.95f), Crabs.Ivory.copy(alpha = 0.55f))))
+        drawPath(curve, Crabs.Ivory, style = Stroke(2.dp.toPx()))
         drawLine(Crabs.Muted.copy(alpha = 0.45f), Offset(0f, h / 2), Offset(w, h / 2), 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
         classes.forEachIndexed { i, c ->
             val info = CLASS_INFO[c ?: return@forEachIndexed] ?: return@forEachIndexed
@@ -190,8 +207,9 @@ fun EvalGraph(
             val ply = i + 1
             if (ply < pts.size) {
                 val o = pts[ply]
-                rotate(45f, o) { drawRect(Crabs.Ink, o - Offset(5.5f, 5.5f), Size(11f, 11f)); drawRect(info.color, o - Offset(4f, 4f), Size(8f, 8f)) }
+                rotate(45f, o) { drawRect(Crabs.Abyss, o - Offset(5.5f, 5.5f), Size(11f, 11f)); drawRect(info.color, o - Offset(4f, 4f), Size(8f, 8f)) }
             }
+        }
         }
         if (sel >= 0) {
             val sx = x(sel.coerceAtMost(n.toFloat()))
@@ -209,7 +227,7 @@ fun EvalGraph(
 fun ClassBadge(cls: String, size: Dp = 22.dp) {
     val info = CLASS_INFO[cls] ?: return
     Box(Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(info.color), contentAlignment = Alignment.Center) {
-        Text(info.symbol, color = Crabs.Ink, fontFamily = Mono, fontWeight = FontWeight.Bold, fontSize = (size.value * (if (info.symbol.length > 1) 0.42f else 0.55f)).sp)
+        Text(info.symbol, color = Crabs.Abyss, fontFamily = Mono, fontWeight = FontWeight.Bold, fontSize = (size.value * (if (info.symbol.length > 1) 0.42f else 0.55f)).sp)
     }
 }
 
@@ -246,12 +264,12 @@ fun CoachBubble(text: String, modifier: Modifier = Modifier, cls: String? = null
                         if (c != null) { ClassBadge(c, 18.dp); Spacer(Modifier.width(8.dp)) }
                         Text(
                             ti ?: CLASS_INFO[c]?.label ?: "Yengeç Koç",
-                            color = CLASS_INFO[c]?.color ?: Crabs.Sand,
+                            color = CLASS_INFO[c]?.color?.forText() ?: Crabs.Sand,
                             fontFamily = Display, fontStyle = FontStyle.Italic, fontSize = 18.sp,
                         )
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text(t, color = Crabs.Text, fontSize = 14.5.sp, lineHeight = 21.sp)
+                    TypeText(t, color = Crabs.Text, fontSize = 14.5.sp, lineHeight = 21.sp)
                     extra?.invoke()
                 }
             }
@@ -296,11 +314,11 @@ fun PlayerBar(
         if (clock != null) {
             Box(
                 Modifier.clip(RoundedCornerShape(10.dp))
-                    .background(if (clockActive) Crabs.Sand else Color.Transparent)
-                    .border(1.dp, if (clockActive) Crabs.Sand else Crabs.Line, RoundedCornerShape(10.dp))
+                    .background(if (clockActive) Crabs.Ivory else Color.Transparent)
+                    .border(1.dp, if (clockActive) Crabs.Ivory else Crabs.Line, RoundedCornerShape(10.dp))
                     .padding(horizontal = 12.dp, vertical = 5.dp)
             ) {
-                Text(clock, fontWeight = FontWeight.Bold, fontSize = 19.sp, color = if (clockActive) Crabs.Ink else Crabs.Muted, fontFamily = Mono)
+                Text(clock, fontWeight = FontWeight.Bold, fontSize = 19.sp, color = if (clockActive) Crabs.Abyss else Crabs.Muted, fontFamily = Mono)
             }
         }
     }
@@ -367,11 +385,11 @@ fun BigButton(text: String, modifier: Modifier = Modifier, color: Color = Crabs.
     val fg = if (ghost) Crabs.Text else Crabs.Ink
     Box(
         modifier
+            .bounceClick(enabled = enabled, scaleTo = 0.96f, onClick = onClick)
             .fillMaxWidth()
             .clip(RoundedCornerShape(50))
             .background(if (ghost) Color.Transparent else if (enabled) color else color.copy(alpha = 0.35f))
             .border(1.dp, if (ghost) Crabs.Line.copy(alpha = 0.25f) else Color.Transparent, RoundedCornerShape(50))
-            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -385,8 +403,9 @@ fun BigButton(text: String, modifier: Modifier = Modifier, color: Color = Crabs.
 /** İnce çerçeveli koyu kart */
 @Composable
 fun CrabCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
-    var m = modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(20.dp))
-    if (onClick != null) m = m.clickable(onClick = onClick)
+    var m: Modifier = modifier
+    if (onClick != null) m = m.bounceClick(scaleTo = 0.97f, onClick = onClick)
+    m = m.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(20.dp))
     Box(m.padding(16.dp)) { content() }
 }
 
@@ -412,13 +431,93 @@ fun ProgressRing(fraction: Float, size: Dp = 46.dp, color: Color = Crabs.Coral, 
 /** Seçilebilir hap: seçiliyse mercan dolgu, değilse ince çerçeve. */
 @Composable
 fun Pill(text: String, selected: Boolean, modifier: Modifier = Modifier, mono: Boolean = false, onClick: () -> Unit) {
+    val bg by androidx.compose.animation.animateColorAsState(if (selected) Crabs.Coral else Color.Transparent, tween(220), label = "pill")
     Box(
-        modifier.clip(RoundedCornerShape(50))
-            .background(if (selected) Crabs.Coral else Color.Transparent)
+        modifier.bounceClick(scaleTo = 0.92f, onClick = onClick).clip(RoundedCornerShape(50))
+            .background(bg)
             .border(1.dp, if (selected) Crabs.Coral else Crabs.Line.copy(alpha = 0.22f), RoundedCornerShape(50))
-            .clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 9.dp),
+            .padding(horizontal = 16.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (selected) Crabs.Ink else Crabs.Text, fontFamily = if (mono) Mono else null)
+    }
+}
+
+
+/** Açık temada parlak sınıf renklerini okunur hale getirir */
+fun Color.forText(): Color = if (Crabs.Dark) this else androidx.compose.ui.graphics.lerp(this, Color.Black, 0.4f)
+
+/**
+ * Daktilo efektiyle beliren metin. Yerleşim baştan tam metne göre yapılır
+ * (görünmeyen kısım saydam), böylece kart yüksekliği zıplamaz.
+ */
+@Composable
+fun TypeText(text: String, color: Color, fontSize: androidx.compose.ui.unit.TextUnit, lineHeight: androidx.compose.ui.unit.TextUnit, modifier: Modifier = Modifier) {
+    val shown = remember(text) { Animatable(0f) }
+    LaunchedEffect(text) { shown.animateTo(text.length.toFloat(), tween((text.length * 14).coerceIn(250, 1100), easing = LinearEasing)) }
+    val n = shown.value.toInt().coerceIn(0, text.length)
+    val s = androidx.compose.ui.text.buildAnnotatedString {
+        append(text.substring(0, n))
+        pushStyle(androidx.compose.ui.text.SpanStyle(color = Color.Transparent)); append(text.substring(n)); pop()
+    }
+    Text(s, color = color, fontSize = fontSize, lineHeight = lineHeight, modifier = modifier)
+}
+
+/** Basınca hafifçe küçülüp yaylanarak geri gelen tıklama */
+fun Modifier.bounceClick(enabled: Boolean = true, scaleTo: Float = 0.95f, onClick: () -> Unit): Modifier = composed {
+    val src = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by src.collectIsPressedAsState()
+    val sc by animateFloatAsState(if (pressed) scaleTo else 1f, spring(dampingRatio = 0.45f, stiffness = 700f), label = "press")
+    this.graphicsLayer { scaleX = sc; scaleY = sc }.clickable(src, indication = null, enabled = enabled, onClick = onClick)
+}
+
+/** Listede sırayla, aşağıdan süzülerek beliren öğeler */
+fun Modifier.staggerIn(index: Int, step: Long = 55L): Modifier = composed {
+    val a = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(index.coerceAtMost(12) * step); a.animateTo(1f, tween(420, easing = FastOutSlowInEasing)) }
+    graphicsLayer { alpha = a.value; translationY = (1f - a.value) * 28.dp.toPx() }
+}
+
+/** Sayan tamsayı */
+@Composable
+fun CountUpInt(target: Int, durationMs: Int = 900): String {
+    val a = remember(target) { Animatable(0f) }
+    LaunchedEffect(target) { a.animateTo(target.toFloat(), tween(durationMs, easing = FastOutSlowInEasing)) }
+    return a.value.toInt().toString()
+}
+
+/**
+ * Basit, yumuşak çizgi grafiği (İlerleme ekranı için). Değerler 0..100.
+ * Soldan sağa çizilerek belirir; ortalama kesikli çizgiyle gösterilir.
+ */
+@Composable
+fun TrendChart(values: List<Float>, modifier: Modifier = Modifier, color: Color = Crabs.Coral, height: Dp = 150.dp) {
+    val intro = remember(values) { Animatable(0f) }
+    LaunchedEffect(values) { intro.animateTo(1f, tween(1100, easing = FastOutSlowInEasing)) }
+    val lineCol = Crabs.Line; val faint = Crabs.Faint; val bg = Crabs.Card
+    Canvas(modifier.fillMaxWidth().height(height)) {
+        if (values.isEmpty()) return@Canvas
+        val w = size.width; val h = size.height; val pad = 10.dp.toPx()
+        val lo = (values.min() - 8f).coerceAtLeast(0f); val hi = (values.max() + 5f).coerceAtMost(100f)
+        val span = (hi - lo).coerceAtLeast(10f)
+        val n = (values.size - 1).coerceAtLeast(1)
+        val pts = values.mapIndexed { i, v -> Offset(if (values.size == 1) w / 2 else pad + (w - 2 * pad) * i / n, pad + (h - 2 * pad) * (1 - (v - lo) / span)) }
+        for (k in 0..3) { val yy = pad + (h - 2 * pad) * k / 3f; drawLine(lineCol, Offset(0f, yy), Offset(w, yy), 1f) }
+        val avg = values.average().toFloat()
+        val ay = pad + (h - 2 * pad) * (1 - (avg - lo) / span)
+        drawLine(faint, Offset(0f, ay), Offset(w, ay), 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
+        val curve = Path().apply {
+            moveTo(pts[0].x, pts[0].y)
+            for (i in 1 until pts.size) {
+                val p0 = pts[(i - 2).coerceAtLeast(0)]; val p1 = pts[i - 1]; val p2 = pts[i]; val p3 = pts[(i + 1).coerceAtMost(pts.size - 1)]
+                cubicTo(p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f, p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f, p2.x, p2.y)
+            }
+        }
+        clipRect(right = w * intro.value) {
+            val fill = Path().apply { addPath(curve); lineTo(pts.last().x, h); lineTo(pts[0].x, h); close() }
+            drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.35f), color.copy(alpha = 0f))))
+            drawPath(curve, color, style = Stroke(2.5.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+            for (p in pts) { drawCircle(bg, 4.5.dp.toPx(), p); drawCircle(color, 3.dp.toPx(), p) }
+        }
     }
 }

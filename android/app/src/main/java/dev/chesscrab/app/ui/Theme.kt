@@ -3,6 +3,7 @@ package dev.chesscrab.app.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,22 +23,75 @@ import dev.chesscrab.app.R
  * kum rengi tahta. Başlıklar serif (DM Serif Display), gövde Manrope,
  * sayılar/notasyon JetBrains Mono.
  */
+data class Palette(
+    val id: String, val name: String, val dark: Boolean,
+    val bg: Color, val surface: Color, val card: Color, val cardHi: Color, val line: Color,
+    val coral: Color, val coralDeep: Color, val sea: Color, val seaDeep: Color,
+    val sand: Color, val ink: Color, val gold: Color, val text: Color, val muted: Color, val faint: Color,
+    val chartBg: Color,
+)
+
+val PALETTES = listOf(
+    Palette(
+        "gelgit", "Gelgit", true,
+        Color(0xFF0B161D), Color(0xFF0F1E27), Color(0xFF152833), Color(0xFF1D3442), Color(0x1FFFFFFF),
+        Color(0xFFFF7A59), Color(0xFFE4573A), Color(0xFF54D1BE), Color(0xFF1F7F78),
+        Color(0xFFF4E8CF), Color(0xFF0B161D), Color(0xFFF2C46D), Color(0xFFEEF3F1), Color(0xFF92A8B0), Color(0xFF5E7782),
+        Color(0xFF07101A),
+    ),
+    Palette(
+        "gece", "Gece", true,
+        Color(0xFF000000), Color(0xFF07090B), Color(0xFF0F1316), Color(0xFF182025), Color(0x1CFFFFFF),
+        Color(0xFF54D1BE), Color(0xFF2FA898), Color(0xFFFF7A59), Color(0xFFB04A33),
+        Color(0xFFEDE6D6), Color(0xFF001312), Color(0xFFF2C46D), Color(0xFFEEF2F1), Color(0xFF8C9AA0), Color(0xFF56636A),
+        Color(0xFF05080A),
+    ),
+    Palette(
+        "resif", "Resif", true,
+        Color(0xFF17111F), Color(0xFF1D1527), Color(0xFF261B33), Color(0xFF312340), Color(0x1FFFFFFF),
+        Color(0xFFFF6F91), Color(0xFFE04E73), Color(0xFF7FD8C9), Color(0xFF3B8F84),
+        Color(0xFFF6E7D7), Color(0xFF1A0F17), Color(0xFFFFC26B), Color(0xFFF4EEF6), Color(0xFFA99BB5), Color(0xFF6E6079),
+        Color(0xFF100B16),
+    ),
+    Palette(
+        "kumsal", "Kumsal", false,
+        Color(0xFFF5EEE1), Color(0xFFEFE6D5), Color(0xFFFFFBF3), Color(0xFFF1E7D6), Color(0x220B161D),
+        Color(0xFFE8623F), Color(0xFFC94B2B), Color(0xFF1C9787), Color(0xFF136A60),
+        Color(0xFF5A3A24), Color(0xFF1B1410), Color(0xFFB8862B), Color(0xFF16242C), Color(0xFF5F727A), Color(0xFF97A3A6),
+        Color(0xFF16242C),
+    ),
+)
+
+fun palette(id: String): Palette = PALETTES.firstOrNull { it.id == id } ?: PALETTES[0]
+
+/**
+ * ChessCrab renkleri. Değerler seçili paletten okunur; palet bir
+ * Compose durumu olduğundan tema değişince bütün ekranlar anında yenilenir.
+ */
 object Crabs {
-    val Bg = Color(0xFF0B161D)
-    val Surface = Color(0xFF0F1E27)
-    val Card = Color(0xFF152833)
-    val CardHi = Color(0xFF1D3442)
-    val Line = Color(0x1FFFFFFF)
-    val Coral = Color(0xFFFF7A59)
-    val CoralDeep = Color(0xFFE4573A)
-    val Sea = Color(0xFF54D1BE)
-    val SeaDeep = Color(0xFF1F7F78)
-    val Sand = Color(0xFFF4E8CF)
-    val Ink = Color(0xFF0B161D)
-    val Gold = Color(0xFFF2C46D)
-    val Text = Color(0xFFEEF3F1)
-    val Muted = Color(0xFF92A8B0)
-    val Faint = Color(0xFF5E7782)
+    private val p: Palette get() = palette(Prefs.appTheme)
+    val Bg get() = p.bg
+    val Surface get() = p.surface
+    val Card get() = p.card
+    val CardHi get() = p.cardHi
+    val Line get() = p.line
+    val Coral get() = p.coral
+    val CoralDeep get() = p.coralDeep
+    val Sea get() = p.sea
+    val SeaDeep get() = p.seaDeep
+    /** Vurgulu metin (koyu temalarda kum, açık temada koyu kahve) */
+    val Sand get() = p.sand
+    /** Dolu vurgu üstündeki metin */
+    val Ink get() = p.ink
+    val Gold get() = p.gold
+    val Text get() = p.text
+    val Muted get() = p.muted
+    val Faint get() = p.faint
+    val ChartBg get() = p.chartBg
+    val Dark get() = p.dark
+    /** Grafiklerde/saatte "beyaz" ve "siyah" taraf: temadan bağımsız */
+    val Ivory = Color(0xFFF4E8CF)
+    val Abyss = Color(0xFF05090C)
 }
 
 val Display = FontFamily(
@@ -56,22 +110,12 @@ val Mono = FontFamily(
     Font(R.font.jetbrains_mono_700, FontWeight.Bold),
 )
 
-private val Scheme = darkColorScheme(
-    primary = Crabs.Coral,
-    onPrimary = Crabs.Ink,
-    secondary = Crabs.Sea,
-    onSecondary = Crabs.Ink,
-    background = Crabs.Bg,
-    onBackground = Crabs.Text,
-    surface = Crabs.Surface,
-    onSurface = Crabs.Text,
-    surfaceVariant = Crabs.Card,
-    onSurfaceVariant = Crabs.Muted,
-    surfaceContainer = Crabs.Surface,
-    surfaceContainerHigh = Crabs.Card,
-    surfaceContainerHighest = Crabs.CardHi,
-    outline = Color(0xFF2C4757),
-    error = Color(0xFFFF5A6E),
+private fun schemeOf(p: Palette) = (if (p.dark) darkColorScheme() else lightColorScheme()).copy(
+    primary = p.coral, onPrimary = p.ink, secondary = p.sea, onSecondary = p.ink,
+    background = p.bg, onBackground = p.text, surface = p.surface, onSurface = p.text,
+    surfaceVariant = p.card, onSurfaceVariant = p.muted, surfaceContainer = p.surface,
+    surfaceContainerHigh = p.card, surfaceContainerHighest = p.cardHi,
+    outline = p.faint, outlineVariant = p.line, error = Color(0xFFFF5A6E),
 )
 
 private val Type = Typography(
@@ -90,7 +134,8 @@ private val Type = Typography(
 
 @Composable
 fun CrabTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = Scheme, typography = Type, content = content)
+    val p = palette(Prefs.appTheme)
+    MaterialTheme(colorScheme = schemeOf(p), typography = Type, content = content)
 }
 
 /** Hamle sınıfı: etiket, renk, rozet simgesi (standart notasyon işaretleri) */
@@ -124,7 +169,24 @@ val BOARD_THEMES = listOf(
 
 fun boardTheme(id: String): BoardTheme = BOARD_THEMES.firstOrNull { it.id == id } ?: BOARD_THEMES[0]
 
-/** Ekranları anında güncelleyen tercihler */
+/** Ekranları anında güncelleyen tercihler (Compose durumu; değişince her şey yeniden çizilir) */
 object Prefs {
-    var boardTheme by mutableStateOf(runCatching { Crab.setting("board_theme", "sand") }.getOrDefault("sand"))
+    var boardTheme by mutableStateOf("sand")
+    var appTheme by mutableStateOf("gelgit")
+
+    /** Uygulama açılışında kayıtlı tercihleri yükler */
+    fun load() {
+        runCatching {
+            boardTheme = Crab.setting("board_theme", "sand")
+            appTheme = Crab.setting("app_theme", "gelgit")
+        }
+    }
+
+    fun setBoard(id: String) { boardTheme = id; runCatching { Crab.setSetting("board_theme", id) } }
+    fun setApp(id: String) { appTheme = id; runCatching { Crab.setSetting("app_theme", id) } }
+}
+
+/** Animasyon ayarları. Testlerde sonsuz (ortam) animasyonlar kapatılır. */
+object Motion {
+    var ambient = true
 }

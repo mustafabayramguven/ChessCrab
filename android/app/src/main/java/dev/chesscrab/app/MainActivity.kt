@@ -1,5 +1,11 @@
 package dev.chesscrab.app
 
+import dev.chesscrab.app.ui.components.bounceClick
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -79,6 +85,8 @@ sealed interface Route {
     data object BotSelect : Route
     data object Review : Route
     data object Puzzle : Route
+    data object Rush : Route
+    data object Progress : Route
     data class Lesson(val id: String) : Route
     data class Drill(val rep: String, val line: Int) : Route
 }
@@ -90,7 +98,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleShare(intent)
-        setContent { CrabTheme { App(sharedPgn) } }
+        setContent {
+            CrabTheme {
+                // durum çubuğu simgeleri temaya uysun (açık temada koyu simgeler)
+                val dark = Crabs.Dark
+                androidx.compose.runtime.LaunchedEffect(dark) {
+                    val st = if (dark) androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    else androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                    enableEdgeToEdge(statusBarStyle = st, navigationBarStyle = st)
+                }
+                App(sharedPgn)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -128,13 +147,31 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
         val m = Modifier.padding(pad).fillMaxSize()
         AnimatedContent(
             targetState = route ?: tab,
-            transitionSpec = { (fadeIn(tween(200)) + slideInVertically(tween(220)) { it / 24 }) togetherWith fadeOut(tween(120)) },
+            transitionSpec = {
+                val into = targetState is Route; val from = initialState is Route
+                when {
+                    // ekran açılırken sağdan kayar, arkadaki hafifçe küçülür
+                    into && !from -> (slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 3 } + fadeIn(tween(260))) togetherWith
+                        (scaleOut(tween(260), targetScale = 0.94f) + fadeOut(tween(200)))
+                    from && !into -> (scaleIn(tween(300), initialScale = 0.94f) + fadeIn(tween(260))) togetherWith
+                        (slideOutHorizontally(tween(280, easing = FastOutSlowInEasing)) { it / 3 } + fadeOut(tween(220)))
+                    !into && !from -> {
+                        // sekmeler arası: yöne göre yatay kayma
+                        val dir = if ((targetState as Tab).ordinal > (initialState as Tab).ordinal) 1 else -1
+                        (slideInHorizontally(tween(280, easing = FastOutSlowInEasing)) { dir * it / 6 } + fadeIn(tween(240))) togetherWith
+                            (slideOutHorizontally(tween(240)) { -dir * it / 6 } + fadeOut(tween(160)))
+                    }
+                    else -> fadeIn(tween(220)) togetherWith fadeOut(tween(160))
+                }
+            },
             label = "nav",
         ) { target ->
             when (target) {
                 Route.BotSelect -> BotSelectScreen(play, m, onStart = { route = null; tab = Tab.Play }, onBack = { route = null })
                 Route.Review -> ReviewScreen(review, m)
                 Route.Puzzle -> PuzzleScreen(m, onExit = { route = null })
+                Route.Rush -> dev.chesscrab.app.ui.learn.RushScreen(m, onExit = { route = null })
+                Route.Progress -> dev.chesscrab.app.ui.progress.ProgressScreen(m, onBack = { route = null })
                 is Route.Lesson -> LessonPlayerScreen(target.id, m, onExit = { route = null }, onNext = { route = Route.Lesson(it) })
                 is Route.Drill -> DrillScreen(target.rep, target.line, m, onNext = { nl -> route = if (nl != null) Route.Drill(target.rep, nl) else null }, onExit = { route = null })
                 Tab.Home -> HomeScreen(
@@ -143,6 +180,8 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
                     onContinueGame = { tab = Tab.Play },
                     onLesson = { route = Route.Lesson(it) },
                     onPuzzle = { route = Route.Puzzle },
+                    onRush = { route = Route.Rush },
+                    onProgress = { route = Route.Progress },
                     onRepertoire = { learnTab = 1; tab = Tab.Learn },
                     onReviewPgn = { review.reset(); route = Route.Review },
                     onOpenGame = { pgn, id -> openReview(pgn, null, id) },
@@ -155,17 +194,27 @@ fun App(sharedPgn: MutableState<String?>, startTab: Tab = Tab.Home, startRoute: 
                         Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
                             listOf("Dersler", "Repertuvar", "Bulmaca").forEachIndexed { i, l ->
                                 val sel = learnTab == i
-                                Column(Modifier.clickable { if (i == 2) route = Route.Puzzle else learnTab = i }) {
-                                    Text(l, fontFamily = dev.chesscrab.app.ui.Display, fontSize = 26.sp, color = if (sel) Crabs.Text else Crabs.Faint)
-                                    Box(Modifier.padding(top = 2.dp).height(3.dp).width(if (sel) 28.dp else 0.dp).clip(RoundedCornerShape(2.dp)).background(Crabs.Coral))
+                                val col by androidx.compose.animation.animateColorAsState(if (sel) Crabs.Text else Crabs.Faint, tween(250), label = "lt")
+                                val uw by androidx.compose.animation.core.animateDpAsState(if (sel) 28.dp else 0.dp, androidx.compose.animation.core.spring(dampingRatio = 0.5f), label = "lu")
+                                Column(Modifier.clickable { learnTab = i }) {
+                                    Text(l, fontFamily = dev.chesscrab.app.ui.Display, fontSize = 26.sp, color = col)
+                                    Box(Modifier.padding(top = 2.dp).height(3.dp).width(uw).clip(RoundedCornerShape(2.dp)).background(Crabs.Coral))
                                 }
                             }
                         }
                     }
-                    if (learnTab == 0) LessonsList(Modifier.weight(1f)) { route = Route.Lesson(it) }
-                    else RepertoireList(Modifier.weight(1f)) { r, l -> route = Route.Drill(r, l) }
+                    AnimatedContent(learnTab, Modifier.weight(1f), transitionSpec = {
+                        val dir = if (targetState > initialState) 1 else -1
+                        (slideInHorizontally(tween(260)) { dir * it / 5 } + fadeIn(tween(220))) togetherWith (slideOutHorizontally(tween(220)) { -dir * it / 5 } + fadeOut(tween(150)))
+                    }, label = "learn") { lt ->
+                        when (lt) {
+                            0 -> LessonsList(Modifier.fillMaxSize()) { route = Route.Lesson(it) }
+                            1 -> RepertoireList(Modifier.fillMaxSize()) { r, l -> route = Route.Drill(r, l) }
+                            else -> dev.chesscrab.app.ui.learn.PuzzleHub(Modifier.fillMaxSize(), onDaily = { route = Route.Puzzle }, onRush = { route = Route.Rush })
+                        }
+                    }
                 }
-                Tab.More -> MoreScreen(m, onOpenGame = { pgn, id -> openReview(pgn, null, id) }, onThemeChanged = {})
+                Tab.More -> MoreScreen(m, onOpenGame = { pgn, id -> openReview(pgn, null, id) }, onThemeChanged = {}, onProgress = { route = Route.Progress })
                 else -> Unit
             }
         }
@@ -182,13 +231,15 @@ private fun FloatingNav(tab: Tab, onSelect: (Tab) -> Unit) {
         ) {
             for (t in Tab.entries) {
                 val sel = t == tab
+                val bg by androidx.compose.animation.animateColorAsState(if (sel) Crabs.Coral else Color.Transparent, tween(260), label = "nb")
+                val fg by androidx.compose.animation.animateColorAsState(if (sel) Crabs.Ink else Crabs.Muted, tween(260), label = "nf")
                 Row(
-                    Modifier.clip(RoundedCornerShape(22.dp)).background(if (sel) Crabs.Coral else Color.Transparent)
-                        .clickable { onSelect(t) }.animateContentSize().padding(horizontal = if (sel) 16.dp else 14.dp, vertical = 11.dp),
+                    Modifier.bounceClick(scaleTo = 0.9f) { onSelect(t) }.clip(RoundedCornerShape(22.dp)).background(bg)
+                        .animateContentSize(androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f)).padding(horizontal = if (sel) 16.dp else 14.dp, vertical = 11.dp),
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                 ) {
-                    Icon(t.icon, contentDescription = t.label, tint = if (sel) Crabs.Ink else Crabs.Muted, modifier = Modifier.size(22.dp))
-                    if (sel) { Spacer(Modifier.width(8.dp)); Text(t.label, color = Crabs.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp) }
+                    Icon(t.icon, contentDescription = t.label, tint = fg, modifier = Modifier.size(22.dp))
+                    if (sel) { Spacer(Modifier.width(8.dp)); Text(t.label, color = fg, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, maxLines = 1) }
                 }
             }
         }

@@ -1,5 +1,8 @@
 package dev.chesscrab.app.ui.review
 
+import dev.chesscrab.app.ui.components.forText
+import dev.chesscrab.app.ui.components.staggerIn
+import dev.chesscrab.app.ui.components.bounceClick
 import androidx.compose.foundation.border
 import dev.chesscrab.app.ui.Display
 import androidx.compose.animation.AnimatedContent
@@ -146,13 +149,13 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (white) Crabs.Sand else Color(0xFF05090C)).border(1.dp, Crabs.Faint, androidx.compose.foundation.shape.CircleShape))
+                        Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (white) Crabs.Ivory else Crabs.Abyss).border(1.dp, Crabs.Faint, androidx.compose.foundation.shape.CircleShape))
                         Spacer(Modifier.width(6.dp))
                         Text(m.tag(if (white) "White" else "Black") ?: if (white) "Beyaz" else "Siyah", fontWeight = FontWeight.SemiBold, maxLines = 1, fontSize = 13.sp)
                     }
                     Spacer(Modifier.height(10.dp))
                     Box(contentAlignment = Alignment.Center) {
-                        dev.chesscrab.app.ui.components.ProgressRing(if (acc.isNaN()) 0f else acc.toFloat() / 100f, 96.dp, if (white) Crabs.Sand else Crabs.Coral)
+                        dev.chesscrab.app.ui.components.ProgressRing(if (acc.isNaN()) 0f else acc.toFloat() / 100f, 96.dp, if (white) Crabs.Sea else Crabs.Coral)
                         Text(if (acc.isNaN()) "–" else CountUp(acc.toFloat()), fontSize = 30.sp, fontFamily = Display)
                     }
                     Spacer(Modifier.height(8.dp))
@@ -172,12 +175,12 @@ private fun SummaryView(m: ReviewModel, r: JSONObject, modifier: Modifier) {
                 val info = CLASS_INFO.getValue(c)
                 val w = moves.count { it.getBoolean("white") && it.getString("class") == c }
                 val b = moves.count { !it.getBoolean("white") && it.getString("class") == c }
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("$w", color = if (w > 0) info.color else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp))
+                Row(Modifier.staggerIn(ci, 40L).fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("$w", color = if (w > 0) info.color.forText() else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp))
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                         ClassBadge(c, 20.dp); Spacer(Modifier.width(6.dp)); Text(info.label, fontSize = 14.sp)
                     }
-                    Text("$b", color = if (b > 0) info.color else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                    Text("$b", color = if (b > 0) info.color.forText() else Crabs.Faint, fontFamily = dev.chesscrab.app.ui.Mono, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
                 }
             }
         }
@@ -319,8 +322,8 @@ private fun ExplorePanel(m: ReviewModel) {
             for (l in lines.getJSONArray("lines").objects()) {
                 val cp = whiteCp(l.getJSONObject("score"), turnWhite)
                 Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.width(54.dp).clip(RoundedCornerShape(50)).background(if (cp >= 0) Crabs.Sand else Color(0xFF05090C)).padding(vertical = 3.dp), contentAlignment = Alignment.Center) {
-                        Text(scoreLabel(cp), color = if (cp >= 0) Crabs.Ink else Crabs.Sand, fontWeight = FontWeight.Bold, fontSize = 11.5.sp, fontFamily = dev.chesscrab.app.ui.Mono)
+                    Box(Modifier.width(54.dp).clip(RoundedCornerShape(50)).background(if (cp >= 0) Crabs.Ivory else Crabs.Abyss).padding(vertical = 3.dp), contentAlignment = Alignment.Center) {
+                        Text(scoreLabel(cp), color = if (cp >= 0) Crabs.Abyss else Crabs.Ivory, fontWeight = FontWeight.Bold, fontSize = 11.5.sp, fontFamily = dev.chesscrab.app.ui.Mono)
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(l.getJSONArray("pv_san").strings().take(7).joinToString(" "), fontSize = 12.5.sp, maxLines = 1, fontFamily = dev.chesscrab.app.ui.Mono)
@@ -333,14 +336,14 @@ private fun ExplorePanel(m: ReviewModel) {
 
 @Composable
 private fun LinkText(text: String, onClick: () -> Unit) {
-    Text("$text →", color = Crabs.Coral, fontWeight = FontWeight.ExtraBold, fontSize = 13.5.sp, modifier = Modifier.clip(RoundedCornerShape(50)).border(1.dp, Crabs.Coral.copy(alpha = 0.5f), RoundedCornerShape(50)).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 6.dp))
+    Text("$text →", color = Crabs.Coral, fontWeight = FontWeight.ExtraBold, fontSize = 13.5.sp, modifier = Modifier.bounceClick(scaleTo = 0.92f, onClick = onClick).clip(RoundedCornerShape(50)).border(1.dp, Crabs.Coral.copy(alpha = 0.5f), RoundedCornerShape(50)).padding(horizontal = 12.dp, vertical = 6.dp))
 }
 
 @Composable
 private fun NavBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, big: Boolean = false, onClick: () -> Unit) {
     Box(
-        Modifier.size(if (big) 64.dp else 46.dp, 46.dp).clip(RoundedCornerShape(50)).background(if (big) Crabs.Coral else Crabs.Card)
-            .border(1.dp, if (big) Crabs.Coral else Crabs.Line, RoundedCornerShape(50)).clickable(onClick = onClick),
+        Modifier.bounceClick(scaleTo = 0.88f, onClick = onClick).size(if (big) 64.dp else 46.dp, 46.dp).clip(RoundedCornerShape(50)).background(if (big) Crabs.Coral else Crabs.Card)
+            .border(1.dp, if (big) Crabs.Coral else Crabs.Line, RoundedCornerShape(50)),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = if (big) Crabs.Ink else Crabs.Sand) }
 }

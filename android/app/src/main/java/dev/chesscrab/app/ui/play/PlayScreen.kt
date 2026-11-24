@@ -1,5 +1,6 @@
 package dev.chesscrab.app.ui.play
 
+import dev.chesscrab.app.ui.components.bounceClick
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.graphics.Brush
 import dev.chesscrab.app.ui.Display
@@ -185,8 +186,8 @@ fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (sans.isEmpty()) item { Text("Hamleler burada görünecek", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(4.dp)) }
-        items((sans.size + 1) / 2) { pair ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        items((sans.size + 1) / 2, key = { it }) { pair ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.animateItem()) {
                 Text("${pair + 1}", color = Crabs.Faint, fontSize = 11.sp, fontFamily = Mono, modifier = Modifier.padding(start = 8.dp, end = 3.dp))
                 for (ply in listOf(pair * 2 + 1, pair * 2 + 2)) {
                     if (ply > sans.size) continue
@@ -213,7 +214,7 @@ fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)
 @Composable
 fun ActionIcon(icon: ImageVector, label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(14.dp)).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 2.dp, vertical = 4.dp),
+        Modifier.bounceClick(enabled = enabled, scaleTo = 0.88f, onClick = onClick).padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.size(44.dp).clip(CircleShape).background(Crabs.Card).border(1.dp, Crabs.Line, CircleShape), contentAlignment = Alignment.Center) {
@@ -323,7 +324,7 @@ fun BotSelectScreen(m: PlayModel, modifier: Modifier, onStart: () -> Unit, onBac
         dev.chesscrab.app.ui.components.Overline("Rengin")
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            for ((k, label, bg) in listOf(Triple("white", "Beyaz", Crabs.Sand), Triple("random", "Rastgele", Crabs.Faint), Triple("black", "Siyah", Color(0xFF05090C)))) {
+            for ((k, label, bg) in listOf(Triple("white", "Beyaz", Crabs.Ivory), Triple("random", "Rastgele", Crabs.Faint), Triple("black", "Siyah", Crabs.Abyss))) {
                 val sel = color == k
                 Box(
                     Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(50)).background(if (sel) Crabs.CardHi else Color.Transparent)

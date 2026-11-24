@@ -98,6 +98,7 @@ class ReviewModel {
                         r.getJSONObject("white").opt("accuracy")?.let { o.put("white_accuracy", it) }
                         r.getJSONObject("black").opt("accuracy")?.let { o.put("black_accuracy", it) }
                         Crab.store.put("games", id, o.toString())
+                        dev.chesscrab.app.Streak.mark()
                     }
                 }
             } catch (e: Exception) {
