@@ -165,28 +165,36 @@ fun PlayScreen(m: PlayModel, modifier: Modifier, onNewGame: () -> Unit, onReview
 
 @Composable
 fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)? = null, classOf: (Int) -> String?) {
-    val scroll = rememberScrollState()
-    LaunchedEffect(sans.size, current) { if (current == null) scroll.animateScrollTo(scroll.maxValue) }
-    Row(
-        Modifier.fillMaxWidth().background(Crabs.Surface).horizontalScroll(scroll).padding(horizontal = 8.dp, vertical = 6.dp),
+    val state = androidx.compose.foundation.lazy.rememberLazyListState()
+    val target = current ?: sans.size
+    LaunchedEffect(sans.size, target) {
+        if (sans.isNotEmpty()) state.animateScrollToItem(((target - 1) / 2).coerceAtLeast(0).let { (it - 1).coerceAtLeast(0) })
+    }
+    androidx.compose.foundation.lazy.LazyRow(
+        state = state,
+        modifier = Modifier.fillMaxWidth().background(Crabs.Surface).padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (sans.isEmpty()) Text("Hamleler burada görünecek", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(4.dp))
-        sans.forEachIndexed { i, s ->
-            val ply = i + 1
-            if (i % 2 == 0) Text("${i / 2 + 1}.", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(start = 6.dp, end = 2.dp))
-            val sel = current == ply || (current == null && ply == sans.size)
-            Row(
-                Modifier.clip(RoundedCornerShape(4.dp)).background(if (sel) Color(0xFF4B4844) else Color.Transparent)
-                    .then(if (onClick != null) Modifier.clickable { onClick(ply) } else Modifier)
-                    .padding(horizontal = 6.dp, vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val cls = classOf(ply)
-                if (cls != null && cls in setOf("brilliant", "great", "best", "inaccuracy", "mistake", "miss", "blunder", "book")) {
-                    ClassBadge(cls, 15.dp); Spacer(Modifier.width(3.dp))
+        if (sans.isEmpty()) item { Text("Hamleler burada görünecek", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(4.dp)) }
+        items((sans.size + 1) / 2) { pair ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${pair + 1}.", color = Crabs.Faint, fontSize = 13.sp, modifier = Modifier.padding(start = 6.dp, end = 2.dp))
+                for (ply in listOf(pair * 2 + 1, pair * 2 + 2)) {
+                    if (ply > sans.size) continue
+                    val sel = ply == target
+                    Row(
+                        Modifier.clip(RoundedCornerShape(4.dp)).background(if (sel) Color(0xFF4B4844) else Color.Transparent)
+                            .then(if (onClick != null) Modifier.clickable { onClick(ply) } else Modifier)
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val cls = classOf(ply)
+                        if (cls != null && cls in setOf("brilliant", "great", "best", "inaccuracy", "mistake", "miss", "blunder", "book")) {
+                            ClassBadge(cls, 15.dp); Spacer(Modifier.width(3.dp))
+                        }
+                        Text(sans[ply - 1], fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium, fontSize = 14.sp)
+                    }
                 }
-                Text(s, fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium, fontSize = 14.sp)
             }
         }
     }

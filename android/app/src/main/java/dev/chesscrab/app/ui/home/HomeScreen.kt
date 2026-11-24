@@ -84,6 +84,8 @@ fun HomeScreen(
         Spacer(Modifier.height(8.dp))
         BigButton("Oyun incele (PGN)", color = Crabs.Card, onClick = onReviewPgn)
 
+        StatsCard()
+
         SectionTitle("Öğren")
         val next = remember { nextLesson() }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -150,5 +152,33 @@ private fun Tile(modifier: Modifier, emoji: String, title: String, sub: String, 
             Text(title, fontWeight = FontWeight.ExtraBold, color = Color.White, fontSize = 16.sp)
             Text(sub, color = Color.White.copy(alpha = 0.88f), fontSize = 12.sp, maxLines = 2)
         }
+    }
+}
+
+@Composable
+private fun StatsCard() {
+    val games = remember { JSONArray(Crab.store.listJson("games")).objects().map { it.getJSONObject("data") } }
+    val me = SyncClient.username.ifEmpty { "Sen" }
+    val accs = games.mapNotNull { d ->
+        if (!d.has("white_accuracy")) null
+        else if (d.optString("black") == me) d.optDouble("black_accuracy") else d.optDouble("white_accuracy")
+    }.filter { !it.isNaN() }
+    val wins = games.count { d -> (d.optString("result") == "1-0" && d.optString("white") == me) || (d.optString("result") == "0-1" && d.optString("black") == me) }
+    val lessons = remember { JSONArray(Crab.store.listJson("lesson_progress")).length() }
+    if (games.isEmpty() && lessons == 0) return
+    Spacer(Modifier.height(14.dp))
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Crabs.Card).padding(vertical = 14.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Stat("${games.size}", "oyun")
+        Stat("$wins", "galibiyet")
+        Stat(if (accs.isEmpty()) "-" else "%" + "%.0f".format(accs.takeLast(10).average()), "son doğruluk")
+        Stat("$lessons", "ders")
+    }
+}
+
+@Composable
+private fun Stat(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+        Text(label, color = Crabs.Muted, fontSize = 12.sp)
     }
 }
