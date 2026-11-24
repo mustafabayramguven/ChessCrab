@@ -167,8 +167,12 @@ fun PlayScreen(m: PlayModel, modifier: Modifier, onNewGame: () -> Unit, onReview
 fun MoveStrip(sans: List<String>, current: Int? = null, onClick: ((Int) -> Unit)? = null, classOf: (Int) -> String?) {
     val state = androidx.compose.foundation.lazy.rememberLazyListState()
     val target = current ?: sans.size
+    var first by remember { mutableStateOf(true) }
     LaunchedEffect(sans.size, target) {
-        if (sans.isNotEmpty()) state.animateScrollToItem(((target - 1) / 2).coerceAtLeast(0).let { (it - 1).coerceAtLeast(0) })
+        if (sans.isEmpty()) return@LaunchedEffect
+        val idx = ((target - 1) / 2 - 1).coerceAtLeast(0)
+        if (first) state.scrollToItem(idx) else state.animateScrollToItem(idx)
+        first = false
     }
     androidx.compose.foundation.lazy.LazyRow(
         state = state,
