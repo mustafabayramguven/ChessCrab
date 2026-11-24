@@ -38,6 +38,11 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.all {
+            it.systemProperty("jna.library.path", System.getenv("CRAB_LIB_DIR") ?: "${rootDir}/../target/release")
+        }
+    }
     packaging {
         jniLibs.useLegacyPackaging = false
     }
@@ -57,4 +62,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     // UniFFI Kotlin bağları JNA kullanır
     implementation("net.java.dev.jna:jna:5.15.0@aar")
+
+    // JVM birim testleri: Rust kütüphanesinin masaüstü derlemesini JNA ile yükler
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("net.java.dev.jna:jna:5.15.0")
+    testImplementation("org.json:json:20240303")
 }

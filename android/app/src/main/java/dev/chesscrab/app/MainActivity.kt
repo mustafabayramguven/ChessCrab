@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsEsports
@@ -36,7 +36,7 @@ import dev.chesscrab.app.ui.SettingsScreen
 
 enum class Tab(val label: String, val icon: ImageVector) {
     Play("Oyna", Icons.Filled.SportsEsports),
-    Lessons("Dersler", Icons.Filled.MenuBook),
+    Lessons("Dersler", Icons.AutoMirrored.Filled.MenuBook),
     Analysis("Analiz", Icons.Filled.Insights),
     Repertoire("Repertuvar", Icons.Filled.Psychology),
     Settings("Daha", Icons.Filled.Settings),

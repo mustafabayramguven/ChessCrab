@@ -51,6 +51,11 @@ jobs:
         with:
           gradle-version: "8.11.1"
 
+      - name: Kotlin ↔ Rust birim testleri (JVM)
+        run: |
+          cargo build --release -p chesscrab-ffi
+          CRAB_LIB_DIR="$GITHUB_WORKSPACE/target/release" gradle -p android testReleaseUnitTest --no-daemon
+
       - name: APK
         env:
           VERSION_CODE: ${{ github.run_number }}
