@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChessCrab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+<style>
+:root {
+  --bg: #161512; --panel: #262421; --panel2: #302e2b; --line: #3d3a36;
+  --text: #e8e6e3; --muted: #9b9893; --accent: #e07b39; --accent2: #f0a35e;
+  --light: #ebd8b7; --dark: #a87b55; --sel: rgba(224,123,57,.55); --last: rgba(205,210,106,.55);
+  --good: #98bc49; --bad: #ca3431; --radius: 10px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+.logo { font-weight: 800; font-size: 20px; letter-spacing: .3px; display: flex; align-items: center; gap: 8px; }
+.logo span { color: var(--accent); }
+nav { display: flex; gap: 4px; flex-wrap: wrap; }
+nav button { background: none; border: 0; color: var(--muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 600; }
+nav button.active, nav button:hover { color: var(--text); background: var(--panel2); }
+#who { margin-left: auto; color: var(--muted); font-size: 13px; }
+main { max-width: 1280px; margin: 0 auto; padding: 18px; }
+.view { display: none; } .view.active { display: block; }
+.layout { display: grid; grid-template-columns: minmax(300px, 640px) minmax(280px, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.card + .card { margin-top: 14px; }
+h2 { margin: 0 0 10px; font-size: 18px; } h3 { margin: 14px 0 6px; font-size: 15px; color: var(--accent2); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+button.btn, select, input, textarea { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+button.btn { cursor: pointer; font-weight: 600; } button.btn:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #1a1310; }
+button.primary:hover { background: var(--accent2); }
+button:disabled { opacity: .45; cursor: default; }
+textarea { width: 100%; min-height: 120px; resize: vertical; font-family: ui-monospace, monospace; font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row + .row { margin-top: 10px; }
+/* tahta */
+.board-wrap { position: relative; width: 100%; max-width: calc(100vh - 150px); margin: 0 auto; aspect-ratio: 1; user-select: none; touch-action: none; }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; border-radius: 6px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.sq { position: relative; display: flex; align-items: center; justify-content: center; }
+.sq.l { background: var(--light); } .sq.d { background: var(--dark); }
+.sq.last::before, .sq.sel::before, .sq.hl::before, .sq.check::before { content: ""; position: absolute; inset: 0; }
+.sq.last::before { background: var(--last); } .sq.sel::before { background: var(--sel); }
+.sq.hl::before { background: rgba(80,160,255,.38); }
+.sq.check::before { background: radial-gradient(circle, rgba(255,0,0,.85) 0%, rgba(231,0,0,.5) 35%, transparent 70%); }
+.sq .dot { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(20,20,20,.28); pointer-events: none; }
+.sq .ring { position: absolute; inset: 4%; border-radius: 50%; border: 5px solid rgba(20,20,20,.28); pointer-events: none; }
+.coord { position: absolute; font-size: 11px; font-weight: 700; pointer-events: none; }
+.coord.f { right: 3px; bottom: 1px; } .coord.r { left: 3px; top: 1px; }
+.sq.l .coord { color: var(--dark); } .sq.d .coord { color: var(--light); }
+.pc { width: 92%; height: 92%; cursor: grab; position: relative; z-index: 2; pointer-events: none; }
+.pc svg { width: 100%; height: 100%; display: block; }
+.drag { position: fixed; pointer-events: none; z-index: 50; }
+svg.arrows { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.promo { position: absolute; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; gap: 8px; z-index: 10; }
+.promo.show { display: flex; }
+.promo button { width: 18%; aspect-ratio: 1; background: var(--panel2); border: 2px solid var(--accent); border-radius: 10px; cursor: pointer; padding: 4px; }
+/* hamle listesi */
+.moves { display: grid; grid-template-columns: 34px 1fr 1fr; max-height: 340px; overflow-y: auto; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; }
+.moves .n { color: var(--muted); padding: 4px 6px; background: var(--panel2); text-align: right; }
+.moves .m { padding: 4px 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
+.moves .m:hover { background: var(--panel2); } .moves .m.cur { background: #45403a; font-weight: 700; }
+.sym { font-weight: 800; }
+.status { font-weight: 700; padding: 8px 12px; border-radius: 8px; background: var(--panel2); }
+.clocks { display: flex; justify-content: space-between; margin: 0 0 8px; }
+.clock { font: 700 22px ui-monospace, monospace; background: var(--panel2); padding: 4px 12px; border-radius: 8px; min-width: 100px; text-align: center; }
+.clock.run { background: var(--accent); color: #1a1310; }
+/* analiz */
+.acc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acc .side { background: var(--panel2); border-radius: 8px; padding: 12px; text-align: center; }
+.acc .big { font-size: 34px; font-weight: 800; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
+.badge { font-size: 12px; padding: 2px 7px; border-radius: 99px; color: #111; font-weight: 700; }
+.graph { width: 100%; height: 110px; background: #1c1b19; border-radius: 8px; cursor: pointer; display: block; }
+.comment { background: var(--panel2); border-left: 4px solid var(--accent); padding: 10px 12px; border-radius: 6px; margin-top: 10px; min-height: 48px; }
+.evalbar { height: 10px; border-radius: 5px; background: #333; overflow: hidden; margin-top: 8px; }
+.evalbar div { height: 100%; background: #f2f2f2; transition: width .2s; }
+/* dersler */
+.course { margin-bottom: 18px; }
+.chapter { margin: 10px 0; }
+.lessons { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.lesson { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.lesson:hover { border-color: var(--accent); }
+.lesson .t { font-weight: 700; } .lesson .s { font-size: 12px; color: var(--muted); }
+.stars { color: #f5c542; letter-spacing: 1px; }
+.lesson-text { font-size: 16px; line-height: 1.6; white-space: pre-wrap; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; }
+.feedback.ok { background: rgba(152,188,73,.18); border: 1px solid var(--good); }
+.feedback.no { background: rgba(202,52,49,.18); border: 1px solid var(--bad); }
+.quiz button { display: block; width: 100%; text-align: left; margin-top: 6px; }
+.progress { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+.progress div { height: 100%; background: var(--accent); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+tr.click { cursor: pointer; } tr.click:hover { background: var(--panel2); }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--accent); padding: 10px 16px; border-radius: 10px; display: none; z-index: 100; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🦀 Chess<span>Crab</span></div>
+  <nav id="nav">
+    <button data-v="play" class="active">Oyna</button>
+    <button data-v="analysis">Analiz</button>
+    <button data-v="lessons">Dersler</button>
+    <button data-v="repertoire">Repertuvar</button>
+    <button data-v="games">Oyunlarım</button>
+    <button data-v="account">Hesap</button>
+  </nav>
+  <div id="who"></div>
+</header>
+<main>
+
+<!-- OYNA -->
+<section class="view active" id="v-play">
+  <div class="layout">
+    <div>
+      <div class="clocks" id="play-clocks" style="display:none"><div class="clock" id="clock-top">-</div><div class="clock" id="clock-bot">-</div></div>
+      <div id="play-board"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>CrabFish'e karşı oyna</h2>
+        <div class="row">
+          <label>Seviye <select id="play-level"></select></label>
+          <label>Renk <select id="play-color"><option value="white">Beyaz</option><option value="black">Siyah</option><option value="random">Rastgele</option></select></label>
+          <label>Süre <select id="play-time"><option value="">Süresiz</option><option value="3,2">3+2</option><option value="5,0">5+0</option><option value="10,0">10+0</option><option value="15,10">15+10</option></select></label>
+        </div>
+        <div class="row"><button class="btn primary" id="play-new">Yeni oyun</button><button class="btn" id="play-undo">Geri al</button><button class="btn" id="play-flip">Çevir</button><button class="btn" id="play-resign">Terk et</button><button class="btn" id="play-analyse">Analiz et</button></div>
+      </div>
+      <div class="card">
+        <div class="status" id="play-status">Hazır</div>
+        <div class="small muted" id="play-opening" style="margin:8px 0"></div>
+        <div class="moves" id="play-moves"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALİZ -->
+<section class="view" id="v-analysis">
+  <div class="layout">
+    <div>
+      <div id="an-board"></div>
+      <div class="evalbar"><div id="an-evalbar" style="width:50%"></div></div>
+      <div class="row" style="margin-top:10px;justify-content:center">
+        <button class="btn" data-nav="first">⏮</button><button class="btn" data-nav="prev">◀</button><button class="btn" data-nav="next">▶</button><button class="btn" data-nav="last">⏭</button><button class="btn" id="an-flip">Çevir</button>
+      </div>
+      <div class="comment" id="an-comment">PGN yapıştır ya da bir oyunu analize gönder.</div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Oyun analizi</h2>
+        <textarea id="an-pgn" placeholder="PGN buraya (lichess / chess.com dışa aktarımı olur)"></textarea>
+        <div class="row">
+          <label>Derinlik <select id="an-depth"><option>10</option><option selected>12</option><option>14</option><option>16</option></select></label>
+          <label id="an-engine-wrap" style="display:none">Motor <select id="an-engine"><option value="crabfish">CrabFish</option><option value="stockfish">Stockfish</option></select></label>
+          <button class="btn primary" id="an-run">Analiz et</button>
+          <span class="small muted" id="an-info"></span>
+        </div>
+      </div>
+      <div class="card" id="an-result" style="display:none">
+        <div class="small muted" id="an-opening"></div>
+        <div class="acc" id="an-acc"></div>
+        <h3>Değerlendirme grafiği</h3>
+        <svg class="graph" id="an-graph" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
+        <h3>Hamleler</h3>
+        <div class="moves" id="an-moves"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DERSLER -->
+<section class="view" id="v-lessons">
+  <div id="course-list"></div>
+  <div id="lesson-player" style="display:none">
+    <div class="layout">
+      <div><div id="ls-board"></div></div>
+      <div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between"><h2 id="ls-title" style="margin:0"></h2><button class="btn" id="ls-back">← Dersler</button></div>
+          <div class="progress" style="margin-top:10px"><div id="ls-progress"></div></div>
+          <div class="lesson-text" id="ls-text"></div>
+          <div class="quiz" id="ls-quiz"></div>
+          <div id="ls-feedback"></div>
+          <div class="row" style="margin-top:14px"><button class="btn primary" id="ls-next">Devam</button><button class="btn" id="ls-hint">İpucu</button><span class="small muted" id="ls-mistakes"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REPERTUVAR -->
+<section class="view" id="v-repertoire">
+  <div id="rep-list"></div>
+  <div id="rep-drill" style="display:none">
+    <div class="layout">
+      <div><div id="dr-board"></div></div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 id="dr-title" style="margin:0"></h2><button class="btn" id="dr-back">← Repertuvar</button></div>
+        <p class="muted" id="dr-sub"></p>
+        <div id="dr-feedback"></div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="dr-nextline" style="display:none">Sıradaki hat</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OYUNLARIM -->
+<section class="view" id="v-games">
+  <div class="card"><h2>Oyunlarım</h2><p class="small muted">Telefonda ve burada oynadığın oyunlar senkronize olur.</p><div id="games-table"></div></div>
+</section>
+
+<!-- HESAP -->
+<section class="view" id="v-account">
+  <div class="card" style="max-width:480px">
+    <h2>Hesap ve senkronizasyon</h2>
+    <div id="acc-in">
+      <div class="row"><input id="acc-user" placeholder="kullanıcı adı"><input id="acc-pass" type="password" placeholder="şifre"></div>
+      <div class="row"><button class="btn primary" id="acc-login">Giriş</button><button class="btn" id="acc-register">Kayıt ol</button></div>
+      <p class="small muted">İlk kayıt olan kullanıcı sunucunun sahibidir. Sonraki kayıtlar CHESSCRAB_ALLOW_REGISTER=1 ile açılır.</p>
+    </div>
+    <div id="acc-out" style="display:none">
+      <p>Giriş yapıldı: <b id="acc-name"></b></p>
+      <div class="row"><button class="btn primary" id="acc-sync">Şimdi senkronize et</button><button class="btn" id="acc-logout">Çıkış</button></div>
+      <p class="small muted" id="acc-syncinfo"></p>
+    </div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// ---------- yardımcılar ----------
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("cc." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("cc." + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem("cc." + k); } catch {} },
+};
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = "none", 2600); }
+async function api(path, body, method) {
+  const h = { "content-type": "application/json" };
+  const tok = store.get("token");
+  if (tok) h.authorization = "Bearer " + tok;
+  const r = await fetch(path, { method: method || (body === undefined ? "GET" : "POST"), headers: h, body: body === undefined ? undefined : JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+  return j;
+}
+const CLASS = {
+  book: ["Kitap", "#a88865", ""], brilliant: ["Parlak", "#1baca6", "!!"], great: ["Harika", "#5c8bb0", "!"], best: ["En iyi", "#98bc49", "★"],
+  excellent: ["Mükemmel", "#98bc49", ""], good: ["İyi", "#97af8b", ""], inaccuracy: ["Belirsiz", "#f0c15c", "?!"], mistake: ["Hata", "#e6912c", "?"],
+  miss: ["Kaçırılan", "#ff7769", "?"], blunder: ["Büyük hata", "#ca3431", "??"], forced: ["Zorunlu", "#97af8b", ""],
+};
+function fmtScore(s) {
+  if (!s) return "";
+  if (s.type === "mate") return s.value === 0 ? "#" : (s.value > 0 ? "M" + s.value : "-M" + (-s.value));
+  return (s.value >= 0 ? "+" : "") + (s.value / 100).toFixed(2);
+}
+
+// ---------- taş çizimleri (basit, özgün SVG) ----------
+const PIECE_PATHS = {
+  p: '<circle cx="50" cy="32" r="13"/><path d="M38 48h24l6 30H32z"/><rect x="26" y="78" width="48" height="10" rx="3"/>',
+  n: '<path d="M30 88h46l-3-12c-2-10 1-24 4-34 3-14-6-26-22-28l-4-6-5 8c-8 4-16 14-20 24l-2 8 8 4 8-6 6 2c-6 8-12 18-14 28z"/><circle cx="46" cy="30" r="3" fill="var(--eye)"/>',
+  b: '<circle cx="50" cy="16" r="6"/><path d="M50 22c-12 8-18 20-16 32 2 8 6 12 8 14h16c2-2 6-6 8-14 2-12-4-24-16-32z"/><path d="M36 70h28l6 10H30z"/><rect x="24" y="80" width="52" height="9" rx="3"/>',
+  r: '<path d="M26 14h10v8h8v-8h12v8h8v-8h10v20l-8 6v34l8 6v8H26v-8l8-6V40l-8-6z"/>',
+  q: '<circle cx="16" cy="26" r="6"/><circle cx="33" cy="18" r="6"/><circle cx="50" cy="15" r="6"/><circle cx="67" cy="18" r="6"/><circle cx="84" cy="26" r="6"/><path d="M18 32l12 38h40l12-38-14 18-6-26-12 24-12-24-6 26z"/><path d="M28 70h44l4 10H24z"/><rect x="22" y="80" width="56" height="9" rx="3"/>',
+  k: '<path d="M46 4h8v8h8v8h-8v8h-8v-8h-8v-8h8z"/><path d="M50 30c-16 0-28 8-28 20 0 10 6 16 10 22h36c4-6 10-12 10-22 0-12-12-20-28-20z"/><path d="M30 72h40l4 8H26z"/><rect x="24" y="80" width="52" height="9" rx="3"/>',
+};
+function pieceSvg(ch) {
+  const white = ch === ch.toUpperCase();
+  const fill = white ? "#f8f6f1" : "#2a2826", stroke = white ? "#3a332c" : "#0d0c0b";
+  return `<svg viewBox="0 0 100 100" style="--eye:${white ? "#3a332c" : "#f8f6f1"}"><g fill="${fill}" stroke="${stroke}" stroke-width="3.2" stroke-linejoin="round">${PIECE_PATHS[ch.toLowerCase()]}</g></svg>`;
+}
+
+// ---------- tahta bileşeni ----------
+class Board {
+  constructor(el, opts = {}) {
+    this.el = el; this.orientation = "white"; this.fen = "8/8/8/8/8/8/8/8 w - - 0 1"; this.legal = []; this.onMove = opts.onMove || (() => {});
+    this.last = null; this.arrows = []; this.highlights = []; this.selected = null; this.check = null; this.interactive = true;
+    el.innerHTML = `<div class="board-wrap"><div class="board"></div><svg class="arrows" viewBox="0 0 800 800"></svg><div class="promo"></div></div>`;
+    this.boardEl = $(".board", el); this.svg = $("svg.arrows", el); this.promoEl = $(".promo", el);
+    this.boardEl.addEventListener("pointerdown", e => this.down(e));
+    window.addEventListener("pointermove", e => this.move(e));
+    window.addEventListener("pointerup", e => this.up(e));
+  }
+  set(o) { Object.assign(this, o); this.render(); }
+  parse() {
+    const rows = this.fen.split(" ")[0].split("/"); const m = {};
+    rows.forEach((row, ri) => { let f = 0; for (const c of row) { if (/\d/.test(c)) f += +c; else { m["abcdefgh"[f] + (8 - ri)] = c; f++; } } });
+    return m;
+  }
+  squares() { const files = "abcdefgh", out = []; for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) { const ff = this.orientation === "white" ? f : 7 - f, rr = this.orientation === "white" ? 7 - r : r; out.push(files[ff] + (rr + 1)); } return out; }
+  center(sq) { const f = "abcdefgh".indexOf(sq[0]), r = +sq[1] - 1; const x = this.orientation === "white" ? f : 7 - f, y = this.orientation === "white" ? 7 - r : r; return [x * 100 + 50, y * 100 + 50]; }
+  render() {
+    const pos = this.parse(); this.pos = pos;
+    const targets = this.selected ? this.legal.filter(u => u.startsWith(this.selected)).map(u => u.slice(2, 4)) : [];
+    const turn = this.fen.split(" ")[1];
+    let checkSq = null;
+    if (this.check) for (const [s, p] of Object.entries(pos)) if (p === (turn === "w" ? "K" : "k")) checkSq = s;
+    const sqs = this.squares();
+    this.boardEl.innerHTML = sqs.map((sq, i) => {
+      const f = "abcdefgh".indexOf(sq[0]), r = +sq[1];
+      const cls = ["sq", (f + r) % 2 === 1 ? "d" : "l"];
+      if (this.last && (this.last.slice(0, 2) === sq || this.last.slice(2, 4) === sq)) cls.push("last");
+      if (this.selected === sq) cls.push("sel");
+      if (this.highlights.includes(sq)) cls.push("hl");
+      if (checkSq === sq) cls.push("check");
+      const p = pos[sq];
+      const coordF = i >= 56 ? `<span class="coord f">${sq[0]}</span>` : "";
+      const coordR = i % 8 === 0 ? `<span class="coord r">${sq[1]}</span>` : "";
+      const mark = targets.includes(sq) ? (p ? '<span class="ring"></span>' : '<span class="dot"></span>') : "";
+      return `<div class="${cls.join(" ")}" data-sq="${sq}">${coordF}${coordR}${p ? `<div class="pc">${pieceSvg(p)}</div>` : ""}${mark}</div>`;
+    }).join("");
+    this.svg.innerHTML = `<defs><marker id="ah" markerWidth="4" markerHeight="4" refX="2.2" refY="2" orient="auto"><path d="M0,0 L4,2 L0,4 z" fill="rgba(21,120,27,.85)"/></marker></defs>` +
+      this.arrows.filter(a => a && a.length >= 4).map(a => { const [x1, y1] = this.center(a.slice(0, 2)), [x2, y2] = this.center(a.slice(2, 4)); const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 1; return `<line x1="${x1}" y1="${y1}" x2="${x2 - dx / l * 28}" y2="${y2 - dy / l * 28}" stroke="rgba(21,120,27,.75)" stroke-width="18" stroke-linecap="round" marker-end="url(#ah)"/>`; }).join("");
+  }
+  sqAt(e) { const el = document.elementFromPoint(e.clientX, e.clientY); const s = el && el.closest && el.closest(".sq"); return s && this.boardEl.contains(s) ? s.dataset.sq : null; }
+  canMoveFrom(sq) { return this.interactive && this.legal.some(u => u.startsWith(sq)); }
+  down(e) {
+    if (!this.interactive) return;
+    const sq = this.sqAt(e); if (!sq) return;
+    if (this.selected && this.legal.some(u => u.startsWith(this.selected + sq))) { this.tryMove(this.selected, sq); return; }
+    if (this.canMoveFrom(sq)) {
+      this.selected = sq; this.render();
+      const p = this.pos[sq]; const rect = this.boardEl.getBoundingClientRect(); const size = rect.width / 8;
+      this.dragEl = document.createElement("div"); this.dragEl.className = "drag"; this.dragEl.style.width = this.dragEl.style.height = size + "px";
+      this.dragEl.innerHTML = pieceSvg(p); this.dragFrom = sq; this.dragStarted = false; this.dragStart = [e.clientX, e.clientY];
+      this.dragSize = size;
+    } else { this.selected = null; this.render(); }
+  }
+  move(e) {
+    if (!this.dragEl) return;
+    if (!this.dragStarted && Math.hypot(e.clientX - this.dragStart[0], e.clientY - this.dragStart[1]) > 5) {
+      this.dragStarted = true; document.body.appendChild(this.dragEl);
+      const pc = $(`.sq[data-sq="${this.dragFrom}"] .pc`, this.boardEl); if (pc) pc.style.opacity = ".25";
+    }
+    if (this.dragStarted) { this.dragEl.style.left = (e.clientX - this.dragSize / 2) + "px"; this.dragEl.style.top = (e.clientY - this.dragSize / 2) + "px"; }
+  }
+  up(e) {
+    if (!this.dragEl) return;
+    const started = this.dragStarted; this.dragEl.remove(); this.dragEl = null;
+    if (!started) return;
+    const sq = this.sqAt(e);
+    if (sq && sq !== this.dragFrom && this.legal.some(u => u.startsWith(this.dragFrom + sq))) this.tryMove(this.dragFrom, sq);
+    else this.render();
+  }
+  tryMove(from, to) {
+    const cands = this.legal.filter(u => u.startsWith(from + to));
+    this.selected = null;
+    if (cands.length > 1) {
+      const white = this.fen.split(" ")[1] === "w";
+      this.promoEl.innerHTML = ["q", "r", "b", "n"].map(p => `<button data-p="${p}">${pieceSvg(white ? p.toUpperCase() : p)}</button>`).join("");
+      this.promoEl.classList.add("show");
+      $$("button", this.promoEl).forEach(b => b.onclick = () => { this.promoEl.classList.remove("show"); this.onMove(from + to + b.dataset.p); });
+      this.render(); return;
+    }
+    this.render(); this.onMove(cands[0]);
+  }
+}
+
+// ---------- senkronizasyon (web istemcisi) ----------
+const sync = {
+  node() { let n = store.get("node"); if (!n) { n = "web-" + Math.random().toString(36).slice(2, 10); store.set("node", n); } return n; },
+  tick() { const c = store.get("hlc", { wall_ms: 0, counter: 0 }); const now = Date.now(); const h = now > c.wall_ms ? { wall_ms: now, counter: 0 } : { wall_ms: c.wall_ms, counter: c.counter + 1 }; store.set("hlc", h); return { ...h, node: this.node() }; },
+  records() { return store.get("records", {}); },
+  list(col) { return Object.values(this.records()).filter(r => r.collection === col && !r.deleted).sort((a, b) => b.hlc.wall_ms - a.hlc.wall_ms); },
+  get(col, id) { const r = this.records()[col + "/" + id]; return r && !r.deleted ? r.data : null; },
+  put(col, id, data) {
+    const recs = this.records(); const rec = { collection: col, id, data, deleted: false, hlc: this.tick() };
+    recs[col + "/" + id] = rec; store.set("records", recs);
+    const pend = store.get("pending", []); pend.push(col + "/" + id); store.set("pending", [...new Set(pend)]);
+    this.run().catch(() => {});
+  },
+  newer(a, b) { return a.wall_ms !== b.wall_ms ? a.wall_ms > b.wall_ms : a.counter !== b.counter ? a.counter > b.counter : a.node > b.node; },
+  async run() {
+    if (!store.get("token")) return 0;
+    const recs = this.records(); const pend = store.get("pending", []);
+    const changes = pend.map(k => recs[k]).filter(Boolean);
+    const resp = await api("/api/sync", { cursor: store.get("cursor", 0), changes, device: this.node() });
+    const recs2 = this.records();
+    for (const r of resp.changes) { const k = r.collection + "/" + r.id; if (!recs2[k] || this.newer(r.hlc, recs2[k].hlc)) recs2[k] = r; }
+    store.set("records", recs2); store.set("cursor", resp.cursor);
+    store.set("pending", store.get("pending", []).filter(k => !changes.some(c => c.collection + "/" + c.id === k && recs2[k] && recs2[k].hlc.wall_ms === c.hlc.wall_ms && recs2[k].hlc.counter === c.hlc.counter)));
+    return resp.changes.length;
+  },
+};
+function uuid() { return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/-/g, ""); }
+
+// ---------- gezinme ----------
+const views = {};
+$$("#nav button").forEach(b => b.onclick = () => show(b.dataset.v));
+function show(v) {
+  $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === v));
+  $$(".view").forEach(s => s.classList.toggle("active", s.id === "v-" + v));
+  views[v] && views[v]();
+}
+
+// ---------- OYNA ----------
+const play = { moves: [], game: null, engineColor: "black", busy: false, clock: null, timer: null, startFen: null, saved: false };
+const playBoard = new Board($("#play-board"), { onMove: u => playMove(u) });
+async function refreshPlay() {
+  const g = await api("/api/game", { moves: play.moves, start_fen: play.startFen });
+  play.game = g;
+  const myTurn = g.turn !== play.engineColor && g.status.state === "ongoing";
+  playBoard.set({ fen: g.fen, legal: myTurn && !play.busy ? g.legal : [], last: g.ucis[g.ucis.length - 1] || null, check: g.check, orientation: playBoard.orientation });
+  $("#play-opening").textContent = g.opening ? `${g.opening.eco} · ${g.opening.name}` : "";
+  renderMoveList($("#play-moves"), g.sans, null, null);
+  if (g.status.state !== "ongoing") {
+    const who = g.status.winner ? (g.status.winner === "white" ? "Beyaz kazandı" : "Siyah kazandı") : "Berabere";
+    $("#play-status").textContent = `${who} · ${g.termination}`; stopClock(); saveGame();
+  } else $("#play-status").textContent = myTurn ? "Sıra sende" : "CrabFish düşünüyor…";
+  return g;
+}
+async function playMove(u) {
+  if (play.busy) return;
+  clockMove(); play.moves.push(u);
+  const g = await refreshPlay();
+  if (g.status.state === "ongoing") await engineTurn();
+}
+async function engineTurn() {
+  play.busy = true; await refreshPlay();
+  try {
+    const movetime = play.clock ? Math.min(3000, Math.max(200, play.clock[play.engineColor] / 30)) : undefined;
+    const r = await api("/api/engine/move", { moves: play.moves, start_fen: play.startFen, level: +$("#play-level").value, movetime_ms: movetime });
+    clockMove(); play.moves.push(r.move.uci);
+  } catch (e) { toast(e.message); }
+  play.busy = false; await refreshPlay();
+}
+function newGame() {
+  let color = $("#play-color").value; if (color === "random") color = Math.random() < .5 ? "white" : "black";
+  play.moves = []; play.engineColor = color === "white" ? "black" : "white"; play.startFen = null; play.saved = false; play.id = uuid();
+  playBoard.orientation = color; stopClock();
+  const tc = $("#play-time").value;
+  if (tc) { const [m, inc] = tc.split(",").map(Number); play.clock = { white: m * 60000, black: m * 60000, inc: inc * 1000, turnStart: Date.now() }; play.tc = tc; $("#play-clocks").style.display = "flex"; play.timer = setInterval(tickClock, 200); }
+  else { play.clock = null; play.tc = null; $("#play-clocks").style.display = "none"; }
+  refreshPlay().then(g => { if (play.engineColor === "white") engineTurn(); });
+}
+function curTurn() { return play.game ? play.game.turn : "white"; }
+function clockMove() { if (!play.clock) return; const t = curTurn(); const el = Date.now() - play.clock.turnStart; play.clock[t] = Math.max(0, play.clock[t] - el) + play.clock.inc; play.clock.turnStart = Date.now(); }
+function stopClock() { clearInterval(play.timer); play.timer = null; }
+function fmtClock(ms) { ms = Math.max(0, ms); const s = Math.floor(ms / 1000); return ms < 10000 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}.${Math.floor(ms % 1000 / 100)}` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function tickClock() {
+  if (!play.clock || !play.game) return;
+  const t = curTurn(); const ongoing = play.game.status.state === "ongoing" && play.moves.length > 0;
+  const left = (c) => c === t && ongoing ? play.clock[c] - (Date.now() - play.clock.turnStart) : play.clock[c];
+  const bottom = playBoard.orientation, top = bottom === "white" ? "black" : "white";
+  $("#clock-top").textContent = fmtClock(left(top)); $("#clock-bot").textContent = fmtClock(left(bottom));
+  $("#clock-top").classList.toggle("run", ongoing && t === top); $("#clock-bot").classList.toggle("run", ongoing && t === bottom);
+  if (ongoing && left(t) <= 0) { stopClock(); $("#play-status").textContent = (t === "white" ? "Siyah" : "Beyaz") + " kazandı · süre bitti"; playBoard.set({ legal: [] }); play.timeoutLoser = t; saveGame(); }
+}
+function gamePgn() {
+  if (!play.game) return "";
+  let pgn = play.game.pgn;
+  const me = store.get("username") || "Sen";
+  const lvl = $("#play-level").selectedOptions[0].textContent;
+  const white = play.engineColor === "white" ? `CrabFish (${lvl})` : me, black = play.engineColor === "black" ? `CrabFish (${lvl})` : me;
+  pgn = pgn.replace('[White "?"]', `[White "${white}"]`).replace('[Black "?"]', `[Black "${black}"]`).replace('[Date "?"]', `[Date "${new Date().toISOString().slice(0, 10).replace(/-/g, ".")}"]`);
+  if (play.timeoutLoser) pgn = pgn.replace(/\*\s*$/, play.timeoutLoser === "white" ? "0-1\n" : "1-0\n").replace('[Result "*"]', `[Result "${play.timeoutLoser === "white" ? "0-1" : "1-0"}"]`);
+  return { pgn, white, black };
+}
+function saveGame() {
+  if (play.saved || !play.game || play.moves.length < 2) return; play.saved = true;
+  const { pgn, white, black } = gamePgn();
+  const result = play.timeoutLoser ? (play.timeoutLoser === "white" ? "0-1" : "1-0") : play.game.result;
+  sync.put("games", play.id, { id: play.id, pgn, white, black, result, mode: "engine", engine_level: +$("#play-level").value, created_ms: Date.now(), opening: play.game.opening ? play.game.opening.name : null });
+}
+$("#play-new").onclick = newGame;
+$("#play-flip").onclick = () => { playBoard.orientation = playBoard.orientation === "white" ? "black" : "white"; refreshPlay(); };
+$("#play-undo").onclick = () => { if (play.busy || !play.moves.length) return; play.moves.splice(-2, play.game.turn === play.engineColor ? 1 : 2); refreshPlay(); };
+$("#play-resign").onclick = () => { if (!play.game || play.game.status.state !== "ongoing") return; play.timeoutLoser = play.engineColor === "white" ? "black" : "white"; stopClock(); $("#play-status").textContent = "Terk ettin"; playBoard.set({ legal: [] }); saveGame(); };
+$("#play-analyse").onclick = () => { if (!play.game) return; $("#an-pgn").value = gamePgn().pgn; show("analysis"); runAnalysis(); };
+
+function renderMoveList(el, sans, classes, cur, onClick) {
+  let h = "";
+  for (let i = 0; i < sans.length; i += 2) {
+    h += `<div class="n">${i / 2 + 1}.</div>`;
+    for (const j of [i, i + 1]) {
+      if (j >= sans.length) { h += "<div></div>"; continue; }
+      const c = classes && classes[j] ? CLASS[classes[j]] : null;
+      h += `<div class="m ${cur === j + 1 ? "cur" : ""}" data-ply="${j + 1}"><span>${esc(sans[j])}</span>${c && c[2] ? `<span class="sym" style="color:${c[1]}">${c[2]}</span>` : ""}</div>`;
+    }
+  }
+  el.innerHTML = h; el.scrollTop = el.scrollHeight;
+  if (onClick) $$(".m", el).forEach(m => m.onclick = () => onClick(+m.dataset.ply));
+}
+
+// ---------- ANALİZ ----------
+const an = { data: null, ply: 0, startFen: null };
+const anBoard = new Board($("#an-board"), {});
+anBoard.interactive = false;
+async function runAnalysis() {
+  const pgn = $("#an-pgn").value.trim(); if (!pgn) return toast("PGN gir");
+  $("#an-run").disabled = true; $("#an-info").textContent = "Analiz ediliyor…";
+  try {
+    const t0 = performance.now();
+    an.data = await api("/api/analyze", { pgn, depth: +$("#an-depth").value, engine: $("#an-engine").value });
+    $("#an-info").textContent = `${(performance.now() - t0 | 0)} ms · ${an.data.engine} · ${(an.data.total_nodes / 1e6).toFixed(1)}M düğüm`;
+    renderAnalysis(); gotoPly(0);
+  } catch (e) { $("#an-info").textContent = ""; toast(e.message); }
+  $("#an-run").disabled = false;
+}
+function renderAnalysis() {
+  const d = an.data; $("#an-result").style.display = "block";
+  $("#an-opening").textContent = d.opening ? `${d.opening[0]} · ${d.opening[1]}` : "";
+  const side = (name, s) => `<div class="side"><div class="muted small">${name}</div><div class="big">${s.accuracy != null ? s.accuracy.toFixed(1) : "-"}%</div><div class="small muted">ACPL ${s.acpl.toFixed(0)}${s.estimated_elo ? " · ~" + s.estimated_elo + " Elo" : ""}</div><div class="badges">${s.counts.map(([c, n]) => `<span class="badge" style="background:${CLASS[c][1]}">${CLASS[c][0]} ${n}</span>`).join("")}</div></div>`;
+  $("#an-acc").innerHTML = side("Beyaz doğruluğu", d.white) + side("Siyah doğruluğu", d.black);
+  // grafik: beyaz kazanma yüzdesi
+  const wp = d.evals.map(e => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * Math.max(-1000, Math.min(1000, e.cp)))) - 1));
+  const n = Math.max(1, wp.length - 1), X = i => i / n * 1000, Y = w => 220 - w / 100 * 220;
+  const pts = wp.map((w, i) => `${X(i).toFixed(1)},${Y(w).toFixed(1)}`).join(" ");
+  const dots = d.moves.filter(m => ["blunder", "mistake", "miss", "brilliant", "great"].includes(m.class)).map(m => `<circle cx="${X(m.ply)}" cy="${Y(wp[m.ply])}" r="7" fill="${CLASS[m.class][1]}"/>`).join("");
+  $("#an-graph").innerHTML = `<polygon points="0,220 ${pts} 1000,220" fill="#e8e6e3"/><line x1="0" y1="110" x2="1000" y2="110" stroke="#777" stroke-dasharray="6 6"/>${dots}<line id="an-cursor" x1="0" x2="0" y1="0" y2="220" stroke="var(--accent)" stroke-width="3"/>`;
+  $("#an-graph").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); gotoPly(Math.round((e.clientX - r.left) / r.width * n)); };
+}
+function gotoPly(p) {
+  const d = an.data; if (!d) return;
+  p = Math.max(0, Math.min(d.moves.length, p)); an.ply = p;
+  const ev = d.evals[p], mv = p > 0 ? d.moves[p - 1] : null;
+  const next = d.moves[p];
+  anBoard.set({ fen: ev.fen, last: mv ? mv.uci : null, arrows: next && next.best_uci && next.class !== "book" ? [next.best_uci] : [], check: ev.fen && false, legal: [] });
+  renderMoveList($("#an-moves"), d.moves.map(m => m.san), d.moves.map(m => m.class), p, gotoPly);
+  const w = 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * Math.max(-1000, Math.min(1000, ev.cp)))) - 1);
+  $("#an-evalbar").style.width = w + "%";
+  const cur = $("#an-cursor"); if (cur) { const x = p / Math.max(1, d.evals.length - 1) * 1000; cur.setAttribute("x1", x); cur.setAttribute("x2", x); }
+  let html = `<b>Değerlendirme: ${fmtScore(ev.score)}</b> <span class="small muted">derinlik ${ev.depth}</span>`;
+  if (mv) {
+    const c = CLASS[mv.class];
+    html = `<div><b>${mv.move_number}${mv.white ? "." : "..."} ${esc(mv.san)}</b> <span class="badge" style="background:${c[1]}">${c[0]}</span> <span class="small muted">doğruluk ${mv.accuracy.toFixed(0)} · ${fmtScore(mv.eval_after)}</span></div><div>${esc(mv.comment)}</div>` +
+      (mv.best_line && mv.best_line.length && !["best", "book", "forced", "brilliant", "great"].includes(mv.class) ? `<div class="small muted">En iyi devam: ${esc(mv.best_line.join(" "))}</div>` : "");
+  }
+  if (next && next.best_san && p < d.moves.length) html += `<div class="small muted">Bu pozisyonda en iyisi: ${esc(next.best_san)}</div>`;
+  $("#an-comment").innerHTML = html;
+}
+$("#an-run").onclick = runAnalysis;
+$("#an-flip").onclick = () => { anBoard.orientation = anBoard.orientation === "white" ? "black" : "white"; anBoard.render(); };
+$$("[data-nav]").forEach(b => b.onclick = () => { const k = b.dataset.nav; gotoPly(k === "first" ? 0 : k === "last" ? 1e9 : an.ply + (k === "next" ? 1 : -1)); });
+document.addEventListener("keydown", e => {
+  if (!$("#v-analysis").classList.contains("active") || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "ArrowRight") gotoPly(an.ply + 1); if (e.key === "ArrowLeft") gotoPly(an.ply - 1);
+});
+
+// ---------- DERSLER ----------
+let courses = null;
+const ls = { sid: null, view: null, lessonId: null };
+const lsBoard = new Board($("#ls-board"), { onMove: u => lessonAct({ action: "move", move: u }) });
+function progressOf(id) { return sync.get("lesson_progress", id); }
+views.lessons = async () => {
+  if (!courses) courses = await api("/api/courses");
+  $("#lesson-player").style.display = "none"; $("#course-list").style.display = "block";
+  $("#course-list").innerHTML = courses.map(c => {
+    const all = c.chapters.flatMap(ch => ch.lessons), done = all.filter(l => progressOf(l.id)?.completed).length;
+    return `<div class="card course"><h2>${esc(c.title)} <span class="small muted">${done}/${all.length} ders</span></h2><p class="muted">${esc(c.description)}</p>` +
+      c.chapters.map(ch => `<div class="chapter"><h3>${esc(ch.title)}</h3><div class="small muted" style="margin-bottom:6px">${esc(ch.description)}</div><div class="lessons">` +
+        ch.lessons.map(l => { const p = progressOf(l.id); return `<div class="lesson" data-id="${l.id}"><div class="t">${esc(l.title)} ${p?.completed ? `<span class="stars">${"★".repeat(p.stars)}${"☆".repeat(3 - p.stars)}</span>` : ""}</div><div class="s">${esc(l.summary)}</div></div>`; }).join("") +
+        `</div></div>`).join("") + `</div>`;
+  }).join("");
+  $$(".lesson").forEach(el => el.onclick = () => startLesson(el.dataset.id));
+};
+async function startLesson(id) {
+  const r = await api(`/api/lessons/${id}/session`, {});
+  ls.sid = r.sid; ls.lessonId = id;
+  const l = courses.flatMap(c => c.chapters.flatMap(ch => ch.lessons)).find(x => x.id === id);
+  $("#ls-title").textContent = l ? l.title : id;
+  $("#course-list").style.display = "none"; $("#lesson-player").style.display = "block";
+  renderLesson(r.view, null);
+}
+async function lessonAct(body) {
+  try { const r = await api(`/api/sessions/${ls.sid}`, body); renderLesson(r.view, r.result, r); }
+  catch (e) { toast(e.message); }
+}
+function renderLesson(v, result, full) {
+  ls.view = v;
+  lsBoard.set({ fen: v.fen, orientation: v.orientation, legal: v.legal_moves, arrows: v.arrows, highlights: v.highlights, last: v.last_move });
+  $("#ls-progress").style.width = (v.total ? (v.index / v.total * 100) : 100) + "%";
+  $("#ls-text").textContent = v.mode === "done" ? "Ders tamamlandı! 🎉" : v.text;
+  $("#ls-quiz").innerHTML = v.quiz && !v.feedback ? `<p><b>${esc(v.quiz.question)}</b></p>` + v.quiz.options.map((o, i) => `<button class="btn" data-i="${i}">${esc(o)}</button>`).join("") : "";
+  $$("#ls-quiz button").forEach(b => b.onclick = () => lessonAct({ action: "answer", option: +b.dataset.i }));
+  let fb = "";
+  if (v.feedback) fb = `<div class="feedback ok">${esc(v.feedback)}</div>`;
+  else if (result && result.feedback && result.feedback.verdict === "wrong") fb = `<div class="feedback no">${esc(result.feedback.message)}</div>`;
+  else if (result && result.correct === false) fb = `<div class="feedback no">${esc(result.message)}</div>`;
+  else if (result && result.hint) fb = `<div class="feedback">💡 ${esc(result.hint)}</div>`;
+  $("#ls-feedback").innerHTML = fb;
+  const canNext = v.mode === "read" || !!v.feedback;
+  $("#ls-next").disabled = !canNext && v.mode !== "done";
+  $("#ls-next").textContent = v.mode === "done" ? "Derslere dön" : "Devam";
+  $("#ls-hint").style.display = v.has_hint && !v.feedback ? "" : "none";
+  $("#ls-mistakes").textContent = v.mistakes ? `${v.mistakes} hata` : "";
+  if (v.mode === "done" && full) {
+    const prev = progressOf(ls.lessonId);
+    const stars = Math.max(full.stars, prev?.stars || 0);
+    sync.put("lesson_progress", ls.lessonId, { lesson_id: ls.lessonId, completed: true, stars, best_mistakes: Math.min(v.mistakes, prev?.best_mistakes ?? 99), completed_ms: Date.now() });
+    $("#ls-text").textContent = `Ders tamamlandı! ${"★".repeat(full.stars)}${"☆".repeat(3 - full.stars)}`;
+  }
+}
+$("#ls-next").onclick = () => ls.view && ls.view.mode === "done" ? views.lessons() : lessonAct({ action: "next" });
+$("#ls-hint").onclick = () => lessonAct({ action: "hint" });
+$("#ls-back").onclick = () => views.lessons();
+
+// ---------- REPERTUVAR ----------
+let reps = null;
+const dr = { sid: null, rep: null, line: 0, cardId: null };
+const drBoard = new Board($("#dr-board"), { onMove: u => drillMove(u) });
+function cardOf(id) { return sync.get("srs_cards", id); }
+views.repertoire = async () => {
+  if (!reps) reps = await api("/api/repertoires");
+  $("#rep-drill").style.display = "none"; $("#rep-list").style.display = "block";
+  const now = Date.now();
+  $("#rep-list").innerHTML = reps.map(r => {
+    const due = r.lines.filter(l => { const c = cardOf(l.card_id); return !c || c.due_ms <= now; }).length;
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(r.title)}</h2><button class="btn primary" data-rep="${r.id}">Çalış (${due} tekrar)</button></div><p class="muted">${esc(r.description)}</p><table>` +
+      r.lines.map(l => { const c = cardOf(l.card_id); const st = !c ? "yeni" : c.due_ms <= now ? "tekrar zamanı" : "sonraki: " + new Date(c.due_ms).toLocaleDateString("tr-TR"); return `<tr class="click" data-rep="${r.id}" data-line="${l.index}"><td>${esc(l.name)}</td><td class="small muted">${esc(l.moves)}</td><td class="small">${st}</td></tr>`; }).join("") + `</table></div>`;
+  }).join("");
+  $$("[data-rep]").forEach(el => el.onclick = () => {
+    const r = reps.find(x => x.id === el.dataset.rep);
+    let line = el.dataset.line != null ? +el.dataset.line : r.lines.findIndex(l => { const c = cardOf(l.card_id); return !c || c.due_ms <= Date.now(); });
+    if (line < 0) { toast("Bugünlük tekrar yok!"); return; }
+    startDrill(r, line);
+  });
+};
+async function startDrill(rep, line) {
+  const r = await api("/api/drills", { repertoire: rep.id, line });
+  Object.assign(dr, { sid: r.sid, rep, line, cardId: r.card_id });
+  $("#rep-list").style.display = "none"; $("#rep-drill").style.display = "block";
+  $("#dr-title").textContent = rep.lines[line].name; $("#dr-sub").textContent = rep.title + " · sıra sende: repertuvar hamleni oyna";
+  $("#dr-feedback").innerHTML = ""; $("#dr-nextline").style.display = "none";
+  renderDrill(r.view);
+}
+function renderDrill(v) { drBoard.set({ fen: v.fen, orientation: v.orientation, legal: v.legal_moves, last: v.last_move, arrows: [] }); }
+async function drillMove(u) {
+  const r = await api(`/api/drills/${dr.sid}`, { move: u });
+  renderDrill(r.view);
+  if (!r.feedback.correct) { $("#dr-feedback").innerHTML = `<div class="feedback no">Repertuvardaki hamle: <b>${esc(r.feedback.expected_san)}</b>. Onu oyna.</div>`; return; }
+  $("#dr-feedback").innerHTML = r.feedback.done ? "" : `<div class="feedback ok">Doğru!${r.feedback.reply_san ? " Rakip: " + esc(r.feedback.reply_san) : ""}</div>`;
+  if (r.feedback.done) {
+    const card = await api("/api/srs/review", { card: cardOf(dr.cardId), card_id: dr.cardId, grade: r.grade });
+    sync.put("srs_cards", dr.cardId, card);
+    const days = Math.round((card.due_ms - Date.now()) / 864e5);
+    $("#dr-feedback").innerHTML = `<div class="feedback ${r.grade === "again" ? "no" : "ok"}">Hat bitti · ${r.view.mistakes} hata · sonraki tekrar: ${days <= 0 ? "bugün" : days + " gün sonra"}${r.view.note ? "<br>" + esc(r.view.note) : ""}</div>`;
+    $("#dr-nextline").style.display = "";
+  }
+}
+$("#dr-back").onclick = () => views.repertoire();
+$("#dr-nextline").onclick = () => {
+  const i = dr.rep.lines.findIndex((l, k) => k !== dr.line && (!cardOf(l.card_id) || cardOf(l.card_id).due_ms <= Date.now()));
+  if (i < 0) { toast("Bu repertuvarda bugünlük tekrar kalmadı"); views.repertoire(); } else startDrill(dr.rep, i);
+};
+
+// ---------- OYUNLARIM ----------
+views.games = async () => {
+  try { await sync.run(); } catch {}
+  const games = sync.list("games");
+  $("#games-table").innerHTML = games.length ? `<table><tr><th>Tarih</th><th>Beyaz</th><th>Siyah</th><th>Sonuç</th><th>Açılış</th><th>Doğruluk</th></tr>` + games.map(r => {
+    const g = r.data; const acc = g.white_accuracy != null ? `${g.white_accuracy.toFixed(0)} / ${g.black_accuracy.toFixed(0)}` : "";
+    return `<tr class="click" data-id="${esc(r.id)}"><td>${new Date(g.created_ms || r.hlc.wall_ms).toLocaleString("tr-TR")}</td><td>${esc(g.white)}</td><td>${esc(g.black)}</td><td>${esc(g.result)}</td><td class="small">${esc(g.opening || "")}</td><td>${acc}</td></tr>`;
+  }).join("") + `</table>` : `<p class="muted">Henüz oyun yok.</p>`;
+  $$("#games-table tr.click").forEach(tr => tr.onclick = () => { const g = sync.get("games", tr.dataset.id); $("#an-pgn").value = g.pgn; show("analysis"); runAnalysis(); });
+};
+
+// ---------- HESAP ----------
+function renderAccount() {
+  const u = store.get("username");
+  $("#who").textContent = u ? "👤 " + u : "çevrimdışı mod";
+  $("#acc-in").style.display = u ? "none" : ""; $("#acc-out").style.display = u ? "" : "none";
+  $("#acc-name").textContent = u || "";
+}
+views.account = renderAccount;
+async function auth(kind) {
+  try {
+    const r = await api("/api/auth/" + kind, { username: $("#acc-user").value, password: $("#acc-pass").value, device: sync.node() });
+    store.set("token", r.token); store.set("username", r.username); store.set("cursor", 0);
+    // Yerel ilerleme sunucuya gitsin
+    store.set("pending", Object.keys(sync.records()));
+    const n = await sync.run(); toast(`Hoş geldin ${r.username}! ${n} kayıt alındı.`); renderAccount(); courses = null;
+  } catch (e) { toast(e.message); }
+}
+$("#acc-login").onclick = () => auth("login");
+$("#acc-register").onclick = () => auth("register");
+$("#acc-logout").onclick = async () => { try { await api("/api/auth/logout", {}); } catch {} store.del("token"); store.del("username"); renderAccount(); };
+$("#acc-sync").onclick = async () => { try { const n = await sync.run(); $("#acc-syncinfo").textContent = `${n} kayıt güncellendi · ${new Date().toLocaleTimeString("tr-TR")}`; } catch (e) { toast(e.message); } };
+
+// ---------- başlat ----------
+(async () => {
+  renderAccount();
+  try {
+    const info = await api("/api/engine");
+    $("#play-level").innerHTML = info.levels.map(l => `<option value="${l.level}" ${l.level === 4 ? "selected" : ""}>${l.level} · ${l.name} (~${l.elo})</option>`).join("");
+    if (info.stockfish) $("#an-engine-wrap").style.display = "";
+  } catch (e) { toast("Sunucuya ulaşılamadı: " + e.message); }
+  sync.run().catch(() => {});
+  newGame();
+})();
+</script>
+</body>
+</html>

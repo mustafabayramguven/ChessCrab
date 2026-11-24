@@ -35,11 +35,10 @@ pub fn to_fen(pos: &Chess) -> String {
 /// SAN ya da UCI hamleyi çöz.
 pub fn parse_move(pos: &Chess, text: &str) -> Result<Move, GameError> {
     let text = text.trim();
-    if let Ok(uci) = text.parse::<UciMove>() {
-        if let Ok(m) = uci.to_move(pos) {
+    if let Ok(uci) = text.parse::<UciMove>()
+        && let Ok(m) = uci.to_move(pos) {
             return Ok(m);
         }
-    }
     let clean = text.trim_end_matches(['+', '#', '!', '?']);
     let san: San = clean.parse().map_err(|_| GameError::IllegalMove(text.to_string()))?;
     san.to_move(pos).map_err(|_| GameError::IllegalMove(text.to_string()))

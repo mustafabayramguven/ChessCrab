@@ -1,5 +1,30 @@
 [package]
 name = "chesscrab-server"
+description = "ChessCrab sunucusu: senkronizasyon, analiz, dersler ve web arayüzü"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+
+[[bin]]
+name = "chesscrab-server"
+path = "src/main.rs"
+
+[dependencies]
+chesscrab-core.workspace = true
+chesscrab-engine.workspace = true
+chesscrab-analysis.workspace = true
+chesscrab-lessons.workspace = true
+chesscrab-sync.workspace = true
+shakmaty.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rusqlite.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+tower-http = { version = "0.7", features = ["cors", "trace"] }
+argon2 = "0.6"
+getrandom = "0.4.3"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }

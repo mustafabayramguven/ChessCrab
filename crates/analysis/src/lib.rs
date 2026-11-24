@@ -469,16 +469,14 @@ fn build_analysis(game: &Game, positions: &[Chess], evals: Vec<PositionEval>, en
                 MoveClass::Miss => "Fırsat kaçtı: rakibin hatasını cezalandırmadın.",
                 _ => "Büyük hata!",
             });
-            if let Score::Mate(n) = mover_after {
-                if n < 0 {
+            if let Score::Mate(n) = mover_after
+                && n < 0 {
                     comment.push_str(&format!(" Bu hamleden sonra {} hamlede mat oluyorsun.", -n));
                 }
-            }
-            if let Score::Mate(n) = mover_before {
-                if n > 0 && !matches!(mover_after, Score::Mate(k) if k > 0) {
+            if let Score::Mate(n) = mover_before
+                && n > 0 && !matches!(mover_after, Score::Mate(k) if k > 0) {
                     comment.push_str(&format!(" {n} hamlede mat vardı."));
                 }
-            }
             if let Some(b) = &best_san {
                 comment.push_str(&format!(" En iyisi {b} ({}).", fmt_score_tr(before.score)));
             }

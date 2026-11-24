@@ -253,23 +253,21 @@ impl LessonSession {
         self.pos.play_unchecked(exp);
         self.last_move = Some(uci_of(exp));
         let mut reply_san = None;
-        if let Some(r) = &step.reply {
-            if let Ok(rm) = parse_move(&self.pos, r) {
+        if let Some(r) = &step.reply
+            && let Ok(rm) = parse_move(&self.pos, r) {
                 reply_san = Some(san_of(&self.pos, rm));
                 self.pos.play_unchecked(rm);
                 self.last_move = Some(uci_of(rm));
             }
-        }
         let mut msg = match verdict {
             Verdict::AlsoGood => format!("{played_san} de iyi, ama biz {exp_san} ile devam edelim."),
             _ => step.success.clone().unwrap_or_else(|| "Doğru!".into()),
         };
-        if verdict == Verdict::AlsoGood {
-            if let Some(s) = &step.success {
+        if verdict == Verdict::AlsoGood
+            && let Some(s) = &step.success {
                 msg.push(' ');
                 msg.push_str(s);
             }
-        }
         self.feedback = Some(msg.clone());
         MoveFeedback { verdict, message: msg, played_san: Some(played_san), reply_san }
     }

@@ -75,11 +75,10 @@ impl Engine {
         // Açılışta çeşitlilik için kitap (ilk 12 yarı hamle)
         if game.ply() < 12 && game.start_fen() == chesscrab_core::START_FEN {
             let sans = game.sans();
-            if let Some(san) = book::pick_book_move(&sans, extra_book, &mut self.rng) {
-                if let Ok(m) = chesscrab_core::parse_move(pos, &san) {
+            if let Some(san) = book::pick_book_move(&sans, extra_book, &mut self.rng)
+                && let Ok(m) = chesscrab_core::parse_move(pos, &san) {
                     return Some(EngineMove { uci: chesscrab_core::uci_of(m), san: san_of(pos, m), score: Score::Cp(0), from_book: true });
                 }
-            }
         }
         let history = game_history_hashes(game);
         let limits = Limits {

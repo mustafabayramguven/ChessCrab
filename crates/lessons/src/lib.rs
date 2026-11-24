@@ -155,11 +155,10 @@ impl Catalog {
                         errs.push(format!("kurs {} / {}: ders yok: {id}", c.id, ch.id));
                     }
                 }
-                if let Some(r) = &ch.repertoire {
-                    if self.repertoire(r).is_none() {
+                if let Some(r) = &ch.repertoire
+                    && self.repertoire(r).is_none() {
                         errs.push(format!("kurs {} / {}: repertuvar yok: {r}", c.id, ch.id));
                     }
-                }
             }
         }
         for r in &self.repertoires {

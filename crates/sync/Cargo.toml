@@ -1,5 +1,17 @@
 [package]
 name = "chesscrab-sync"
+description = "Offline-first senkronizasyon: HLC + son yazan kazanır (LWW), SQLite yerel depo"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+rusqlite = { workspace = true, optional = true }
+
+[features]
+default = ["sqlite"]
+sqlite = ["dep:rusqlite"]

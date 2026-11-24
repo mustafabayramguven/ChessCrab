@@ -183,11 +183,10 @@ pub fn identify_opening<S: AsRef<str>>(sans: &[S]) -> Option<(&'static Opening, 
     let mut best: Option<(&'static Opening, usize)> = None;
     for op in OPENINGS {
         let line: Vec<String> = op.moves.split_whitespace().map(norm).collect();
-        if line.len() <= game.len() && line.iter().zip(&game).all(|(a, b)| a == b) {
-            if best.map(|(_, n)| line.len() > n).unwrap_or(true) {
+        if line.len() <= game.len() && line.iter().zip(&game).all(|(a, b)| a == b)
+            && best.map(|(_, n)| line.len() > n).unwrap_or(true) {
                 best = Some((op, line.len()));
             }
-        }
     }
     best
 }

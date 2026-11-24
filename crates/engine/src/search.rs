@@ -373,16 +373,14 @@ impl Searcher {
                 break;
             }
             // Mat bulunduysa ve derinlik yeterliyse bitir
-            if let Score::Mate(n) = result.score {
-                if limits.depth.is_none() && !limits.infinite && (n.unsigned_abs() * 2) < depth {
+            if let Score::Mate(n) = result.score
+                && limits.depth.is_none() && !limits.infinite && (n.unsigned_abs() * 2) < depth {
                     break;
                 }
-            }
-            if let Some(soft) = self.soft_deadline {
-                if Instant::now() >= soft {
+            if let Some(soft) = self.soft_deadline
+                && Instant::now() >= soft {
                     break;
                 }
-            }
         }
         result.nodes = self.nodes;
         result.time_ms = self.start.elapsed().as_millis() as u64;
@@ -422,17 +420,15 @@ impl Searcher {
             if self.stop.load(Ordering::Relaxed) {
                 self.stopped = true;
             }
-            if let Some(h) = self.hard_deadline {
-                if Instant::now() >= h {
+            if let Some(h) = self.hard_deadline
+                && Instant::now() >= h {
                     self.stopped = true;
                 }
-            }
         }
-        if let Some(n) = self.node_limit {
-            if self.nodes >= n {
+        if let Some(n) = self.node_limit
+            && self.nodes >= n {
                 self.stopped = true;
             }
-        }
     }
 
     fn is_repetition(&self, halfmoves: u32) -> bool {
@@ -577,8 +573,8 @@ impl Searcher {
                 return static_eval;
             }
             // Null move
-            if !was_null && depth >= 3 && static_eval >= beta && has_non_pawn_material(pos) {
-                if let Ok(null_pos) = pos.clone().swap_turn() {
+            if !was_null && depth >= 3 && static_eval >= beta && has_non_pawn_material(pos)
+                && let Ok(null_pos) = pos.clone().swap_turn() {
                     let r = 3 + depth / 4 + ((static_eval - beta) / 200).min(3);
                     let nh = hash_of(&null_pos);
                     self.hashes.push(nh);
@@ -591,7 +587,6 @@ impl Searcher {
                         return if s >= MATE_BOUND { beta } else { s };
                     }
                 }
-            }
         }
 
         // İç iteratif derinleşme yerine: TT hamlesi yoksa derinliği azalt

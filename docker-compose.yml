@@ -1,0 +1,18 @@
+services:
+  chesscrab:
+    image: ghcr.io/mustafabayramguven/chesscrab:latest
+    # Kendin derlemek istersen:
+    # build: .
+    container_name: chesscrab
+    restart: unless-stopped
+    ports:
+      - "3437:3437"
+    volumes:
+      - ./data:/data
+    environment:
+      # İlk kullanıcıdan sonra kayıt kapalı; açmak için 1 yap
+      CHESSCRAB_ALLOW_REGISTER: "0"
+      # 1 GB RAM'li sunucularda analizi tek iş parçacığıyla sınırlamak iyi olur
+      CHESSCRAB_ANALYSIS_THREADS: "2"
+      CHESSCRAB_MAX_DEPTH: "18"
+    mem_limit: 512m
