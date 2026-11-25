@@ -1,26 +1,30 @@
 package dev.chesscrab.app.ui.board
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -28,15 +32,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -44,36 +47,43 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chesscrab.app.R
+import androidx.compose.ui.window.Dialog
 import dev.chesscrab.app.ui.BoardTheme
 import dev.chesscrab.app.ui.CLASS_INFO
+import dev.chesscrab.app.ui.K
+import dev.chesscrab.app.ui.KType
+import dev.chesscrab.app.ui.Mono
+import dev.chesscrab.app.ui.Motion
+import dev.chesscrab.app.ui.Prefs
 import dev.chesscrab.app.ui.boardTheme
+import dev.chesscrab.app.ui.kare.press
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-data class Arrow(val uci: String, val color: Color = Color(0xD9FF7A59))
+/** Vektör ok: kobalt (en iyi), kehribar (ipucu), kızıl (tehdit); kesikli = olası/gizli tehdit */
+data class Arrow(val uci: String, val color: Color = K.Blue, val dashed: Boolean = false)
 data class SquareBadge(val square: String, val cls: String)
-/** Kare üzerinde kısa süreli renk parlaması (doğru/yanlış geri bildirimi). `token` her yeni parlamada artmalı. */
+/** Kare üzerinde kısa süreli renk parlaması. `token` her yeni parlamada artmalı. */
 data class Flash(val square: String, val color: Color, val token: Int)
+/** Tuval darbe efekti: "capture" | "brilliant" | "checkmate" */
+data class BoardFx(val square: String, val kind: String, val token: Int)
 
-val ARROW_BEST = Color(0xD9FF7A59)
-val ARROW_HINT = Color(0xCC2F6FD6)
-val ARROW_BAD = Color(0xB3B0304A)
-
-private val LAST_MOVE = Color(0x66FFB45A)
-private val SELECTED = Color(0x8CFF9A5C)
+val ARROW_BEST = K.Blue
+val ARROW_HINT = K.Yellow
+val ARROW_BAD = K.Red
+val FLASH_GOOD = Color(0xFF2563EB)
+val FLASH_BAD = Color(0xFFDC2626)
 
 fun parseBoard(fen: String): Map<String, Char> {
     val out = HashMap<String, Char>()
@@ -88,29 +98,6 @@ fun parseBoard(fen: String): Map<String, Char> {
         }
     }
     return out
-}
-
-@Composable
-fun rememberPieces(): Map<Char, ImageBitmap> {
-    val ids = mapOf(
-        'K' to R.drawable.piece_wk, 'Q' to R.drawable.piece_wq, 'R' to R.drawable.piece_wr,
-        'B' to R.drawable.piece_wb, 'N' to R.drawable.piece_wn, 'P' to R.drawable.piece_wp,
-        'k' to R.drawable.piece_bk, 'q' to R.drawable.piece_bq, 'r' to R.drawable.piece_br,
-        'b' to R.drawable.piece_bb, 'n' to R.drawable.piece_bn, 'p' to R.drawable.piece_bp,
-    )
-    return ids.mapValues { ImageBitmap.imageResource(it.value) }
-}
-
-fun DrawScope.drawPieceImage(img: ImageBitmap, topLeft: Offset, size: Float, alpha: Float = 1f) {
-    drawImage(
-        img,
-        srcOffset = IntOffset.Zero,
-        srcSize = IntSize(img.width, img.height),
-        dstOffset = IntOffset(topLeft.x.roundToInt(), topLeft.y.roundToInt()),
-        dstSize = IntSize(size.roundToInt(), size.roundToInt()),
-        alpha = alpha,
-        filterQuality = FilterQuality.High,
-    )
 }
 
 private data class Slide(val piece: Char, val from: String, val to: String)
@@ -128,7 +115,7 @@ private fun planFor(prev: Map<String, Char>?, cur: Map<String, Char>, lastMove: 
     val from = lastMove.substring(0, 2)
     val to = lastMove.substring(2, 4)
     val moving = prev[from] ?: return null
-    if (cur[from] != null) return null // geri alma vb.: canlandırma yok
+    if (cur[from] != null) return null
     val piece = cur[to] ?: return null
     val slides = mutableListOf(Slide(piece, from, to))
     var captured: Pair<String, Char>? = prev[to]?.let { to to it }
@@ -146,9 +133,39 @@ private fun planFor(prev: Map<String, Char>?, cur: Map<String, Char>, lastMove: 
     return AnimPlan(slides, captured)
 }
 
+/** FLIP uçuşu ölçeği: 1.14 → 1.03 (%82) → 1 */
+private fun flightScale(t: Float): Float = if (t < 0.82f) 1.14f + (1.03f - 1.14f) * (t / 0.82f) else 1.03f + (1f - 1.03f) * ((t - 0.82f) / 0.18f)
+
+/** Darbe efekti: genişleyen halka + yönlü kıvılcım çizgileri (konsept tuval motoru) */
+private fun DrawScope.drawImpact(center: Offset, s: Float, kind: String, p: Float) {
+    val ease = 1f - (1f - p) * (1f - p) * (1f - p)
+    val alpha = 1f - p
+    val color = when (kind) { "brilliant" -> K.Ink; "capture", "checkmate" -> K.Red; else -> K.Blue }
+    val u = s / 90f // konseptte kare 90 tuval birimi
+    val mate = kind == "checkmate"
+    drawCircle(color.copy(alpha = alpha * 0.92f), (16 + ease * (if (mate) 96 else 58)) * u, center, style = Stroke((if (mate) 4f else 3f) * u))
+    if (mate || kind == "brilliant") drawCircle(color.copy(alpha = alpha * 0.6f), (8 + ease * 40) * u, center, style = Stroke(1.5f * u))
+    val count = if (mate) 16 else 8
+    val speed = if (mate) 4.2f else 2.8f
+    val len = if (kind == "brilliant") 16f else 11f
+    for (i in 0 until count) {
+        val ang = (2 * PI * i / count).toFloat() + if (kind == "brilliant") 0f else 0.2f
+        val dist = 12 + ease * speed * 18
+        val a = center + Offset(cos(ang), sin(ang)) * (dist * u)
+        val b = center + Offset(cos(ang), sin(ang)) * ((dist + len * (1 - p * 0.5f)) * u)
+        drawLine(color.copy(alpha = alpha), a, b, 2.5f * u, cap = StrokeCap.Butt)
+    }
+}
+
+/** İçe çizilen çerçeve (kare kenarına `w` kalınlığında) */
+private fun DrawScope.inset(tl: Offset, s: Float, color: Color, w: Float, effect: PathEffect? = null, pad: Float = 0f) {
+    drawRect(color, tl + Offset(w / 2 + pad, w / 2 + pad), Size(s - w - 2 * pad, s - w - 2 * pad), style = Stroke(w, pathEffect = effect))
+}
+
 /**
- * Animasyonlu satranç tahtası: dokun-dokun ya da sürükle-bırak, kayan taşlar,
- * hamle kalitesi rozeti, oklar, parlama ve yanlış hamlede sallanma.
+ * Öğretici tahta: kenardan kenara 8×8 ızgara, dokun-dokun / sürükle-bırak,
+ * FLIP taş uçuşu, kobalt yasal noktalar, kızıl alım halkası, tehdit kutuları,
+ * şah sonarı, kehribar ipucu, vektör oklar, hamle damgası ve darbe efektleri.
  */
 @Composable
 fun ChessBoard(
@@ -160,43 +177,55 @@ fun ChessBoard(
     check: Boolean = false,
     arrows: List<Arrow> = emptyList(),
     highlights: List<String> = emptyList(),
+    hint: String? = null,
+    threats: Set<String> = emptySet(),
     badge: SquareBadge? = null,
     flash: Flash? = null,
+    fx: BoardFx? = null,
     shake: Int = 0,
     theme: BoardTheme? = null,
     coordinates: Boolean = true,
     onMove: (String) -> Unit = {},
 ) {
-    // Tema her çizimde tercihten okunur: ayarlardan değişince tahta anında güncellenir
-    val themeId = dev.chesscrab.app.ui.Prefs.boardTheme
-    val theme = theme ?: boardTheme(themeId)
-    val pieces = rememberPieces()
+    val themeId = Prefs.boardTheme
+    val th = theme ?: boardTheme(themeId)
+    val drawPiece = rememberPieceDrawer()
+    val reduced = Motion.reduced
     val board = remember(fen) { parseBoard(fen) }
     val holder = remember { Holder() }
-    val plan = remember(fen) { planFor(holder.lastBoard, board, lastMove, holder.skipNext) }
-    // alım olduysa (sürüklenerek bile) hedef karede halka dalgası
+    val plan = remember(fen) { if (reduced) null else planFor(holder.lastBoard, board, lastMove, holder.skipNext) }
+    // alım olduysa (sürüklenerek bile) hedef karede şok dalgası
     val burst = remember(fen) {
         val prev = holder.lastBoard
-        if (prev != null && lastMove != null && lastMove.length >= 4 && prev.size > board.size) lastMove.substring(2, 4) else null
+        if (!reduced && prev != null && lastMove != null && lastMove.length >= 4 && prev.size > board.size) lastMove.substring(2, 4) else null
     }
-    val fx = remember(fen) { Animatable(if (holder.lastBoard == null || holder.lastBoard == board) 1f else 0f) }
-    LaunchedEffect(fen) { fx.animateTo(1f, tween(620, easing = LinearOutSlowInEasing)) }
     SideEffect { holder.lastBoard = board; holder.skipNext = false }
-    val progress = remember(fen) { Animatable(if (plan == null) 1f else 0f) }
-    LaunchedEffect(fen) { if (plan != null) progress.animateTo(1f, tween(240, easing = FastOutSlowInEasing)) }
 
-    val badgeScale = remember(badge) { Animatable(if (badge == null) 1f else 0f) }
-    LaunchedEffect(badge) { if (badge != null) badgeScale.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) }
-    val flashAlpha = remember(flash?.token) { Animatable(if (flash == null) 0f else 0.75f) }
-    LaunchedEffect(flash?.token) { if (flash != null) flashAlpha.animateTo(0f, tween(900)) }
+    val flight = remember(fen) { Animatable(if (plan == null) 1f else 0f) }
+    LaunchedEffect(fen) { if (plan != null) flight.animateTo(1f, tween(240, easing = LinearEasing)) }
+    val burstT = remember(fen) { Animatable(if (burst == null) 1f else 0f) }
+    LaunchedEffect(fen) { if (burst != null) burstT.animateTo(1f, tween(480, easing = LinearEasing)) }
+    val fxT = remember(fx?.token) { Animatable(if (fx == null || reduced) 1f else 0f) }
+    LaunchedEffect(fx?.token) { if (fx != null && !reduced) fxT.animateTo(1f, tween(if (fx.kind == "checkmate") 760 else 480, easing = LinearEasing)) }
+
+    val stampT = remember(badge) { Animatable(if (badge == null || reduced) 1f else 0f) }
+    LaunchedEffect(badge) { if (badge != null && !reduced) stampT.animateTo(1f, tween(320, easing = Motion.Expo)) }
+    val arrowT = remember(arrows) { Animatable(if (arrows.isEmpty() || reduced) 1f else 0f) }
+    LaunchedEffect(arrows) { if (arrows.isNotEmpty() && !reduced) arrowT.animateTo(1f, tween(340, easing = Motion.Expo)) }
+    val flashAlpha = remember(flash?.token) { Animatable(if (flash == null) 0f else 0.7f) }
+    LaunchedEffect(flash?.token) { if (flash != null) flashAlpha.animateTo(0f, tween(if (reduced) 300 else 900)) }
     val shakeX = remember { Animatable(0f) }
     LaunchedEffect(shake) {
-        if (shake > 0) shakeX.animateTo(0f, keyframes { durationMillis = 360; -18f at 50; 16f at 110; -11f at 170; 8f at 230; -4f at 290 })
+        if (shake > 0 && !reduced) shakeX.animateTo(0f, keyframes { durationMillis = 280; -5f at 62 using Motion.Expo; 5f at 134; -3f at 202 })
     }
+    // şah sonarı (1.1 s, sonsuz)
+    val sonar = if (check && Motion.loops) {
+        rememberInfiniteTransition(label = "sonar").animateFloat(0f, 1f, infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Restart), label = "s").value
+    } else 0.5f
 
     var selected by remember(fen) { mutableStateOf<String?>(null) }
-    val selAnim = remember { Animatable(0f) }
-    LaunchedEffect(selected) { selAnim.snapTo(0f); if (selected != null) selAnim.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium)) }
+    val selAnim = remember { Animatable(1f) }
+    LaunchedEffect(selected) { if (selected != null && !reduced) { selAnim.snapTo(0f); selAnim.animateTo(1f, tween(160, easing = Motion.Expo)) } }
     var dragFrom by remember(fen) { mutableStateOf<String?>(null) }
     var dragPos by remember { mutableStateOf(Offset.Zero) }
     var promo by remember(fen) { mutableStateOf<List<String>?>(null) }
@@ -206,7 +235,7 @@ fun ChessBoard(
 
     fun squareAt(o: Offset, size: Float): String? {
         val x = (o.x / size).toInt(); val y = (o.y / size).toInt()
-        if (x !in 0..7 || y !in 0..7) return null
+        if (o.x < 0 || o.y < 0 || x !in 0..7 || y !in 0..7) return null
         val f = if (whiteBottom) x else 7 - x
         val r = if (whiteBottom) 7 - y else y
         return sq(f, r)
@@ -230,13 +259,7 @@ fun ChessBoard(
         }
     }
 
-    androidx.compose.foundation.layout.Box(
-        modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .offset { IntOffset(shakeX.value.roundToInt(), 0) }
-            .clip(RoundedCornerShape(10.dp))
-    ) {
+    Box(modifier.fillMaxWidth().aspectRatio(1f).offset { IntOffset((shakeX.value * density).roundToInt(), 0) }) {
         Canvas(
             Modifier
                 .matchParentSize()
@@ -265,142 +288,187 @@ fun ChessBoard(
                 }
         ) {
             val s = size.width / 8f
-            val p = progress.value
-            // kareler
+            val t = flight.value
+            val pos = Motion.Expo.transform(t)
+            val lm = lastMove?.takeIf { it.length >= 4 }
+            val hintFrom = hint?.take(2); val hintTo = hint?.takeIf { it.length >= 4 }?.substring(2, 4)
+            val dropSq = dragFrom?.let { squareAt(dragPos, s) }
+
+            // 1) ızgara: kareler, son hamle sisi, seçim, ipucu, tehdit kutuları
             for (x in 0..7) for (y in 0..7) {
                 val f = if (whiteBottom) x else 7 - x
                 val r = if (whiteBottom) 7 - y else y
                 val name = sq(f, r)
                 val tl = Offset(x * s, y * s)
                 val light = (f + r) % 2 == 1
-                drawRect(if (light) theme.light else theme.dark, tl, Size(s, s))
-                if (lastMove != null && lastMove.length >= 4 && (lastMove.startsWith(name) || lastMove.substring(2, 4) == name)) drawRect(LAST_MOVE.copy(alpha = LAST_MOVE.alpha * (0.35f + 0.65f * fx.value)), tl, Size(s, s))
-                if (dragFrom != null && name == squareAt(dragPos, s) && legal.any { it.startsWith(dragFrom!! + name) }) drawRect(Color(0x33FFFFFF), tl, Size(s, s), style = Stroke(s * 0.06f))
-                if (name in highlights) drawRect(Color(0x6654D1BE), tl, Size(s, s))
-                if (selected == name) drawRect(SELECTED, tl, Size(s, s))
+                val last = lm != null && (lm.startsWith(name) || lm.substring(2, 4) == name)
+                drawRect(if (last) (if (light) th.lastLight else th.lastDark) else (if (light) th.light else th.dark), tl, Size(s, s))
                 if (flash != null && flash.square == name && flashAlpha.value > 0f) drawRect(flash.color.copy(alpha = flashAlpha.value), tl, Size(s, s))
+                if (name in highlights) inset(tl, s, K.Yellow, 3.dp.toPx())
+                if (name == hintFrom) inset(tl, s, K.Yellow, 2.dp.toPx())
+                if (name == hintTo) inset(tl, s, K.Yellow, 3.dp.toPx())
+                if (selected == name) inset(tl, s, K.Blue, 3.dp.toPx())
+                if (name == dropSq && name != dragFrom && legal.any { it.startsWith(dragFrom!! + name) }) inset(tl, s, K.Blue, 2.dp.toPx())
+                if (name in threats) inset(tl, s, K.Red.copy(alpha = 0.92f), 1.5.dp.toPx(), PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx())), pad = 3.dp.toPx())
             }
-            // koordinatlar (karenin karşıt renginde)
+            // koordinatlar (mono 9sp, %72)
             if (coordinates) {
-                val style = TextStyle(fontSize = (s * 0.15f / density).sp, fontWeight = FontWeight.Bold, fontFamily = dev.chesscrab.app.ui.Mono)
-                val rb = if (whiteBottom) 0 else 7
-                val fl0 = if (whiteBottom) 0 else 7
+                val st = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = Mono)
                 for (i in 0..7) {
                     val f = if (whiteBottom) i else 7 - i
-                    val lightF = (f + rb) % 2 == 1
-                    val fl = measurer.measure("${'a' + f}", style.copy(color = if (lightF) theme.dark else theme.light))
-                    drawText(fl, topLeft = Offset(i * s + s - fl.size.width - s * 0.05f, 8 * s - fl.size.height - s * 0.01f))
+                    val rBottom = if (whiteBottom) 0 else 7
+                    val lightF = (f + rBottom) % 2 == 1
+                    val fl = measurer.measure("${'a' + f}", st.copy(color = (if (lightF) th.coordOnLight else th.coordOnDark).copy(alpha = 0.72f)))
+                    drawText(fl, topLeft = Offset(i * s + s - fl.size.width - 3.dp.toPx(), 8 * s - fl.size.height - 2.dp.toPx()))
                     val r = if (whiteBottom) 7 - i else i
-                    val lightR = (fl0 + r) % 2 == 1
-                    val rl = measurer.measure("${r + 1}", style.copy(color = if (lightR) theme.dark else theme.light))
-                    drawText(rl, topLeft = Offset(s * 0.05f, i * s + s * 0.02f))
+                    val fLeft = if (whiteBottom) 0 else 7
+                    val lightR = (fLeft + r) % 2 == 1
+                    val rl = measurer.measure("${r + 1}", st.copy(color = (if (lightR) th.coordOnLight else th.coordOnDark).copy(alpha = 0.72f)))
+                    drawText(rl, topLeft = Offset(3.dp.toPx(), i * s + 2.dp.toPx()))
                 }
             }
-            // şah tehdidi
+            // şah sonarı: kızıl radyal, nabız gibi
             if (check) {
                 val k = if (turnWhite) 'K' else 'k'
                 board.entries.firstOrNull { it.value == k }?.let { e ->
-                    val c = topLeft(e.key, s) + Offset(s / 2, s / 2)
-                    val rr = s * 0.72f * (1f + 0.3f * (1f - fx.value))
-                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF3B4E), Color(0xAAE7243A), Color.Transparent), center = c, radius = rr), radius = rr, center = c)
+                    val tl = topLeft(e.key, s)
+                    val c = tl + Offset(s / 2, s / 2)
+                    val wave = 0.5f - 0.5f * cos(sonar * 2 * PI.toFloat())
+                    val op = 0.92f - 0.47f * wave
+                    val sc = 0.96f + 0.04f * wave
+                    scale(sc, pivot = c) {
+                        drawRect(Brush.radialGradient(listOf(K.Red.copy(alpha = 0.85f * op), K.Red.copy(alpha = 0.25f * op)), center = c, radius = s * 0.75f), tl, Size(s, s))
+                    }
                 }
             }
-            // taşlar
+
+            // 2) taşlar — dinlenirken düz, kalkınca gölgeli
             val moving = plan?.slides?.map { it.to }?.toSet().orEmpty()
             for ((sqName, pc) in board) {
                 if (sqName == dragFrom) continue
-                if (p < 1f && sqName in moving) continue
-                pieces[pc]?.let { drawPieceImage(it, topLeft(sqName, s), s) }
+                if (t < 1f && sqName in moving) continue
+                val tl = topLeft(sqName, s)
+                if (sqName == selected && dragFrom == null) {
+                    // seçili taş: 3dp yukarı, %8 büyük, kalkış gölgesi
+                    val g = selAnim.value
+                    val lift = 3.dp.toPx() * g
+                    val sz = s * (1f + 0.08f * g)
+                    drawOval(Color.Black.copy(alpha = 0.35f * g), tl + Offset(s * 0.2f, s * 0.78f), Size(s * 0.6f, s * 0.16f))
+                    drawPiece(pc, tl - Offset((sz - s) / 2, (sz - s) / 2 + lift), sz, 1f)
+                } else drawPiece(pc, tl, s, 1f)
             }
-            if (plan != null && p < 1f) {
-                plan.captured?.let { (cs, cp) -> pieces[cp]?.let { drawPieceImage(it, topLeft(cs, s), s, alpha = 1f - p) } }
+            if (plan != null && t < 1f) {
+                plan.captured?.let { (cs, cp) -> drawPiece(cp, topLeft(cs, s), s, 1f - pos) }
+                val sc = flightScale(t)
                 for (sl in plan.slides) {
                     val a = topLeft(sl.from, s); val b = topLeft(sl.to, s)
-                    val pos = Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p)
-                    // taş havaya kalkar, gölgesi yerde kalır
-                    val lift = kotlin.math.sin(p * Math.PI).toFloat()
-                    drawOval(Color(0x33000000), pos + Offset(s * 0.18f, s * 0.72f), Size(s * 0.64f * (1 - 0.2f * lift), s * 0.18f))
-                    val sz = s * (1f + 0.14f * lift)
-                    pieces[sl.piece]?.let { drawPieceImage(it, pos - Offset((sz - s) / 2, (sz - s) / 2 + s * 0.12f * lift), sz) }
+                    val p = Offset(a.x + (b.x - a.x) * pos, a.y + (b.y - a.y) * pos)
+                    drawOval(Color.Black.copy(alpha = 0.4f * (1 - t)), p + Offset(s * 0.18f, s * 0.8f), Size(s * 0.64f, s * 0.16f))
+                    val sz = s * sc
+                    drawPiece(sl.piece, p - Offset((sz - s) / 2, (sz - s) / 2 + s * 0.1f * (sc - 1f) / 0.14f), sz, 1f)
                 }
             }
-            // alım dalgası: genişleyen halka + saçılan kıvılcımlar
-            if (burst != null && fx.value < 1f) {
-                val c = topLeft(burst, s) + Offset(s / 2, s / 2)
-                val k = fx.value
-                drawCircle(Color(0xFFFF7A59).copy(alpha = 0.7f * (1 - k)), s * (0.3f + 0.6f * k), c, style = Stroke(s * 0.07f * (1 - k) + 1f))
-                for (i in 0 until 8) {
-                    val ang = i * (Math.PI / 4).toFloat() + 0.4f
-                    val d = s * (0.25f + 0.55f * k)
-                    drawCircle(Color(0xFFF2C46D).copy(alpha = 1 - k), s * 0.045f * (1 - k) + 0.5f, c + Offset(cos(ang) * d, sin(ang) * d))
-                }
-            }
-            // yasal hamle noktaları (yayla büyüyerek belirir)
+
+            // 3) yasal hamle işaretleri: kobalt nokta (tebeşir kenarlı), kızıl alım halkası
             selected?.let { sel ->
                 val g = selAnim.value
-                legal.filter { it.startsWith(sel) }.map { it.substring(2, 4) }.distinct().forEach { t ->
-                    val c = topLeft(t, s) + Offset(s / 2, s / 2)
-                    if (board.containsKey(t)) drawCircle(Color(0x400B161D), s * 0.45f * g.coerceAtMost(1.1f), c, style = Stroke(s * 0.09f))
-                    else drawCircle(Color(0x400B161D), s * 0.16f * g, c)
+                val gs = 0.4f + 0.6f * g
+                legal.filter { it.startsWith(sel) }.map { it.substring(2, 4) }.distinct().forEach { target ->
+                    val tl = topLeft(target, s)
+                    val c = tl + Offset(s / 2, s / 2)
+                    if (board.containsKey(target)) {
+                        drawCircle(K.Red.copy(alpha = g), (s / 2 - 4.dp.toPx() - 1.5.dp.toPx()) * gs, c, style = Stroke(3.dp.toPx()))
+                    } else {
+                        val r = s * 0.135f * gs
+                        drawCircle(K.Blue.copy(alpha = 0.76f * g), r, c)
+                        drawCircle(K.Ink.copy(alpha = 0.94f * g), r, c, style = Stroke(2.dp.toPx() * gs))
+                    }
                 }
             }
-            // oklar
+
+            // 4) vektör oklar
+            val at = arrowT.value
             for (a in arrows) {
                 if (a.uci.length < 4) continue
-                val p1 = topLeft(a.uci.substring(0, 2), s) + Offset(s / 2, s / 2)
-                val p2 = topLeft(a.uci.substring(2, 4), s) + Offset(s / 2, s / 2)
-                val ang = atan2(p2.y - p1.y, p2.x - p1.x)
-                val len = hypot(p2.x - p1.x, p2.y - p1.y)
-                val head = s * 0.42f
-                val end = Offset(p1.x + cos(ang) * (len - head), p1.y + sin(ang) * (len - head))
-                drawLine(a.color, p1, end, strokeWidth = s * 0.2f, cap = StrokeCap.Round)
-                val path = Path().apply {
-                    moveTo(p2.x, p2.y)
-                    lineTo(end.x + cos(ang + 1.5708f) * head * 0.62f, end.y + sin(ang + 1.5708f) * head * 0.62f)
-                    lineTo(end.x + cos(ang - 1.5708f) * head * 0.62f, end.y + sin(ang - 1.5708f) * head * 0.62f)
-                    close()
+                val c1 = topLeft(a.uci.substring(0, 2), s) + Offset(s / 2, s / 2)
+                val c2 = topLeft(a.uci.substring(2, 4), s) + Offset(s / 2, s / 2)
+                val ang = atan2(c2.y - c1.y, c2.x - c1.x)
+                val len = hypot(c2.x - c1.x, c2.y - c1.y)
+                val dir = Offset(cos(ang), sin(ang))
+                val start = c1 + dir * (s * 0.24f)
+                val tip = c2 - dir * (s * 0.2f)
+                val headLen = s * 0.42f
+                val shaftEnd = c2 - dir * (s * 0.2f + headLen * 0.85f)
+                val frac = if (a.dashed) 1f else at
+                val alpha = if (a.dashed) 0.92f * at else 0.2f + 0.72f * at
+                val col = a.color.copy(alpha = alpha * 0.96f)
+                val curEnd = start + (shaftEnd - start) * frac
+                val w = s * 0.1f
+                if (len > s * 0.5f) drawLine(col, start, curEnd, w, cap = if (a.dashed) StrokeCap.Butt else StrokeCap.Round,
+                    pathEffect = if (a.dashed) PathEffect.dashPathEffect(floatArrayOf(s * 0.22f, s * 0.14f)) else null)
+                if (frac > 0.6f) {
+                    val tipNow = shaftEnd + (tip - shaftEnd) * ((frac - 0.6f) / 0.4f)
+                    val n = Offset(-dir.y, dir.x)
+                    val back = tipNow - dir * headLen
+                    val head = Path().apply {
+                        moveTo(tipNow.x, tipNow.y)
+                        lineTo(back.x + n.x * headLen * 0.5f, back.y + n.y * headLen * 0.5f)
+                        lineTo(back.x - n.x * headLen * 0.5f, back.y - n.y * headLen * 0.5f)
+                        close()
+                    }
+                    drawPath(head, col)
                 }
-                drawPath(path, a.color)
             }
-            // hamle kalitesi rozeti
-            if (badge != null && p >= 1f) CLASS_INFO[badge.cls]?.let { info ->
+
+            // 5) darbe efektleri
+            if (burst != null && burstT.value < 1f) drawImpact(topLeft(burst, s) + Offset(s / 2, s / 2), s, "capture", burstT.value)
+            if (fx != null && fxT.value < 1f) drawImpact(topLeft(fx.square, s) + Offset(s / 2, s / 2), s, fx.kind, fxT.value)
+
+            // 6) hamle damgası: hedef karenin sağ üst köşesine iner
+            if (badge != null && t >= 1f) CLASS_INFO[badge.cls]?.let { info ->
                 val tl = topLeft(badge.square, s)
-                val r = s * 0.2f
-                val c = Offset(tl.x + s - r * 0.75f, tl.y + r * 0.75f)
-                scale(badgeScale.value, pivot = c) {
-                    val cr = androidx.compose.ui.geometry.CornerRadius(r * 0.62f)
-                    drawRoundRect(Color(0x66000000), c - Offset(r, r * 0.85f), Size(r * 2, r * 2), cr)
-                    drawRoundRect(info.color, c - Offset(r, r), Size(r * 2, r * 2), cr)
-                    drawRoundRect(Color(0xFF0B161D), c - Offset(r, r), Size(r * 2, r * 2), cr, style = Stroke(r * 0.12f))
-                    val t = measurer.measure(info.symbol, TextStyle(color = Color(0xFF0B161D), fontSize = (r * (if (info.symbol.length > 1) 0.95f else 1.15f) / density).sp, fontWeight = FontWeight.Bold, fontFamily = dev.chesscrab.app.ui.Mono))
-                    drawText(t, topLeft = Offset(c.x - t.size.width / 2f, c.y - t.size.height / 2f))
+                val k = stampT.value
+                val bs = maxOf(22.dp.toPx(), s * 0.42f)
+                val o = Offset(tl.x + s + 4.dp.toPx() - bs, tl.y - 4.dp.toPx() - 6.dp.toPx() * (1 - k))
+                val c = o + Offset(bs / 2, bs / 2)
+                scale(1.6f - 0.6f * k, pivot = c) {
+                    val cr = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx())
+                    drawRoundRect(info.color.copy(alpha = k), o, Size(bs, bs), cr)
+                    drawRoundRect(K.Base.copy(alpha = k), o, Size(bs, bs), cr, style = Stroke(1.dp.toPx()))
+                    val tx = measurer.measure(info.symbol, TextStyle(color = info.onColor.copy(alpha = k), fontSize = (bs * 0.5f / density / fontScale).sp, fontWeight = FontWeight.Bold, fontFamily = Mono))
+                    drawText(tx, topLeft = Offset(c.x - tx.size.width / 2f, c.y - tx.size.height / 2f))
                 }
             }
-            // sürüklenen taş
-            dragFrom?.let { d -> board[d]?.let { pc -> pieces[pc]?.let {
-                drawOval(Color(0x40000000), dragPos + Offset(-s * 0.4f, s * 0.25f), Size(s * 0.8f, s * 0.22f))
-                drawPieceImage(it, dragPos - Offset(s * 0.65f, s * 0.9f), s * 1.3f)
-            } } }
+
+            // 7) sürüklenen taş: başparmağın üstünde, %116, derin gölge
+            dragFrom?.let { d ->
+                board[d]?.let { pc ->
+                    val sz = s * 1.16f
+                    drawOval(Color.Black.copy(alpha = 0.45f), dragPos + Offset(-sz * 0.32f, sz * 0.3f), Size(sz * 0.64f, sz * 0.18f))
+                    drawPiece(pc, dragPos - Offset(sz * 0.5f, sz * 0.62f), sz, 1f)
+                }
+            }
         }
     }
 
     promo?.let { cands ->
-        AlertDialog(
-            onDismissRequest = { promo = null },
-            confirmButton = {},
-            title = { Text("Terfi") },
-            text = {
-                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+        Dialog(onDismissRequest = { promo = null }) {
+            Column(Modifier.background(K.Surface).border(1.dp, K.LineStrong).padding(14.dp)) {
+                Text("TERFİ", style = KType.label, color = K.Ink2)
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for (pc in listOf('q', 'r', 'b', 'n')) {
                         val uci = cands.firstOrNull { it.endsWith(pc) } ?: continue
-                        val img = pieces[if (turnWhite) pc.uppercaseChar() else pc] ?: continue
-                        TextButton(onClick = { promo = null; holder.skipNext = false; onMove(uci) }) {
-                            Canvas(Modifier.size(52.dp)) { drawPieceImage(img, Offset.Zero, size.width) }
-                        }
+                        val ch = if (turnWhite) pc.uppercaseChar() else pc
+                        Box(
+                            Modifier.size(60.dp).background(th.light).border(1.dp, K.LineSubtle)
+                                .press(scale = 0.94f) { promo = null; holder.skipNext = false; onMove(uci) },
+                            contentAlignment = Alignment.Center,
+                        ) { Canvas(Modifier.size(56.dp)) { drawPiece(ch, Offset.Zero, size.width, 1f) } }
                     }
                 }
-            },
-        )
+            }
+        }
     }
 }
 
@@ -420,4 +488,17 @@ fun capturedPieces(fen: String): Triple<List<Char>, List<Char>, Int> {
     }
     val order = "qrbnp"
     return Triple(byWhite.sortedBy { order.indexOf(it.lowercaseChar()) }, byBlack.sortedBy { order.indexOf(it.lowercaseChar()) }, diff)
+}
+
+/** Alınan taşları küçük çizen satır (oyuncu şeridinde) */
+@Composable
+fun CapturedRow(pieces: List<Char>, advantage: Int) {
+    val drawPiece = rememberPieceDrawer()
+    if (pieces.isEmpty() && advantage <= 0) return
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 6.dp)) {
+        Canvas(Modifier.size(width = (pieces.size * 9 + 6).dp, height = 14.dp)) {
+            pieces.forEachIndexed { i, c -> drawPiece(c, Offset(i * 9.dp.toPx(), 0f), 14.dp.toPx(), 1f) }
+        }
+        if (advantage > 0) Text("+$advantage", style = KType.mono.copy(fontSize = 11.sp), color = K.Ink2)
+    }
 }

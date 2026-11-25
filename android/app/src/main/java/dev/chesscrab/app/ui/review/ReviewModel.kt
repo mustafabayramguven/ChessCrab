@@ -1,6 +1,7 @@
 package dev.chesscrab.app.ui.review
 
-import dev.chesscrab.app.ui.Crabs
+import dev.chesscrab.app.ui.board.FLASH_BAD
+import dev.chesscrab.app.ui.board.FLASH_GOOD
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -154,12 +155,12 @@ class ReviewModel {
             flashToken++
             if (good) {
                 Sounds.play(Sounds.S.CORRECT)
-                flash = Flash(uci.substring(2, 4), Crabs.Sea, flashToken)
+                flash = Flash(uci.substring(2, 4), FLASH_GOOD, flashToken)
                 retry = r.copy(shownFen = after.fen, lastMove = uci, legal = emptyList(), ok = true,
                     text = if (c.getBoolean("is_best")) "Harika! En iyi hamleyi buldun: ${after.sans.lastOrNull() ?: uci}." else "Güzel! ${after.sans.lastOrNull()} da neredeyse en iyisi kadar iyi (en iyisi ${c.optStr("best_san")}).")
             } else {
                 Sounds.play(Sounds.S.WRONG)
-                flash = Flash(uci.substring(2, 4), Color(0xFFFA412D), flashToken); shake++
+                flash = Flash(uci.substring(2, 4), FLASH_BAD, flashToken); shake++
                 val tries = r.tries + 1
                 val pawns = String.format(java.util.Locale.US, "%.1f", loss / 100.0)
                 delay(650)

@@ -13,7 +13,7 @@ import dev.chesscrab.app.SyncClient
 import dev.chesscrab.app.optStr
 import dev.chesscrab.app.ui.CLASS_INFO
 import dev.chesscrab.app.ui.board.Sounds
-import dev.chesscrab.app.ui.components.winPercent
+import dev.chesscrab.app.ui.kare.winPercent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,17 +25,17 @@ import org.json.JSONObject
 import uniffi.chesscrab_ffi.ChessGame
 import java.util.UUID
 
-data class Bot(val level: Int, val name: String, val elo: Int, val emoji: String, val color: Color, val blurb: String)
+data class Bot(val level: Int, val name: String, val elo: Int, val mark: String, val color: Color, val blurb: String)
 
 val BOTS = listOf(
-    Bot(1, "Yavru Yengeç", 400, "🦀", Color(0xFFFF7A59), "Taşlar nasıl gidiyordu? Birlikte öğrenelim!"),
-    Bot(2, "Kaplumbağa Kemal", 700, "🐢", Color(0xFF6FB98A), "Acelem yok… ama arada taş bırakırım."),
-    Bot(3, "Martı Mert", 1000, "🐦", Color(0xFF7FB2FF), "Açıkta kalan taşları kaparım!"),
-    Bot(4, "Ahtapot Ayla", 1300, "🐙", Color(0xFFD07BB4), "Sekiz kolum var, çatallara dikkat."),
-    Bot(5, "Denizatı Deniz", 1600, "🐴", Color(0xFFF2C46D), "Açılışlarımı bilirim, orta oyunda görüşürüz."),
-    Bot(6, "Kılıçbalığı Kaan", 1900, "🐟", Color(0xFF54D1BE), "Keskin taktikler, keskin saldırılar."),
-    Bot(7, "Köpekbalığı Selin", 2300, "🦈", Color(0xFF8FA3B8), "Bir hata yap, gerisini ben hallederim."),
-    Bot(8, "CrabFish", 3000, "👑", Color(0xFFF4E8CF), "Tam güç. Bol şans."),
+    Bot(1, "Yavru Yengeç", 400, "YY", Color(0xFFFF7A59), "Taşlar nasıl gidiyordu? Birlikte öğrenelim!"),
+    Bot(2, "Kaplumbağa Kemal", 700, "KK", Color(0xFF6FB98A), "Acelem yok… ama arada taş bırakırım."),
+    Bot(3, "Martı Mert", 1000, "MM", Color(0xFF7FB2FF), "Açıkta kalan taşları kaparım!"),
+    Bot(4, "Ahtapot Ayla", 1300, "AA", Color(0xFFD07BB4), "Sekiz kolum var, çatallara dikkat."),
+    Bot(5, "Denizatı Deniz", 1600, "DD", Color(0xFFF2C46D), "Açılışlarımı bilirim, orta oyunda görüşürüz."),
+    Bot(6, "Kılıçbalığı Kaan", 1900, "KB", Color(0xFF54D1BE), "Keskin taktikler, keskin saldırılar."),
+    Bot(7, "Köpekbalığı Selin", 2300, "KS", Color(0xFF8FA3B8), "Bir hata yap, gerisini ben hallederim."),
+    Bot(8, "CrabFish", 3000, "CF", Color(0xFFF4E8CF), "Tam güç. Bol şans."),
 )
 
 data class TimeCtl(val label: String, val baseMs: Long, val incMs: Long)
@@ -67,6 +67,10 @@ class PlayModel {
     var blackMs by mutableLongStateOf(0L)
     private var turnStart = 0L
     var coachOn by mutableStateOf(Crab.setting("coach", "1") == "1")
+    var threatsOn by mutableStateOf(Crab.setting("threats", "1") == "1")
+    /** Tahtadaki darbe efekti (parlak hamle, mat) */
+    var fx by mutableStateOf<dev.chesscrab.app.ui.board.BoardFx?>(null)
+    private var fxToken = 0
 
     /** reviews[i] = (i+1). yarı hamlenin koç değerlendirmesi (MoveAnalysis JSON) */
     val reviews = mutableStateListOf<JSONObject?>()
@@ -103,7 +107,7 @@ class PlayModel {
         hintArrow = null; hintLevel = 0
         whiteMs = tc.baseMs; blackMs = tc.baseMs
         turnStart = System.currentTimeMillis()
-        say = CoachSay("${b.name}: \"${b.blurb}\"", title = "${b.emoji} ${b.name} (${b.elo})")
+        say = CoachSay(b.blurb, title = "${b.name} · ${b.elo}")
         refresh()
         if (engineWhite) scope.launch { engineMove() }
     }
@@ -140,7 +144,10 @@ class PlayModel {
         while (reviews.size > view.sans.size) reviews.removeAt(reviews.size - 1)
         while (wins.size > view.sans.size + 1) wins.removeAt(wins.size - 1)
         requestReview(byUser)
-        if (view.over) onGameOver()
+        if (view.over) {
+            if (view.check && view.winner != null) view.lastMove?.let { fx = dev.chesscrab.app.ui.board.BoardFx(it.substring(2, 4), "checkmate", ++fxToken) }
+            onGameOver()
+        }
     }
 
     private fun requestReview(byUser: Boolean) {
@@ -162,6 +169,7 @@ class PlayModel {
             if (byUser) {
                 val cls = mv.getString("class")
                 say = CoachSay(mv.getString("comment"), cls = cls)
+                if ((cls == "brilliant" || cls == "great") && game.ply().toInt() >= ply) view.ucis.getOrNull(ply - 1)?.let { fx = dev.chesscrab.app.ui.board.BoardFx(it.substring(2, 4), "brilliant", ++fxToken) }
                 if (cls == "blunder" || cls == "mistake") shake++
             }
         }

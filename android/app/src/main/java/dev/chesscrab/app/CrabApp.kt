@@ -14,7 +14,7 @@ class CrabApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Crab.init(this)
-        dev.chesscrab.app.ui.Prefs.load()
+        dev.chesscrab.app.ui.Prefs.load(this)
     }
 }
 

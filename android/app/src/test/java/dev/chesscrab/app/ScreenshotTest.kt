@@ -38,24 +38,24 @@ class ScreenshotTest {
 
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0"""
 
-    private fun shot(name: String, startTab: Tab = Tab.Home, route: Route? = null, play: PlayModel = PlayModel(), review: ReviewModel = ReviewModel()) {
-        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
-        compose.setContent { CrabTheme { App(mutableStateOf(null), startTab, route, play, review) } }
+    private fun shot(name: String, startTab: Tab = Tab.Lobby, route: Route? = null, play: PlayModel = PlayModel(), review: ReviewModel = ReviewModel(), learnTab: Int = 0) {
+        dev.chesscrab.app.ui.Prefs.boardTheme = "carbon"; dev.chesscrab.app.ui.Prefs.pieceSet = "kare"; dev.chesscrab.app.ui.Prefs.reducedMotion = false
+        compose.setContent { CrabTheme { App(mutableStateOf(null), startTab, route, play, review, learnTab) } }
         compose.waitForIdle()
         compose.mainClock.advanceTimeBy(3000)
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("build/screens/$name.png")
     }
 
-    @Test fun home() = shot("01-ana-sayfa")
+    @Test fun home() = shot("01-lobi")
 
-    @Test fun botSelect() = shot("02-bot-secimi", route = Route.BotSelect)
+    @Test fun botSelect() = shot("02-yeni-oyun", route = Route.BotSelect)
 
     @Test fun playWithCoach() {
         val p = PlayModel()
         // Siyahın 4...Nd4?! ve beyazın 5.Nxe5?? hatasıyla kısa bir oyun
         p.loadForPreview(listOf("e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6", "d1e2", "c6d4", "f3e5"), BOTS[3], analyse = true)
-        shot("03-oyun-canli-koc", startTab = Tab.Play, play = p)
+        shot("03-oyna", startTab = Tab.Play, play = p)
     }
 
     private fun reviewModel(ply: Int? = null, retry: Boolean = false): ReviewModel {
@@ -65,13 +65,13 @@ class ScreenshotTest {
         return r
     }
 
-    @Test fun reviewSummary() = shot("04-inceleme-ozet", route = Route.Review, review = reviewModel())
+    @Test fun reviewSummary() = shot("04-analiz-ozet", startTab = Tab.Analysis, review = reviewModel())
 
-    @Test fun reviewBrilliant() = shot("05-inceleme-parlak", route = Route.Review, review = reviewModel(31))
+    @Test fun reviewBrilliant() = shot("05-analiz-parlak", startTab = Tab.Analysis, review = reviewModel(31))
 
-    @Test fun reviewMistake() = shot("06-inceleme-hata", route = Route.Review, review = reviewModel(22))
+    @Test fun reviewMistake() = shot("06-analiz-hata", startTab = Tab.Analysis, review = reviewModel(22))
 
-    @Test fun reviewRetry() = shot("07-daha-iyisini-dene", route = Route.Review, review = reviewModel(22, retry = true))
+    @Test fun reviewRetry() = shot("07-daha-iyisini-dene", startTab = Tab.Analysis, review = reviewModel(22, retry = true))
 
     @Test fun lessons() = shot("08-dersler", startTab = Tab.Learn)
 
@@ -81,7 +81,11 @@ class ScreenshotTest {
 
     @Test fun drill() = shot("11-repertuvar", route = Route.Drill("siyah-caro", 0))
 
-    @Test fun more() = shot("12-ayarlar", startTab = Tab.More)
+    @Test fun more() = shot("12-ayarlar", startTab = Tab.Settings)
+
+    @Test fun puzzleHub() = shot("16-ogren-bulmaca", startTab = Tab.Learn, learnTab = 2)
+
+    @Test fun analysisImport() = shot("18-analiz-giris", startTab = Tab.Analysis)
 
     /** İlerleme ekranı için örnek oyunlar ve seri */
     private fun seed() {
@@ -106,38 +110,29 @@ class ScreenshotTest {
     @Test fun rushIntro() { Crab.setSetting("rush_best", "14"); shot("14-firtina", route = Route.Rush) }
 
     @Test fun rushRun() {
-        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"
         compose.mainClock.autoAdvance = false
         compose.setContent {
             CrabTheme {
-                androidx.compose.material3.Surface(color = dev.chesscrab.app.ui.Crabs.Bg) {
+                androidx.compose.material3.Surface(color = dev.chesscrab.app.ui.K.Base) {
                     dev.chesscrab.app.ui.learn.RushScreen(androidx.compose.ui.Modifier, onExit = {}, startRunning = true)
                 }
             }
         }
-        // süre işlesin ama fırtına bitmesin: elle 12 saniye ilerlet
         repeat(120) { compose.mainClock.advanceTimeBy(100) }
         compose.onRoot().captureRoboImage("build/screens/15-firtina-oyun.png")
     }
 
-    @Test fun lightTheme() {
-        seed()
-        dev.chesscrab.app.ui.Prefs.appTheme = "kumsal"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
-        compose.setContent { CrabTheme { App(mutableStateOf(null)) } }
-        compose.waitForIdle(); compose.mainClock.advanceTimeBy(3000); compose.waitForIdle()
-        compose.onRoot().captureRoboImage("build/screens/16-tema-kumsal.png")
-    }
-
-    /** Tema çalışırken değişince tahta ve uygulama hemen güncellenmeli */
+    /** Ayar çalışırken değişince tahta ve taşlar hemen güncellenmeli */
     @Test fun themeSwitchLive() {
         val p = PlayModel()
-        p.loadForPreview(listOf("e2e4", "e7e5", "g1f3", "b8c6"), BOTS[2], analyse = false)
-        dev.chesscrab.app.ui.Prefs.appTheme = "gelgit"; dev.chesscrab.app.ui.Prefs.boardTheme = "sand"
+        p.loadForPreview(listOf("e2e4", "e7e5", "g1f3", "b8c6", "f1b5"), BOTS[2], analyse = false)
+        dev.chesscrab.app.ui.Prefs.boardTheme = "carbon"; dev.chesscrab.app.ui.Prefs.pieceSet = "kare"
         compose.setContent { CrabTheme { App(mutableStateOf(null), Tab.Play, null, p, ReviewModel()) } }
         compose.waitForIdle(); compose.mainClock.advanceTimeBy(1500); compose.waitForIdle()
-        compose.runOnUiThread { dev.chesscrab.app.ui.Prefs.setApp("resif"); dev.chesscrab.app.ui.Prefs.setBoard("coral") }
+        compose.runOnUiThread { dev.chesscrab.app.ui.Prefs.setBoard("wood"); dev.chesscrab.app.ui.Prefs.setPieces("klasik") }
         compose.waitForIdle(); compose.mainClock.advanceTimeBy(1500); compose.waitForIdle()
         compose.onRoot().captureRoboImage("build/screens/17-tema-canli-degisim.png")
-        org.junit.Assert.assertEquals("coral", Crab.setting("board_theme"))
+        org.junit.Assert.assertEquals("wood", Crab.setting("board_theme"))
+        compose.runOnUiThread { dev.chesscrab.app.ui.Prefs.setBoard("carbon"); dev.chesscrab.app.ui.Prefs.setPieces("kare") }
     }
 }

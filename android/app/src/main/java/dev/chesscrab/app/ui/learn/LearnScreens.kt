@@ -1,70 +1,40 @@
 package dev.chesscrab.app.ui.learn
 
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.core.spring
-import dev.chesscrab.app.ui.components.bounceClick
-import dev.chesscrab.app.ui.components.staggerIn
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chesscrab.app.Crab
 import dev.chesscrab.app.GameView
+import dev.chesscrab.app.Streak
 import dev.chesscrab.app.SyncClient
 import dev.chesscrab.app.objects
 import dev.chesscrab.app.optStr
 import dev.chesscrab.app.strings
-import dev.chesscrab.app.ui.Crabs
-import dev.chesscrab.app.ui.board.ARROW_HINT
-import dev.chesscrab.app.ui.board.Arrow
-import dev.chesscrab.app.ui.board.ChessBoard
-import dev.chesscrab.app.ui.board.Flash
-import dev.chesscrab.app.ui.board.Sounds
-import dev.chesscrab.app.ui.components.BigButton
-import dev.chesscrab.app.ui.components.CoachBubble
-import dev.chesscrab.app.ui.components.Confetti
-import dev.chesscrab.app.ui.components.ProgressRing
+import dev.chesscrab.app.ui.K
+import dev.chesscrab.app.ui.KType
+import dev.chesscrab.app.ui.Motion
+import dev.chesscrab.app.ui.board.*
+import dev.chesscrab.app.ui.kare.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -82,100 +52,111 @@ fun isDue(cardId: String, now: Long = System.currentTimeMillis()) = cardOf(cardI
 
 private fun syncLater() { if (SyncClient.loggedIn) CoroutineScope(Dispatchers.IO).launch { SyncClient.sync() } }
 
-private val COURSE_ACCENT get() = listOf(Crabs.Sea, Crabs.Coral)
-private val ROMAN = listOf("I", "II", "III", "IV", "V")
+private fun code(prefix: String, n: Int) = "$prefix ${n.toString().padStart(3, '0')}"
 
-/** Kurs listesi: kurs kartları, bölümler açılır-kapanır, dersler yıldızlı */
-@Composable
-fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
-    val courses = remember { JSONArray(coursesJson()).objects() }
-    var expanded by rememberSaveable { mutableStateOf("prensipler") }
-    LazyColumn(modifier.fillMaxSize().padding(horizontal = 14.dp)) {
-        courses.forEachIndexed { ci, c ->
-            item(key = c.getString("id")) {
-                val all = c.getJSONArray("chapters").objects().flatMap { it.getJSONArray("lessons").objects() }
-                val done = all.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
-                val accent = COURSE_ACCENT[ci % 2]
-                Box(
-                    Modifier.staggerIn(ci * 3).fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(26.dp))
-                        .background(Crabs.Card).background(Brush.linearGradient(listOf(COURSE_ACCENT[ci % 2].copy(alpha = 0.30f), COURSE_ACCENT[ci % 2].copy(alpha = 0.06f)))).border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
-                ) {
-                    dev.chesscrab.app.ui.components.WaveBackdrop(Modifier.matchParentSize(), color = accent, lines = 3, phase = ci * 2f)
-                    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            dev.chesscrab.app.ui.components.Overline("Kurs ${ROMAN.getOrElse(ci) { "${ci + 1}" }} · ${all.size} ders", color = accent)
-                            Spacer(Modifier.height(4.dp))
-                            Text(c.getString("title"), style = MaterialTheme.typography.headlineSmall)
-                            Spacer(Modifier.height(4.dp))
-                            Text(c.getString("description"), fontSize = 12.5.sp, color = Crabs.Muted, maxLines = 3, lineHeight = 17.sp)
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        ProgressRing(if (all.isEmpty()) 0f else done / all.size.toFloat(), 58.dp, accent, "$done/${all.size}")
-                    }
-                }
-            }
-            for (ch in c.getJSONArray("chapters").objects()) {
-                val chId = ch.getString("id")
-                val lessons = ch.getJSONArray("lessons").objects()
-                item(key = "$chId-h") {
-                    val done = lessons.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
-                    Row(
-                        Modifier.staggerIn(ci * 3 + 1).bounceClick(scaleTo = 0.98f) { expanded = if (expanded == chId) "" else chId }
-                            .fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(18.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(18.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(ch.getString("title"), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
-                            Text("$done / ${lessons.size} ders", fontSize = 12.sp, color = if (done == lessons.size) Crabs.Sea else Crabs.Muted)
-                        }
-                        val rot by animateFloatAsState(if (expanded == chId) 180f else 0f, spring(dampingRatio = 0.6f), label = "chev")
-                        Icon(Icons.Filled.ExpandMore, null, tint = Crabs.Muted, modifier = Modifier.graphicsLayer { rotationZ = rot })
-                    }
-                }
-                if (expanded == chId) {
-                    item(key = "$chId-d") { Text(ch.getString("description"), fontSize = 12.sp, color = Crabs.Muted, modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)) }
-                    lessons.forEachIndexed { li, l ->
-                        item(key = l.getString("id")) {
-                            val p = progressOf(l.getString("id"))
-                            val doneL = p?.optBoolean("completed") == true
-                            Row(
-                                Modifier.staggerIn(li, 35L).bounceClick(scaleTo = 0.97f) { onOpen(l.getString("id")) }
-                                    .fillMaxWidth().padding(vertical = 2.dp).clip(RoundedCornerShape(16.dp)).padding(horizontal = 8.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(
-                                    Modifier.size(38.dp).clip(CircleShape).background(if (doneL) Crabs.Sea.copy(alpha = 0.18f) else Color.Transparent)
-                                        .border(1.dp, if (doneL) Crabs.Sea else Crabs.Line, CircleShape),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    if (doneL) Icon(Icons.Filled.CheckCircle, null, tint = Crabs.Sea, modifier = Modifier.size(20.dp))
-                                    else Text("${li + 1}", fontFamily = dev.chesscrab.app.ui.Display, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 18.sp, color = Crabs.Sand)
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(l.getString("title"), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                                    Text(l.getString("summary"), fontSize = 12.sp, color = Crabs.Muted, maxLines = 2)
-                                }
-                                if (doneL) {
-                                    val s = p!!.optInt("stars")
-                                    Text("★".repeat(s) + "☆".repeat(3 - s), color = Crabs.Gold, fontSize = 13.sp)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        item { Spacer(Modifier.height(24.dp)) }
-    }
-}
-
-/** İlk tamamlanmamış ders (ana sayfa "derse devam et" kartı için) */
+/** İlk tamamlanmamış ders */
 fun nextLesson(): Pair<String, String>? {
     for (c in JSONArray(coursesJson()).objects()) for (ch in c.getJSONArray("chapters").objects()) for (l in ch.getJSONArray("lessons").objects()) {
         if (progressOf(l.getString("id"))?.optBoolean("completed") != true) return l.getString("id") to l.getString("title")
     }
     return null
+}
+
+/** Derslerden seçilen günün bulmacası */
+fun dailyPuzzle(dayOffset: Int = 0): JSONObject {
+    val ps = JSONArray(puzzlesJson()).objects()
+    val day = (System.currentTimeMillis() / 86_400_000L).toInt() + dayOffset
+    return ps[Math.floorMod(day * 7, ps.size)]
+}
+
+/** Öğren sekmesi: Dersler / Repertuvar / Bulmaca */
+@Composable
+fun LearnScreen(
+    modifier: Modifier,
+    tab: Int,
+    onTab: (Int) -> Unit,
+    onLesson: (String) -> Unit,
+    onDrill: (String, Int) -> Unit,
+    onPuzzle: () -> Unit,
+    onRush: () -> Unit,
+) {
+    Column(modifier.fillMaxSize()) {
+        TopBar("Öğren", "TKT 003")
+        Row(Modifier.fillMaxWidth().background(K.Base).hairlineBottom().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("Dersler", "Repertuvar", "Bulmaca").forEachIndexed { i, l -> SegButton(l, tab == i, Modifier.weight(1f)) { onTab(i) } }
+        }
+        AnimatedContent(tab, Modifier.weight(1f), transitionSpec = {
+            fadeIn(tween(if (Motion.reduced) 120 else Motion.VIEW, easing = Motion.Expo)) togetherWith fadeOut(tween(120))
+        }, label = "learn") { t ->
+            when (t) {
+                0 -> LessonsList(Modifier.fillMaxSize(), onLesson)
+                1 -> RepertoireList(Modifier.fillMaxSize(), onDrill)
+                else -> PuzzleHub(Modifier.fillMaxSize(), onPuzzle, onRush)
+            }
+        }
+    }
+}
+
+/** Kurslar: koyu kurs bandı, kılçizgili bölüm satırları, açılınca dersler */
+@Composable
+fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
+    val courses = remember { JSONArray(coursesJson()).objects() }
+    var expanded by rememberSaveable { mutableStateOf("prensipler") }
+    val next = remember { nextLesson()?.first }
+    LazyColumn(modifier.fillMaxSize()) {
+        courses.forEachIndexed { ci, c ->
+            item(key = c.getString("id")) {
+                val all = c.getJSONArray("chapters").objects().flatMap { it.getJSONArray("lessons").objects() }
+                val done = all.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
+                Column(Modifier.fillMaxWidth().background(K.Surface).hairlineBottom().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CatalogCode(code("KRS", ci + 1))
+                        Spacer(Modifier.weight(1f))
+                        Text("$done/${all.size}", style = KType.mono, color = K.Ink)
+                    }
+                    Text(c.getString("title").upTr(), style = KType.headline, color = K.Ink)
+                    Text(c.getString("description"), style = KType.desc, color = K.Ink2)
+                    ProgressTrack(if (all.isEmpty()) 0f else done / all.size.toFloat())
+                }
+            }
+            for ((chi, ch) in c.getJSONArray("chapters").objects().withIndex()) {
+                val chId = ch.getString("id")
+                val lessons = ch.getJSONArray("lessons").objects()
+                item(key = "$chId-h") {
+                    val done = lessons.count { progressOf(it.getString("id"))?.optBoolean("completed") == true }
+                    val open = expanded == chId
+                    val rot by animateFloatAsState(if (open) 90f else 0f, tween(Motion.STATE, easing = Motion.Expo), label = "chev")
+                    GameRow(
+                        title = "${chi + 1}. ${ch.getString("title")}",
+                        sub = ch.getString("description"),
+                        badge = "$done/${lessons.size}",
+                        badgeColor = if (done == lessons.size) K.Ink else K.LineStrong,
+                        trailing = { Icon(KIcons.Next, null, tint = K.Ink3, modifier = Modifier.size(18.dp).graphicsLayer { rotationZ = rot }) },
+                    ) { expanded = if (open) "" else chId }
+                }
+                if (expanded == chId) {
+                    lessons.forEachIndexed { li, l ->
+                        item(key = l.getString("id")) {
+                            val p = progressOf(l.getString("id"))
+                            val doneL = p?.optBoolean("completed") == true
+                            val isNext = l.getString("id") == next
+                            GameRow(
+                                title = l.getString("title"),
+                                sub = l.getString("summary"),
+                                bg = K.Surface,
+                                badge = when { doneL -> "${p!!.optInt("stars")}/3"; isNext -> "Başla"; else -> null },
+                                badgeColor = when { doneL -> K.Ink; isNext -> K.Yellow; else -> K.LineStrong },
+                                badgeText = if (isNext && !doneL) K.Yellow else K.Ink,
+                                leading = { Monogram((li + 1).toString().padStart(2, '0'), filled = doneL) },
+                            ) { onOpen(l.getString("id")) }
+                        }
+                    }
+                }
+            }
+            item { Hairline() }
+        }
+        item { Spacer(Modifier.height(20.dp)) }
+    }
 }
 
 @Composable
@@ -185,6 +166,7 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
     var wrong by remember(lessonId) { mutableStateOf<String?>(null) }
     var hint by remember(lessonId) { mutableStateOf<String?>(null) }
     var flash by remember(lessonId) { mutableStateOf<Flash?>(null) }
+    var fx by remember(lessonId) { mutableStateOf<BoardFx?>(null) }
     var shake by remember(lessonId) { mutableIntStateOf(0) }
     var token by remember { mutableIntStateOf(0) }
     var saved by remember(lessonId) { mutableStateOf(false) }
@@ -198,91 +180,79 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
         val stars = maxOf(player.stars().toInt(), prev?.optInt("stars") ?: 0)
         Crab.store.put("lesson_progress", lessonId, JSONObject().put("lesson_id", lessonId).put("completed", true).put("stars", stars)
             .put("best_mistakes", minOf(player.mistakes().toInt(), prev?.optInt("best_mistakes", 99) ?: 99)).put("completed_ms", System.currentTimeMillis()).toString())
-        dev.chesscrab.app.Streak.mark()
+        Streak.mark()
         syncLater()
     }
     val total = view.getInt("total").coerceAtLeast(1)
-    val prog by animateFloatAsState(if (mode == "done") 1f else view.getInt("index") / total.toFloat(), tween(500), label = "p")
+    val idx = if (mode == "done") total else view.getInt("index")
 
-    Box(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("✕", fontSize = 20.sp, color = Crabs.Muted, modifier = Modifier.clickable(onClick = onExit).padding(end = 12.dp))
-                Box(Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Crabs.CardHi)) {
-                    Box(Modifier.fillMaxWidth(prog).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Brush.horizontalGradient(listOf(Crabs.Sea, Crabs.Coral))))
-                }
-                Spacer(Modifier.width(10.dp))
-                Text("${minOf(view.getInt("index") + 1, total)}/$total", color = Crabs.Muted, fontSize = 12.sp, fontFamily = dev.chesscrab.app.ui.Mono)
+    Column(modifier.fillMaxSize()) {
+        TopBar("Ders", code("DRS", (lessonId.hashCode() and 0x3FF) % 1000), onBack = onExit)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            SignalReadout(player.title(), if (mode == "done") "Ders tamamlandı" else "Adım ${minOf(idx + 1, total)} / $total") {
+                SignalCells(minOf(total, 10), if (total <= 10) idx else idx * 10 / total, active = if (mode == "done") null else (if (total <= 10) idx else idx * 10 / total))
             }
-            Text(player.title(), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 16.dp))
-            Spacer(Modifier.height(8.dp))
-            Box(Modifier.padding(horizontal = 8.dp)) {
-                ChessBoard(
-                    fen = view.getString("fen"),
-                    whiteBottom = view.getString("orientation") == "white",
-                    legal = view.getJSONArray("legal_moves").strings(),
-                    lastMove = view.optStr("last_move"),
-                    arrows = view.getJSONArray("arrows").strings().map { Arrow(it) },
-                    highlights = view.getJSONArray("highlights").strings(),
-                    flash = flash, shake = shake,
-                    onMove = { uci ->
-                        val fb = JSONObject(player.submitMove(uci))
-                        val verdict = fb.getString("verdict")
-                        token++
-                        if (verdict == "correct" || verdict == "also_good") {
-                            wrong = null; hint = null
-                            Sounds.play(Sounds.S.CORRECT)
-                            flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
-                        } else {
-                            Sounds.play(Sounds.S.WRONG)
-                            flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
-                            shake++
-                            wrong = fb.getString("message")
-                        }
-                        reload()
-                    },
-                )
+            ChessBoard(
+                fen = view.getString("fen"),
+                whiteBottom = view.getString("orientation") == "white",
+                legal = view.getJSONArray("legal_moves").strings(),
+                lastMove = view.optStr("last_move"),
+                arrows = view.getJSONArray("arrows").strings().map { Arrow(it, K.Blue, dashed = true) },
+                highlights = view.getJSONArray("highlights").strings(),
+                flash = flash, fx = fx, shake = shake,
+                onMove = { uci ->
+                    val fb = JSONObject(player.submitMove(uci))
+                    val verdict = fb.getString("verdict")
+                    token++
+                    if (verdict == "correct" || verdict == "also_good") {
+                        wrong = null; hint = null
+                        Sounds.play(Sounds.S.CORRECT)
+                        flash = Flash(uci.substring(2, 4), FLASH_GOOD, token)
+                    } else {
+                        Sounds.play(Sounds.S.WRONG)
+                        flash = Flash(uci.substring(2, 4), FLASH_BAD, token)
+                        shake++
+                        wrong = fb.getString("message")
+                    }
+                    reload()
+                    if (view.getString("mode") == "done") view.optStr("last_move")?.let { fx = BoardFx(it.substring(2, 4), "brilliant", token) }
+                },
+            )
+            val feedback = view.optStr("feedback")
+            val quiz = view.optJSONObject("quiz")
+            val stars = player.stars().toInt()
+            when {
+                mode == "done" -> CoachStrip("Ders tamam · $stars/3", if (player.mistakes() == 0u) "Hiç hata yapmadın." else "${player.mistakes()} hata yaptın; tekrar edip 3/3 alabilirsin.", code = "brilliant")
+                feedback != null -> CoachStrip("Doğru", feedback, code = "best")
+                wrong != null -> CoachStrip("Tekrar dene", wrong!!, code = "mistake")
+                hint != null -> CoachStrip("İpucu", hint!!, code = null)
+                else -> CoachStrip(player.title(), view.getString("text"))
             }
-            Column(Modifier.padding(14.dp)) {
-                val feedback = view.optStr("feedback")
-                val quiz = view.optJSONObject("quiz")
-                when {
-                    mode == "done" -> CoachBubble("Dersi bitirdin! " + "★".repeat(player.stars().toInt()) + "☆".repeat(3 - player.stars().toInt()) +
-                        if (player.mistakes() == 0u) " Hiç hata yapmadın, harika!" else " ${player.mistakes()} hata yaptın; tekrar edip 3 yıldız alabilirsin.", title = "Tebrikler!")
-                    feedback != null -> CoachBubble(feedback, cls = "best", title = "Doğru!")
-                    wrong != null -> CoachBubble(wrong!!, cls = "mistake", title = "Tekrar dene")
-                    hint != null -> CoachBubble(hint!!, title = "İpucu")
-                    else -> CoachBubble(view.getString("text"))
-                }
-                if (quiz != null && feedback == null && mode != "done") {
-                    Spacer(Modifier.height(10.dp))
-                    Text(quiz.getString("question"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            if (quiz != null && feedback == null && mode != "done") {
+                SectionLabel("Soru")
+                Text(quiz.getString("question"), style = KType.bodyCompact, color = K.Ink, modifier = Modifier.padding(horizontal = 14.dp))
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     quiz.getJSONArray("options").strings().forEachIndexed { i, o ->
-                        Box(
-                            Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(16.dp)).background(Crabs.Card)
-                                .border(1.dp, Crabs.Line, RoundedCornerShape(16.dp))
-                                .clickable {
-                                    val r = JSONObject(player.answer(i.toUInt()))
-                                    if (r.getBoolean("correct")) { Sounds.play(Sounds.S.CORRECT); wrong = null } else { Sounds.play(Sounds.S.WRONG); shake++; wrong = r.getString("message") }
-                                    reload()
-                                }.padding(14.dp)
-                        ) { Text(o, fontSize = 15.sp) }
+                        BranchButton("${'A' + i}  ·  $o", modifier = Modifier.fillMaxWidth(), mono = false) {
+                            val r = JSONObject(player.answer(i.toUInt()))
+                            if (r.getBoolean("correct")) { Sounds.play(Sounds.S.CORRECT); wrong = null } else { Sounds.play(Sounds.S.WRONG); shake++; wrong = r.getString("message") }
+                            reload()
+                        }
                     }
                 }
-                Spacer(Modifier.height(14.dp))
+            }
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when {
                     mode == "done" -> {
-                        val next = nextLesson()
-                        if (next != null && next.first != lessonId) BigButton("Sonraki ders: ${next.second}") { onNext(next.first) }
-                        Spacer(Modifier.height(8.dp))
-                        BigButton("Derslere dön", color = Crabs.Card, onClick = onExit)
+                        val nx = nextLesson()
+                        if (nx != null && nx.first != lessonId) SavilleButton("Sonraki ders: ${nx.second}", Modifier.fillMaxWidth(), cap = K.Blue) { onNext(nx.first) }
+                        SavilleButton("Derslere dön", Modifier.fillMaxWidth(), cap = K.Industrial, onClick = onExit)
                     }
-                    mode == "read" || feedback != null -> BigButton("Devam") { player.next(); wrong = null; hint = null; reload() }
-                    view.getBoolean("has_hint") -> BigButton("İpucu", color = Crabs.Card) { hint = player.hint(); reload() }
+                    mode == "read" || feedback != null -> SavilleButton("Devam", Modifier.fillMaxWidth(), cap = K.Blue) { player.next(); wrong = null; hint = null; reload() }
+                    view.getBoolean("has_hint") -> SavilleButton("İpucu", Modifier.fillMaxWidth(), cap = K.Yellow) { hint = player.hint(); reload() }
                 }
             }
         }
-        if (mode == "done") Confetti()
     }
 }
 
@@ -291,33 +261,29 @@ fun LessonPlayerScreen(lessonId: String, modifier: Modifier, onExit: () -> Unit,
 fun RepertoireList(modifier: Modifier, onDrill: (String, Int) -> Unit) {
     val reps = remember { JSONArray(repertoiresJson()).objects() }
     val now = System.currentTimeMillis()
-    LazyColumn(modifier.fillMaxSize().padding(horizontal = 14.dp)) {
+    LazyColumn(modifier.fillMaxSize()) {
         item {
-            CoachBubble("Rakibin hamleleri kendiliğinden oynanır; sen repertuvarındaki hamleleri hatırla. Her hattı unutmadan hemen önce tekrar ettiririm.", modifier = Modifier.padding(top = 14.dp))
+            CoachStrip("Aralıklı tekrar", "Rakibin hamleleri kendiliğinden oynanır; sen repertuvarındakini hatırla. Her hattı unutmadan hemen önce tekrar ettiririm.")
         }
-        for (r in reps) {
+        reps.forEachIndexed { i, r ->
             item(key = r.getString("id")) {
                 val lines = r.getJSONArray("lines").objects()
                 val due = lines.count { isDue(it.getString("card_id"), now) }
                 val learned = lines.count { cardOf(it.getString("card_id")) != null }
-                Column(Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(22.dp)).background(Crabs.Card).border(1.dp, Crabs.Line, RoundedCornerShape(22.dp)).padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        ProgressRing(learned / lines.size.toFloat(), 46.dp, Crabs.Sea, label = "$learned")
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(r.getString("title"), fontFamily = dev.chesscrab.app.ui.Display, fontSize = 20.sp)
-                            Text(if (due > 0) "$due hat tekrar bekliyor" else "Bugünlük bitti ✓", fontSize = 12.sp, color = if (due > 0) Crabs.Coral else Crabs.Sea)
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    BigButton(if (due > 0) "Çalış ($due)" else "Yine de çalış", color = if (due > 0) Crabs.Coral else Crabs.CardHi) {
-                        val i = lines.indexOfFirst { isDue(it.getString("card_id"), now) }.let { if (it < 0) 0 else it }
-                        onDrill(r.getString("id"), i)
-                    }
+                GameRow(
+                    title = r.getString("title"),
+                    sub = "${lines.size} hat · $learned öğrenildi · ${if (due > 0) "$due tekrar bekliyor" else "bugünlük tamam"}",
+                    badge = if (due > 0) "Çalış $due" else "Tekrar",
+                    badgeColor = if (due > 0) K.Yellow else K.LineStrong,
+                    badgeText = if (due > 0) K.Yellow else K.Ink,
+                    leading = { Monogram((i + 1).toString().padStart(2, '0'), filled = due == 0 && learned == lines.size) },
+                ) {
+                    val li = lines.indexOfFirst { isDue(it.getString("card_id"), now) }.let { if (it < 0) 0 else it }
+                    onDrill(r.getString("id"), li)
                 }
             }
         }
-        item { Spacer(Modifier.height(24.dp)) }
+        item { Hairline(); Spacer(Modifier.height(20.dp)) }
     }
 }
 
@@ -334,16 +300,13 @@ fun DrillScreen(repId: String, line: Int, modifier: Modifier, onNext: (Int?) -> 
     val lineObj = rep.getJSONArray("lines").getJSONObject(line)
     val prog = view.getJSONArray("progress")
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("✕", fontSize = 20.sp, color = Crabs.Muted, modifier = Modifier.clickable(onClick = onExit).padding(end = 12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(lineObj.getString("name"), fontWeight = FontWeight.Bold)
-                Text(rep.getString("title"), fontSize = 12.sp, color = Crabs.Muted)
+    Column(modifier.fillMaxSize()) {
+        TopBar("Repertuvar", code("REP", line + 1), onBack = onExit)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            SignalReadout(lineObj.getString("name"), "${rep.getString("title")} · ${view.getInt("mistakes")} hata") {
+                val total = prog.getInt(1).coerceAtLeast(1)
+                Text("${prog.getInt(0)}/$total", style = KType.mono, color = K.Ink)
             }
-            Text("${prog.getInt(0)}/${prog.getInt(1)}", color = Crabs.Muted)
-        }
-        Box(Modifier.padding(horizontal = 8.dp)) {
             ChessBoard(
                 fen = view.getString("fen"), whiteBottom = view.getString("orientation") == "white",
                 legal = view.getJSONArray("legal_moves").strings(), lastMove = view.optStr("last_move"),
@@ -353,12 +316,12 @@ fun DrillScreen(repId: String, line: Int, modifier: Modifier, onNext: (Int?) -> 
                     token++
                     if (!fb.getBoolean("correct")) {
                         Sounds.play(Sounds.S.WRONG); shake++
-                        flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
+                        flash = Flash(uci.substring(2, 4), FLASH_BAD, token)
                         say = "mistake" to "Repertuvarındaki hamle ${fb.optStr("expected_san")}. Onu oyna."
                     } else {
                         Sounds.play(Sounds.S.MOVE)
-                        flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
-                        say = "best" to ("Doğru!" + (fb.optStr("reply_san")?.let { " Rakip: $it" } ?: ""))
+                        flash = Flash(uci.substring(2, 4), FLASH_GOOD, token)
+                        say = "best" to ("Doğru." + (fb.optStr("reply_san")?.let { " Rakip: $it" } ?: ""))
                     }
                     view = JSONObject(drill.viewJson())
                     if (fb.getBoolean("done") && !finished) {
@@ -367,151 +330,158 @@ fun DrillScreen(repId: String, line: Int, modifier: Modifier, onNext: (Int?) -> 
                         val now = System.currentTimeMillis()
                         val card = srsReviewJson(Crab.store.get("srs_cards", drill.cardId()), drill.cardId(), drill.grade(), now)
                         Crab.store.put("srs_cards", drill.cardId(), card)
-                        dev.chesscrab.app.Streak.mark()
+                        Streak.mark()
                         val days = (JSONObject(card).getLong("due_ms") - now) / 86_400_000L
-                        say = (if (drill.grade() == "again") "mistake" else "best") to "Hat bitti · ${view.getInt("mistakes")} hata · sonraki tekrar: ${if (days <= 0) "bugün" else "$days gün sonra"}. ${view.optString("note")}"
+                        say = (if (drill.grade() == "again") "mistake" else "best") to "Hat bitti · ${view.getInt("mistakes")} hata · sonraki tekrar ${if (days <= 0) "bugün" else "$days gün sonra"}. ${view.optString("note")}"
                         syncLater()
                     }
                 },
             )
-        }
-        Column(Modifier.padding(14.dp)) {
-            CoachBubble(say.second, cls = say.first, title = say.first?.let { if (it == "best") "Doğru" else "Dikkat" })
+            CoachStrip(if (say.first == "mistake") "Dikkat" else if (say.first == "best") "Doğru" else lineObj.getString("name"), say.second, code = say.first)
             if (finished) {
-                Spacer(Modifier.height(12.dp))
-                val lines = rep.getJSONArray("lines").objects()
-                val nxt = lines.indexOfFirst { it.getInt("index") != line && isDue(it.getString("card_id")) }
-                if (nxt >= 0) BigButton("Sıradaki hat") { onNext(nxt) }
-                Spacer(Modifier.height(8.dp))
-                BigButton("Bitir", color = Crabs.Card, onClick = onExit)
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val lines = rep.getJSONArray("lines").objects()
+                    val nxt = lines.indexOfFirst { it.getInt("index") != line && isDue(it.getString("card_id")) }
+                    if (nxt >= 0) SavilleButton("Sıradaki hat", Modifier.fillMaxWidth(), cap = K.Yellow) { onNext(nxt) }
+                    SavilleButton("Bitir", Modifier.fillMaxWidth(), cap = K.Industrial, onClick = onExit)
+                }
             }
         }
     }
 }
 
-/** Derslerden seçilen günün bulmacası */
-fun dailyPuzzle(dayOffset: Int = 0): JSONObject {
-    val ps = JSONArray(puzzlesJson()).objects()
-    val day = (System.currentTimeMillis() / 86_400_000L).toInt() + dayOffset
-    return ps[Math.floorMod(day * 7, ps.size)]
-}
-
+/** Günün bulmacası: sinyal okuma bandı, adım bandı, tahta, koç şeridi, eylemler */
 @Composable
 fun PuzzleScreen(modifier: Modifier, onExit: () -> Unit) {
     var offset by remember { mutableIntStateOf(0) }
+    var reset by remember { mutableIntStateOf(0) }
     val pz = remember(offset) { dailyPuzzle(offset) }
     val solution = remember(pz) { pz.getJSONArray("moves").strings() }
-    val game = remember(pz) { ChessGame.fromFen(pz.getString("fen")) }
-    var view by remember(pz) { mutableStateOf(GameView.parse(game.stateJson())) }
-    var idx by remember(pz) { mutableIntStateOf(0) }
-    var say by remember(pz) { mutableStateOf<Pair<String?, String>>(null to pz.getString("prompt").ifBlank { "En iyi hamleyi bul." }) }
+    val game = remember(pz, reset) { ChessGame.fromFen(pz.getString("fen")) }
+    var view by remember(pz, reset) { mutableStateOf(GameView.parse(game.stateJson())) }
+    var idx by remember(pz, reset) { mutableIntStateOf(0) }
+    var say by remember(pz, reset) { mutableStateOf<Pair<String?, String>>(null to "Doğru taşı seç ya da sürükle; takılırsan ok ipucu al.") }
     var flash by remember(pz) { mutableStateOf<Flash?>(null) }
+    var fx by remember(pz) { mutableStateOf<BoardFx?>(null) }
     var shake by remember(pz) { mutableIntStateOf(0) }
     var token by remember { mutableIntStateOf(0) }
-    var showSol by remember(pz) { mutableStateOf(false) }
+    var showHint by remember(pz, reset) { mutableStateOf(false) }
+    var busy by remember(pz, reset) { mutableStateOf(false) }
     val solved = idx >= solution.size
     val myWhite = remember(pz) { GameView.parse(ChessGame.fromFen(pz.getString("fen")).stateJson()).turnWhite }
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    var busy by remember(pz) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val myMoves = (solution.size + 1) / 2
+    val myDone = (idx + 1) / 2
+    val streak = remember(Streak.version) { Streak.current() }
 
-    Box(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("✕", fontSize = 20.sp, color = Crabs.Muted, modifier = Modifier.clickable(onClick = onExit).padding(end = 12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(if (offset == 0) "Günün bulmacası" else "Bulmaca", fontWeight = FontWeight.Bold)
-                    Text("${if (myWhite) "Beyaz" else "Siyah"} oynar · ${pz.getString("lesson_title")}", fontSize = 12.sp, color = Crabs.Muted)
+    fun play(uci: String) {
+        token++
+        if (uci == solution[idx]) {
+            view = GameView.parse(game.play(uci)); idx++
+            flash = Flash(uci.substring(2, 4), FLASH_GOOD, token)
+            showHint = false
+            if (idx < solution.size) {
+                Sounds.forSan(view.sans.lastOrNull())
+                say = "best" to "Doğru. Rakip cevap veriyor…"
+                busy = true
+                scope.launch {
+                    delay(if (Motion.reduced) 200 else 550)
+                    view = GameView.parse(game.play(solution[idx])); idx++
+                    Sounds.forSan(view.sans.lastOrNull())
+                    say = "best" to "Rakip ${view.sans.last()} oynadı. Devam et."
+                    busy = false
+                }
+            } else {
+                Sounds.play(Sounds.S.CORRECT)
+                Streak.mark()
+                fx = BoardFx(uci.substring(2, 4), if (view.check && view.over) "checkmate" else "brilliant", token)
+                say = "brilliant" to "Taktik çözüldü: ${view.sans.lastOrNull() ?: ""}. ${pz.getString("prompt")}"
+            }
+        } else {
+            Sounds.play(Sounds.S.WRONG); shake++
+            flash = Flash(uci.substring(2, 4), FLASH_BAD, token)
+            say = "mistake" to "Tam değil. Rakibin şahını ya da korumasız taşını hedefleyen hamleyi dene."
+        }
+    }
+
+    Column(modifier.fillMaxSize()) {
+        TopBar("Bulmaca", code("PZL", Math.floorMod(pz.getString("id").hashCode(), 1000)), onBack = onExit)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            SignalReadout(
+                "${if (offset == 0) "Günün bulmacası" else "Bulmaca ${offset + 1}"} · ${pz.getString("lesson_title")}",
+                "${if (myWhite) "Beyaz" else "Siyah"} oynar · seri $streak",
+            ) { SignalCells(6, minOf(streak, 6), active = if (solved) null else minOf(streak, 5)) }
+            // adım bandı
+            Row(Modifier.fillMaxWidth().hairlineBottom()) {
+                for (i in 0 until minOf(myMoves, 4)) {
+                    val st = when { i < myDone -> "solved"; i == myDone && !solved -> "current"; else -> "" }
+                    Row(
+                        Modifier.weight(1f).background(when (st) { "solved" -> K.Ink.copy(alpha = 0.1f); "current" -> K.Elevated; else -> K.Surface })
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Hamle ${i + 1}", style = KType.desc.copy(fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+                            color = when (st) { "solved" -> K.Ink; "current" -> K.Yellow; else -> K.Ink2 }, modifier = Modifier.weight(1f))
+                        Text(if (st == "solved") "OK" else "0${i + 1}", style = KType.code, color = when (st) { "solved" -> K.Ink; "current" -> K.Yellow; else -> K.Ink2 })
+                    }
+                    if (i < minOf(myMoves, 4) - 1) Box(Modifier.width(1.dp).height(34.dp).background(K.LineSubtle))
                 }
             }
-            Box(Modifier.padding(horizontal = 8.dp)) {
-                ChessBoard(
-                    fen = view.fen, whiteBottom = myWhite, legal = if (solved || busy) emptyList() else view.legal, lastMove = view.lastMove, check = view.check,
-                    arrows = if (showSol && !solved) listOf(Arrow(solution[idx], ARROW_HINT)) else emptyList(),
-                    flash = flash, shake = shake,
-                    onMove = { uci ->
-                        token++
-                        if (uci == solution[idx]) {
-                            view = GameView.parse(game.play(uci)); idx++
-                            flash = Flash(uci.substring(2, 4), Crabs.Sea, token)
-                            if (idx < solution.size) {
-                                Sounds.forSan(view.sans.lastOrNull())
-                                say = "best" to "Doğru!"
-                                busy = true
-                                scope.launch {
-                                    kotlinx.coroutines.delay(550)
-                                    view = GameView.parse(game.play(solution[idx])); idx++
-                                    Sounds.forSan(view.sans.lastOrNull())
-                                    say = "best" to "Doğru! Rakip ${view.sans.last()} oynadı. Devam et."
-                                    busy = false
-                                }
-                            } else {
-                                Sounds.play(Sounds.S.CORRECT)
-                                dev.chesscrab.app.Streak.mark()
-                                say = "brilliant" to "Çözdün! ${view.sans.lastOrNull() ?: ""}"
-                            }
-                            showSol = false
-                        } else {
-                            Sounds.play(Sounds.S.WRONG); shake++
-                            flash = Flash(uci.substring(2, 4), Color(0xFFFF4F64), token)
-                            say = "mistake" to "Bu değil. Şahları, alımları ve tehditleri kontrol et."
-                        }
-                    },
-                )
+            ChessBoard(
+                fen = view.fen, whiteBottom = myWhite, legal = if (solved || busy) emptyList() else view.legal, lastMove = view.lastMove, check = view.check,
+                arrows = if (showHint && !solved) listOf(Arrow(solution[idx], K.Yellow)) else emptyList(),
+                hint = if (showHint && !solved) solution[idx] else null,
+                flash = flash, fx = fx, shake = shake,
+                onMove = { play(it) },
+            )
+            CoachStrip(
+                when (say.first) { "brilliant" -> "Harika! Taktik çözüldü"; "mistake" -> "Tam değil"; "best" -> "Doğru"; else -> pz.getString("prompt").ifBlank { "En iyi hamleyi bul" } },
+                say.second, code = say.first,
+            ) {
+                if (solved) SavilleButton("Sonraki", cap = K.Yellow) { offset++ }
             }
-            Column(Modifier.padding(14.dp)) {
-                CoachBubble(say.second, cls = say.first)
-                Spacer(Modifier.height(12.dp))
-                if (solved) BigButton("Yeni bulmaca") { offset++ }
-                else BigButton("Çözümü göster", color = Crabs.Card) { showSol = true }
+            ActionRow {
+                MiniAction(KIcons.Bulb, "Ok ipucu", Modifier.weight(1f), on = showHint, enabled = !solved && !busy) {
+                    showHint = true; say = null to "İpucu oku çizildi: ${solution[idx].take(2)} → ${solution[idx].drop(2).take(2)}"
+                }
+                MiniAction(KIcons.PlayTri, "Çözümü izle", Modifier.weight(1f), enabled = !solved && !busy) {
+                    busy = true
+                    scope.launch {
+                        while (idx < solution.size) {
+                            delay(if (Motion.reduced) 200 else 650)
+                            view = GameView.parse(game.play(solution[idx])); idx++
+                            Sounds.forSan(view.sans.lastOrNull())
+                        }
+                        say = null to "Çözüm: ${view.sans.joinToString(" ")}"
+                        busy = false
+                    }
+                }
+                MiniAction(KIcons.Reset, "Tekrar", Modifier.weight(1f), enabled = !busy) { reset++ }
             }
         }
-        if (solved) Confetti()
     }
 }
 
-
-/** Öğren → Bulmaca sekmesi: günün bulmacası ve fırtına */
+/** Öğren → Bulmaca: günün bulmacası ve fırtına satırları */
 @Composable
 fun PuzzleHub(modifier: Modifier, onDaily: () -> Unit, onRush: () -> Unit) {
     val pz = remember { dailyPuzzle() }
     val best = remember { runCatching { Crab.setting("rush_best", "0") }.getOrDefault("0") }
-    Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 14.dp)) {
-        Row(
-            Modifier.staggerIn(0).bounceClick(scaleTo = 0.97f, onClick = onDaily).fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(Crabs.Card)
-                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)).padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.size(112.dp).clip(RoundedCornerShape(12.dp))) {
-                ChessBoard(pz.getString("fen"), pz.getString("fen").split(' ').getOrNull(1) != "b", emptyList(), coordinates = false)
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                dev.chesscrab.app.ui.components.Overline("Günün bulmacası", color = Crabs.Sea)
-                Spacer(Modifier.height(4.dp))
-                Text(pz.getString("lesson_title"), style = MaterialTheme.typography.titleLarge)
-                Spacer(Modifier.height(4.dp))
-                Text("Her gün yeni bir konum. İpucu ve çözüm hazır.", color = Crabs.Muted, fontSize = 12.5.sp)
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Box(
-            Modifier.staggerIn(1).bounceClick(scaleTo = 0.97f, onClick = onRush).fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(Crabs.Card)
-                .background(Brush.linearGradient(listOf(Crabs.Gold.copy(alpha = 0.26f), Crabs.Coral.copy(alpha = 0.08f), Color.Transparent)))
-                .border(1.dp, Crabs.Line, RoundedCornerShape(26.dp)),
-        ) {
-            dev.chesscrab.app.ui.components.WaveBackdrop(Modifier.matchParentSize(), color = Crabs.Gold, lines = 4)
-            Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    dev.chesscrab.app.ui.components.Overline("Bulmaca fırtınası", color = Crabs.Gold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("3 dakika, 3 can", style = MaterialTheme.typography.headlineSmall)
-                    Text("Zamana karşı art arda bulmaca", color = Crabs.Muted, fontSize = 12.5.sp)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(best, fontFamily = dev.chesscrab.app.ui.Display, fontSize = 38.sp, color = Crabs.Gold)
-                    dev.chesscrab.app.ui.components.Overline("rekor")
-                }
-            }
-        }
+    val streak = remember(Streak.version) { Streak.current() }
+    Column(modifier.verticalScroll(rememberScrollState())) {
+        SignalReadout("Bulmaca serisi", "Her gün bir çözüm seriyi sürdürür") { SignalCells(6, minOf(streak, 6)) }
+        SectionLabel("Görevler")
+        GameRow(
+            title = "Günün bulmacası",
+            sub = "${pz.getString("lesson_title")} · ${pz.getString("prompt").take(60)}",
+            badge = "Çöz", badgeColor = K.Yellow, badgeText = K.Yellow,
+            leading = {
+                Box(Modifier.size(64.dp)) { ChessBoard(pz.getString("fen"), pz.getString("fen").split(' ').getOrNull(1) != "b", emptyList(), coordinates = false) }
+            },
+            onClick = onDaily,
+        )
+        GameRow(title = "Bulmaca fırtınası", sub = "3 dakika · 3 can · kolaydan zora · rekor $best", badge = "Başla", badgeColor = K.Red, onClick = onRush)
+        Hairline()
     }
 }
+

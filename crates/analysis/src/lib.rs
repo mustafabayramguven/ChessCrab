@@ -194,6 +194,9 @@ pub struct MoveAnalysis {
     /// Kötü hamlelerde rakibin en iyi cevabı
     #[serde(default)]
     pub refutation_san: Option<String>,
+    /// Rakibin cezalandıran cevabı (UCI), tahtada kızıl kesikli ok için
+    #[serde(default)]
+    pub refutation_uci: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -484,6 +487,7 @@ pub fn analyse_move(
         let best_san = before.best_san.clone();
         let bad = matches!(class, MoveClass::Inaccuracy | MoveClass::Mistake | MoveClass::Miss | MoveClass::Blunder);
         let refutation_san = if bad { after.pv_san.first().cloned() } else { None };
+        let refutation_uci = if bad { after.best_uci.clone() } else { None };
         let mut comment = String::new();
         let mover_after = if white_moved { after.score } else { after.score.negate() };
         let mover_before = if white_moved { before.score } else { before.score.negate() };
@@ -554,6 +558,7 @@ pub fn analyse_move(
             best_line: before.pv_san.clone(),
             comment,
             refutation_san,
+            refutation_uci,
         }
 }
 
