@@ -127,7 +127,7 @@ fun LessonsList(modifier: Modifier, onOpen: (String) -> Unit) {
                     val open = expanded == chId
                     val rot by animateFloatAsState(if (open) 90f else 0f, tween(Motion.STATE, easing = Motion.Expo), label = "chev")
                     GameRow(
-                        title = "${chi + 1}. ${ch.getString("title")}",
+                        title = ch.getString("title").let { t -> if (t.firstOrNull()?.isDigit() == true) t else "${chi + 1}. $t" },
                         sub = ch.getString("description"),
                         badge = "$done/${lessons.size}",
                         badgeColor = if (done == lessons.size) K.Ink else K.LineStrong,

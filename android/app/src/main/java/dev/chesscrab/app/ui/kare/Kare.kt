@@ -150,10 +150,12 @@ fun TopBar(title: String, code: String, onBack: (() -> Unit)? = null, trailing: 
                 Icon(KIcons.Back, "Geri", tint = K.Ink2, modifier = Modifier.size(20.dp))
             }
         }
-        Text(title.upTr(), style = KType.title, color = K.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-        Spacer(Modifier.width(10.dp))
-        CatalogCode(code)
-        Spacer(Modifier.weight(1f))
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Text(title.upTr(), style = KType.title, color = K.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            Spacer(Modifier.width(10.dp))
+            CatalogCode(code)
+        }
+        Spacer(Modifier.width(8.dp))
         if (trailing != null) trailing() else SavilleStrip()
     }
 }
@@ -179,13 +181,14 @@ fun SavilleButton(text: String, modifier: Modifier = Modifier, cap: Color = K.Bl
             .background(K.Base)
             .border(1.dp, K.LineStrong, RControl)
             .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Satır içi kullanımda kompakt (metin + başlık); fillMaxWidth verilince metin solda, başlık sağ kenarda
         Text(
             text.upTr(), style = KType.label, color = K.Ink, maxLines = 1,
             modifier = Modifier.weight(1f, fill = false).padding(start = 12.dp, end = 10.dp, top = 15.dp, bottom = 15.dp),
         )
-        Spacer(Modifier.weight(1f))
         Box(Modifier.width(14.dp).fillMaxHeight().background(cap))
     }
 }
